@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "CHIM-PrivateConversation-dev",
+    "commit": "d8f79c6059ac9184c5117c26a0514e18aae76902",
+    "manifest_version": "0.1.7",
+    "export_command": "git archive --format=zip --output=dist/release-0.1.7-check/source-d8f79c6.zip d8f79c6059ac9184c5117c26a0514e18aae76902",
+    "export_path": "dist/release-0.1.7-check/source-d8f79c6.zip",
+    "export_bytes": 3324768,
+    "export_sha256": "441d81ae494a65cf1922a0a05f4917a70299cca297023be982db4ecd90efb4c1",
+    "export_zip_entries": 120,
+    "export_extractions": [
+      "dist/release-0.1.7-check/clean-export-a",
+      "dist/release-0.1.7-check/clean-export-b"
+    ],
+    "local_tag": {
+      "name": "private_conversation-v0.1.7",
+      "commit": "d8f79c6059ac9184c5117c26a0514e18aae76902",
+      "export_path": "dist/release-0.1.7-check/source-tag-v0.1.7.zip",
+      "export_bytes": 3324768,
+      "export_sha256": "441d81ae494a65cf1922a0a05f4917a70299cca297023be982db4ecd90efb4c1",
+      "byte_identical_to_commit_export": true,
+      "rebuild_needed": false
+    }
+  },
+  "worktree_comparison": {
+    "server_allowlisted_file_count": 20,
+    "server_allowlisted_exact_bytes_equal": true,
+    "release_input_paths_normalized_equal": [
+      ".gitattributes",
+      ".gitignore",
+      "scripts/build-package.py",
+      "tests/package_check.py"
+    ],
+    "text_normalization": "CRLF converted to LF before comparison",
+    "manifest_previous_version": "0.1.6",
+    "manifest_current_version": "0.1.7",
+    "manifest_only_version_field_changed": true,
+    "known_post_commit_worktree_document_excluded": "tasks/release-0.1.7/source-review.md",
+    "allowlisted_payload_sha256": {
+      "server/.htaccess": "ccd754e3ccb7ac8b8a8eafd60f087d6e5a4b936c17459720d5c512b5b927c05a",
+      "server/reflection_receipt.php": "a5f4779697fea7e04d73b51d4a293cbb5b44d90986ea927ab7dadd4b4a960103",
+      "server/manifest.json": "4a6c0a37a2377dd9e3179c15a0aa877941da4d7763c925898328b7ce10ee47f7"
+    }
+  },
+  "package_check": {
+    "command": "python tests/package_check.py",
+    "working_directory": "dist/release-0.1.7-check/clean-export-a",
+    "exit_code": 0,
+    "stdout": "....\n----------------------------------------------------------------------\nRan 4 tests in 2.706s\n\nOK\n"
+  },
+  "builder": {
+    "command": "python scripts/build-package.py --format release --release-dir dist/release-v0.1.7",
+    "working_directories": [
+      "dist/release-0.1.7-check/clean-export-a",
+      "dist/release-0.1.7-check/clean-export-b"
+    ],
+    "exit_codes": [0, 0],
+    "four_assets_byte_identical": true,
+    "assets": [
+      {
+        "name": "private_conversation-0.1.7.dwpkg",
+        "path_a": "dist/release-0.1.7-check/clean-export-a/dist/release-v0.1.7/private_conversation-0.1.7.dwpkg",
+        "path_b": "dist/release-0.1.7-check/clean-export-b/dist/release-v0.1.7/private_conversation-0.1.7.dwpkg",
+        "bytes": 3344250,
+        "sha256": "a9347c6ebd4b6eb40b86b9d383785403b8e427a72e2992963088432f41e2f873"
+      },
+      {
+        "name": "private_conversation.tar.gz",
+        "path_a": "dist/release-0.1.7-check/clean-export-a/dist/release-v0.1.7/private_conversation.tar.gz",
+        "path_b": "dist/release-0.1.7-check/clean-export-b/dist/release-v0.1.7/private_conversation.tar.gz",
+        "bytes": 3021841,
+        "sha256": "cd180949fa4bc12cd2b98daa1bad33ac53ff522e624446d9e7f9cdcd9691779b"
+      },
+      {
+        "name": "private_conversation-0.1.7-mo2.zip",
+        "path_a": "dist/release-0.1.7-check/clean-export-a/dist/release-v0.1.7/private_conversation-0.1.7-mo2.zip",
+        "path_b": "dist/release-0.1.7-check/clean-export-b/dist/release-v0.1.7/private_conversation-0.1.7-mo2.zip",
+        "bytes": 3024485,
+        "sha256": "639cbd44e674cb16a9e42fa1724a9e13efabf883e99ce89120e14a1997547ce4"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "path_a": "dist/release-0.1.7-check/clean-export-a/dist/release-v0.1.7/SHA256SUMS.txt",
+        "path_b": "dist/release-0.1.7-check/clean-export-b/dist/release-v0.1.7/SHA256SUMS.txt",
+        "bytes": 294,
+        "sha256": "388d5ff92673dc2119f5e22a96e94ffc06baaeccd40fdcd53ba6a36fb8b40c50"
+      }
+    ]
+  },
+  "verification": {
+    "exit_code": 0,
+    "server_file_count": 20,
+    "source_and_test_builder_worktree_match": true,
+    "all_105_archive_files_match_both_extractions": true,
+    "source_tree_cross_export_equal": true,
+    "dwpkg_allowlist_manifest_crc_source_and_checksums": "passed",
+    "repository_tar_root_member_order_and_payload": "passed",
+    "mo2_exact_member": "CHIM/server-plugins/private_conversation/0.1.7.dwpkg",
+    "mo2_crc_and_embedded_dwpkg_bytes": "passed",
+    "all_asset_sha256_sums": "passed"
+  },
+  "hub_pre_copy": {
+    "repository": "CHIM-Plugins-release-0.1.7",
+    "target": "plugins/private_conversation",
+    "source_files": 105,
+    "existing_files": 74,
+    "stale_extras": [],
+    "missing_count": 31,
+    "missing_paths": [
+      ".gitignore",
+      "distribution/private_conversation-v0.1.7.md",
+      "server/.htaccess",
+      "server/reflection_receipt.php",
+      "tasks/ack-bug-fix-2026-10-01/core-review.md",
+      "tasks/ack-bug-fix-2026-10-01/final-review.md",
+      "tasks/ack-bug-fix-2026-10-01/final-scope-check.json",
+      "tasks/ack-bug-fix-2026-10-01/integration-review.md",
+      "tasks/ack-bug-fix-2026-10-01/storage-review.md",
+      "tasks/ack-bug-run-2026-10-01/core-review.md",
+      "tasks/ack-bug-run-2026-10-01/final-review.md",
+      "tasks/ack-bug-run-2026-10-01/integration-review.md",
+      "tasks/ack-bug-run-2026-10-01/storage-review.md",
+      "tasks/ack-handoff-fix-2026-10-01/contract-review.md",
+      "tasks/ack-handoff-fix-2026-10-01/core-review.md",
+      "tasks/ack-handoff-fix-2026-10-01/database-review.md",
+      "tasks/ack-handoff-fix-2026-10-01/final-review.md",
+      "tasks/maintenance-2026-10-01/ack-review.md",
+      "tasks/maintenance-2026-10-01/final-review.md",
+      "tasks/maintenance-2026-10-01/routing-review.md",
+      "tasks/maintenance-2026-10-01/state-security-review.md",
+      "tasks/release-0.1.7/hub-review.md",
+      "tasks/release-0.1.7/metadata-review.md",
+      "tasks/release-0.1.7/plan.md",
+      "tasks/release-0.1.7/source-review.md",
+      "tests/http_state_protection_check.py",
+      "tests/reflection_ack_bug_check.php",
+      "tests/reflection_ack_database_check.php",
+      "tests/reflection_ack_shutdown_check.php",
+      "tests/reflection_direct_ack_capacity_check.php",
+      "tests/reflection_receipt_bug_check.php"
+    ],
+    "target_files_after": 105,
+    "target_equals_clean_export": true,
+    "target_tree_sha256": "d168bb398de74e3ea80d9adf6ad5d1a834278933ec31e1e87c611326d39a946a",
+    "outside_inventory_files": 167,
+    "outside_tree_sha256_before": "23b2287d8b7b50ed11193e6bf5bccd3fe4b084917c8fd813059e25f3454bbfb3",
+    "outside_tree_sha256_after": "23b2287d8b7b50ed11193e6bf5bccd3fe4b084917c8fd813059e25f3454bbfb3",
+    "outside_unchanged": true,
+    "copy_status": "completed"
+  },
+  "hub_commit_review": {
+    "repository": "CHIM-Plugins-release-0.1.7",
+    "commit": "98ed33b4169b4bc3e29835fdc4d710e83e6c2c1a",
+    "source_commit": "d8f79c6059ac9184c5117c26a0514e18aae76902",
+    "source_root_tree": "45c6c1f817ad1066010fdac3bfb30bea8c15ca67",
+    "hub_plugins_private_conversation_tree": "45c6c1f817ad1066010fdac3bfb30bea8c15ca67",
+    "pcv_tree_exact_equal": true,
+    "outside_pcv_changed_paths": [
+      "README.md",
+      "distribution/private_conversation-v0.1.7.md",
+      "docs/deployment-migration.md"
+    ],
+    "outside_diff_matches_allowed_paths": true,
+    "hub_root_mp_manifest_version": "0.1.14",
+    "nested_pcv_manifest_version": "0.1.7",
+    "hub_worktree_clean": true,
+    "hub_local_tag_or_push_by_this_reviewer": false
+  },
+  "limits": [
+    "No installation, provider, live CHIM, audio, gameplay, push, release, or publication verification.",
+    "The local tag export matches the executed commit ZIP; no post-tag rebuild was needed.",
+    "The hub subtree is committed; hub tag/push/publication remains a lead-owned step."
+  ]
+}

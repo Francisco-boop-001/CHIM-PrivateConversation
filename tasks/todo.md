@@ -261,9 +261,11 @@ Review: tasks/ack-bug-fix-2026-10-01/final-review.md accepts both minimal fixes 
 
 ## Publish Private Conversation 0.1.7
 
-- [ ] Prepare and review metadata, intended source inventory and PCV-only hub route.
-- [ ] Commit scoped source and verify immutable exports/reproducible packages.
-- [ ] Verify draft assets, publish, then advance update manifests.
-- [ ] Verify public releases/refs/downloads and record the review.
+- [x] Prepare and review metadata, intended source inventory and PCV-only hub route.
+- [x] Commit scoped source and verify immutable exports/reproducible packages.
+- [x] Verify draft assets, publish, then advance update manifests.
+- [x] Verify public releases/refs/downloads and record the review.
 
 Plan: tasks/release-0.1.7/plan.md. User authorized commit, push and publication; Mind Poisoning stays separate and installed environments remain untouched.
+
+Review: tasks/release-0.1.7/publication-evidence.md records 0.1.7 PRE-ALPHA publication in the dedicated repository and CHIM-Plugins hub. Lead reviewed owner diffs, source/packaging gates, exact hub subtree identity and downloaded assets before publication. Both main branches advanced afterward without force. Mind Poisoning root payload and all 52 protected authoring files are unchanged; installed CHIM/provider/Skyrim behavior remains unverified.

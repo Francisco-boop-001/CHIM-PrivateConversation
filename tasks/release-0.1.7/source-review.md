@@ -20,7 +20,7 @@ The remaining expected release edits are documentation, package expectations and
 
 ## Explicit staging allowlist
 
-Stage only these release payload, source, and focused test files, after the lead accepts the metadata review:
+Recommended explicit staging allowlist, conditional on the clean-source package/export gate below:
 
 ```text
 .gitattributes
