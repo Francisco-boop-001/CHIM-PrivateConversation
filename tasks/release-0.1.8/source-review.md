@@ -60,6 +60,12 @@ Add only `tasks/release-0.1.8/source-review.md` if preserving this provenance no
 
 Keep out the untracked `before/` trees, `source-before.json`, `final-scope-check.json`, protected snapshots, stale/earlier task plans, temporary database or Apache copies, `dist/`, and unrelated work. No `.gitignore`, `.gitattributes`, `.htaccess`, builder, package-check, or Mind Poisoning files belong to this candidate set. The independent hub/preservation check remains its own release gate.
 
+## Package-check follow-up
+
+The release gate later exposed that `tests/package_check.py` still pinned generated DWPkg/MO2 names and the manifest version to 0.1.7. It now reads `server/manifest.json` once as its independent expected-version source and uses that value for archive names, the manifest assertion, and the MO2 member path. Add `tests/package_check.py` as an explicit release staging path; this supersedes the earlier sentence above excluding package-check files.
+
+The updated test SHA-256 is `2871C93C555123636EB170C040D2E13B41BD386BBDC8F52DDB0964F866792146`. Python AST parsing, a scan confirming no remaining literal `0.1.7` expectation in the test, and `git diff --check -- tests/package_check.py` passed. I did not rerun the package gate; the packager will run it from the next clean source commit.
+
 ## Evidence referenced
 
 The accepted behavioral and source findings are in `tasks/critique-followup-2026-10-01/final-review.md` and its ACK, storage, logger, and operator subreviews. The only fresh checks for this staging audit were `git diff --cached --name-only`, `git diff --cached --check`, the listed SHA-256 calculations, and the branch/HEAD/origin/tag queries. No install, publication, live database, provider, or gameplay test was performed here.

@@ -13,6 +13,7 @@ from zipfile import ZipFile
 
 
 ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_VERSION = json.loads((ROOT / "server" / "manifest.json").read_text(encoding="utf-8"))["version"]
 SPEC = importlib.util.spec_from_file_location("pcv_package", ROOT / "scripts" / "build-package.py")
 assert SPEC is not None and SPEC.loader is not None
 PACKAGE = importlib.util.module_from_spec(SPEC)
@@ -63,9 +64,9 @@ class PackageChecks(unittest.TestCase):
             PACKAGE.build_release(ROOT, second)
 
             names = {
-                "private_conversation-0.1.7.dwpkg",
+                f"private_conversation-{EXPECTED_VERSION}.dwpkg",
                 "private_conversation.tar.gz",
-                "private_conversation-0.1.7-mo2.zip",
+                f"private_conversation-{EXPECTED_VERSION}-mo2.zip",
                 "SHA256SUMS.txt",
             }
             self.assertEqual({path.name for path in first.iterdir()}, names)
@@ -73,7 +74,7 @@ class PackageChecks(unittest.TestCase):
                 {path.name: path.read_bytes() for path in first.iterdir()},
                 {path.name: path.read_bytes() for path in second.iterdir()},
             )
-            self.assertEqual(manifest["version"], "0.1.7")
+            self.assertEqual(manifest["version"], EXPECTED_VERSION)
             self.assertEqual(manifest["status"], "development_candidate")
             self.assertEqual(manifest["schema_version"], 2)
             self.assertEqual(manifest["git_repo"], "Francisco-boop-001/CHIM-PrivateConversation")
@@ -97,7 +98,7 @@ class PackageChecks(unittest.TestCase):
             )
             self.assertEqual(channel["archive_strip_components"], 1)
 
-            dwpkg = first / "private_conversation-0.1.7.dwpkg"
+            dwpkg = first / f"private_conversation-{EXPECTED_VERSION}.dwpkg"
             expected_htaccess = (ROOT / "server" / ".htaccess").read_bytes()
             PACKAGE.verify_package(dwpkg, ROOT)
             with ZipFile(dwpkg) as archive:
@@ -143,8 +144,8 @@ class PackageChecks(unittest.TestCase):
             )
             self.assertEqual(extracted_files[".htaccess"], expected_htaccess)
 
-            mo2 = first / "private_conversation-0.1.7-mo2.zip"
-            member = "CHIM/server-plugins/private_conversation/0.1.7.dwpkg"
+            mo2 = first / f"private_conversation-{EXPECTED_VERSION}-mo2.zip"
+            member = f"CHIM/server-plugins/private_conversation/{EXPECTED_VERSION}.dwpkg"
             with ZipFile(mo2) as archive:
                 self.assertEqual(archive.namelist(), [member])
                 self.assertEqual(archive.testzip(), None)
@@ -177,9 +178,9 @@ class PackageChecks(unittest.TestCase):
             self.assertEqual(
                 {path.name for path in output.iterdir()},
                 {
-                    "private_conversation-0.1.7.dwpkg",
+                    f"private_conversation-{EXPECTED_VERSION}.dwpkg",
                     "private_conversation.tar.gz",
-                    "private_conversation-0.1.7-mo2.zip",
+                    f"private_conversation-{EXPECTED_VERSION}-mo2.zip",
                     "SHA256SUMS.txt",
                 },
             )
