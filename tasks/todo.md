@@ -284,9 +284,11 @@ Review: tasks/critique-followup-2026-10-01/final-review.md accepts the 60-second
 
 ## Publish Private Conversation 0.1.8
 
-- [ ] Prepare reviewed release metadata and scoped source commit.
-- [ ] Verify clean exports, deterministic assets and PCV-only hub synchronization.
-- [ ] Verify draft downloads, publish, then advance update manifests.
-- [ ] Verify public state and record final evidence.
+- [x] Prepare reviewed release metadata and scoped source commit.
+- [x] Verify clean exports, deterministic assets and PCV-only hub synchronization.
+- [x] Verify draft downloads, publish, then advance update manifests.
+- [x] Verify public state and record final evidence.
 
 Plan: tasks/release-0.1.8/plan.md. User authorized commit, push and publish Private Conversation only; installed environments remain unchanged.
+
+Review: tasks/release-0.1.8/publication-evidence.md records the 0.1.8 PRE-ALPHA release and hub bridge. Clean-source and clean-tag package gates passed; both draft and fresh public downloads matched exact bytes. The hub tagged snapshot equals canonical source, both update branches advanced only after publication, and final public refs/manifests and all 52 protected hashes were verified. Historical tags/assets and unrelated dirty files remain intact. Installed CHIM/provider/Skyrim behavior remains unverified.
