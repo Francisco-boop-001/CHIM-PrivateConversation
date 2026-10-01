@@ -193,3 +193,12 @@ Review: current PCV development source already uses the new observer API. Both f
 
 Plan: tasks/release-v0.1.5-plan.md. No installation or gameplay certification is claimed.
 Review: 0.1.5 PRE-ALPHA published after focused checks, clean commit/tag exports and exact draft/public download equality. Public hub and PCV manifest now point at 0.1.5; separately published MP 0.1.13 remains unchanged. Source tag is immutable; tasks/release-v0.1.5-evidence.md and package review retain hashes, gates and runtime limits.
+
+## Private Conversation 0.1.6 publication
+
+- [x] Review earlier solo registration, scoped missing-ACK diagnostics and strict Mind Poisoning API v1 compatibility.
+- [x] Preserve published logging revision 2; document wire limits and own-test cleanup.
+- [x] Establish independent deployment identity and canonical source line endings.
+- [x] Verify clean exports/packages and downloaded drafts; publish PRE-ALPHA before advancing main.
+
+Review: release-v0.1.6-evidence.md records matched MP 0.1.14/PCV 0.1.6 sources, focused fixtures, exact package hashes, public asset checks and migration. Registration remains after output flush, so early ACK recovery and live integration remain unproven. No installed CHIM, modlist or live data changes.
