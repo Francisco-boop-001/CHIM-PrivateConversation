@@ -129,6 +129,7 @@ try {
     pcvCheck(@mkdir($isolatedLockState, 0700), 'could not create isolated lock-contention state directory');
     $logLock = fopen($logFixture . '/events.lock', 'c');
     pcvCheck(is_resource($logLock) && flock($logLock, LOCK_EX | LOCK_NB), 'could not hold logger lock for state-transition check');
+    chmod($logFixture . '/events.lock', 0600);
     $transitionDuringLogFailure = pcv_stage($otherKey, $a, $knownNpcs, $isolatedLockState);
     flock($logLock, LOCK_UN);
     fclose($logLock);
@@ -176,16 +177,27 @@ try {
     pcvCheck(($malformedOptionalId['config_id'] ?? null) === null, 'malformed optional ID should normalize to null');
 
     $pcvStageDisabled = ['enabled' => false];
-    $disabledScope = ['enabled' => false, 'actor_a' => '', 'actor_b' => '', 'exclude_player' => true, 'bystander_mode' => 'exclude'];
+    pcv_stage($key, $a, $knownNpcs, $fixture);
+    pcvCheckState(pcv_read($key, $fixture), 'active', $b, true,
+        'END fixture has both an active scene and a staged replacement', $a);
+    $stateBeforeInvalidEnd = (string)file_get_contents($fixture . '/state.json');
+    pcvCheckState(pcv_stage('invalid', $pcvStageDisabled, [], $fixture), 'unavailable', null, false,
+        'invalid-key END must fail closed');
+    pcvCheck((string)file_get_contents($fixture . '/state.json') === $stateBeforeInvalidEnd,
+        'invalid-key END must leave active and pending state untouched');
     $ended = pcv_stage($key, $pcvStageDisabled, [], $fixture);
-    pcvCheckState($ended, 'active', $b, true, 'END remains pending before eligible input', $disabledScope);
-    $endConfigId = $ended['pending_config_id'] ?? null;
-    pcvCheck(is_string($endConfigId) && pcv_log_valid_uuid($endConfigId), 'pending END should have its own correlation ID');
-    pcvCheckState(pcv_begin_request($key, false, $fixture, $knownNpcs), 'active', $b, true, 'ineligible request cannot apply END', $disabledScope);
-    $endedResult = pcv_begin_request($key, true, $fixture);
-    pcvCheckState($endedResult, 'off', null, false, 'eligible input applies END');
-    pcvCheck(($endedResult['config_id'] ?? null) === null && ($endedResult['pending_config_id'] ?? null) === null,
-        'completed END should return no active or pending config ID');
+    pcvCheckState($ended, 'off', null, false, 'END clears active and pending state without another input');
+    pcvCheck(($ended['config_id'] ?? null) === null && ($ended['pending_config_id'] ?? null) === null,
+        'immediate END should return no active or pending config ID');
+    $endedStore = json_decode((string)file_get_contents($fixture . '/state.json'), true, 16, JSON_THROW_ON_ERROR);
+    pcvCheck(($endedStore['key'] ?? null) === $key
+        && array_key_exists('active', $endedStore) && $endedStore['active'] === null
+        && array_key_exists('pending', $endedStore) && $endedStore['pending'] === null,
+        'immediate END must atomically preserve identity while clearing both stored slots');
+    pcvCheckState(pcv_begin_request($key, true, $fixture), 'off', null, false,
+        'a later eligible input cannot revive an immediately ended scene');
+    pcvCheckState(pcv_read($otherKey, $fixture), 'off', null, false,
+        'immediate END state must remain isolated from a different identity');
 
     pcv_stage($key, $a, $knownNpcs, $fixture);
     $beforeSwitch = pcv_begin_request($key, true, $fixture, $knownNpcs);
@@ -349,12 +361,13 @@ try {
     );
     $endActivationLogged = false;
     foreach ($entries as $entry) {
-        if (($entry['event'] ?? null) === 'state.scope_activated' && ($entry['config_id'] ?? null) === $endConfigId) {
+        if (($entry['event'] ?? null) === 'state.scope_activated'
+            && ($entry['context']['action'] ?? null) === 'end') {
             $endActivationLogged = true;
             break;
         }
     }
-    pcvCheck($endActivationLogged, 'END activation event should retain its pending config ID');
+    pcvCheck($endActivationLogged, 'immediate END should use the existing scope activation event with action=end');
     pcvCheck(!str_contains((string)file_get_contents($logPath), 'Aela the Huntress'), 'operational logs must not contain NPC names');
     pcvCheck(!str_contains((string)file_get_contents($logPath), $key), 'operational logs must not contain the state key');
 

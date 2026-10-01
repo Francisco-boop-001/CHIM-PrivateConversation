@@ -47,6 +47,10 @@ class PackageChecks(unittest.TestCase):
                 self.assertIn("server/assets/private-conversation-scene.png", expected)
                 self.assertIn("server/assets/style.css", expected)
                 self.assertIn("server/assets/ui-refresh.js", expected)
+                self.assertEqual(
+                    archive.read("server/.htaccess"),
+                    (ROOT / "server" / ".htaccess").read_bytes(),
+                )
                 self.assertFalse(any(name.startswith("server/state/") for name in expected))
                 self.assertFalse(any(name.startswith("tests/") for name in expected))
 
@@ -59,9 +63,9 @@ class PackageChecks(unittest.TestCase):
             PACKAGE.build_release(ROOT, second)
 
             names = {
-                "private_conversation-0.1.6.dwpkg",
+                "private_conversation-0.1.7.dwpkg",
                 "private_conversation.tar.gz",
-                "private_conversation-0.1.6-mo2.zip",
+                "private_conversation-0.1.7-mo2.zip",
                 "SHA256SUMS.txt",
             }
             self.assertEqual({path.name for path in first.iterdir()}, names)
@@ -69,7 +73,7 @@ class PackageChecks(unittest.TestCase):
                 {path.name: path.read_bytes() for path in first.iterdir()},
                 {path.name: path.read_bytes() for path in second.iterdir()},
             )
-            self.assertEqual(manifest["version"], "0.1.6")
+            self.assertEqual(manifest["version"], "0.1.7")
             self.assertEqual(manifest["status"], "development_candidate")
             self.assertEqual(manifest["schema_version"], 2)
             self.assertEqual(manifest["git_repo"], "Francisco-boop-001/CHIM-PrivateConversation")
@@ -93,10 +97,12 @@ class PackageChecks(unittest.TestCase):
             )
             self.assertEqual(channel["archive_strip_components"], 1)
 
-            dwpkg = first / "private_conversation-0.1.6.dwpkg"
+            dwpkg = first / "private_conversation-0.1.7.dwpkg"
+            expected_htaccess = (ROOT / "server" / ".htaccess").read_bytes()
             PACKAGE.verify_package(dwpkg, ROOT)
             with ZipFile(dwpkg) as archive:
                 self.assertEqual(archive.testzip(), None)
+                self.assertEqual(archive.read("server/.htaccess"), expected_htaccess)
                 packaged = json.loads(archive.read("server/manifest.json"))
                 self.assertEqual(packaged["version"], manifest["version"])
                 package_manifest = json.loads(archive.read("manifest.json"))
@@ -135,13 +141,15 @@ class PackageChecks(unittest.TestCase):
                 extracted_files,
                 {name: (ROOT / "server" / name).read_bytes() for name in PACKAGE.SERVER_FILES},
             )
+            self.assertEqual(extracted_files[".htaccess"], expected_htaccess)
 
-            mo2 = first / "private_conversation-0.1.6-mo2.zip"
-            member = "CHIM/server-plugins/private_conversation/0.1.6.dwpkg"
+            mo2 = first / "private_conversation-0.1.7-mo2.zip"
+            member = "CHIM/server-plugins/private_conversation/0.1.7.dwpkg"
             with ZipFile(mo2) as archive:
                 self.assertEqual(archive.namelist(), [member])
                 self.assertEqual(archive.testzip(), None)
-                self.assertEqual(archive.read(member), dwpkg.read_bytes())
+                mo2_package = archive.read(member)
+                self.assertEqual(mo2_package, dwpkg.read_bytes())
 
             sums = (first / "SHA256SUMS.txt").read_text(encoding="ascii").splitlines()
             self.assertEqual(len(sums), 3)
@@ -169,9 +177,9 @@ class PackageChecks(unittest.TestCase):
             self.assertEqual(
                 {path.name for path in output.iterdir()},
                 {
-                    "private_conversation-0.1.6.dwpkg",
+                    "private_conversation-0.1.7.dwpkg",
                     "private_conversation.tar.gz",
-                    "private_conversation-0.1.6-mo2.zip",
+                    "private_conversation-0.1.7-mo2.zip",
                     "SHA256SUMS.txt",
                 },
             )

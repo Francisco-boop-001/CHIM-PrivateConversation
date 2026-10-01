@@ -25,7 +25,14 @@ $requestType = is_string($gameRequest[0] ?? null) ? $gameRequest[0] : '';
 if ($requestType === '_speech') {
     $reflectionPath = __DIR__ . '/reflection.php';
     if (is_file($reflectionPath) && !is_link($reflectionPath)) {
-        require_once $reflectionPath;
+        try {
+            require_once $reflectionPath;
+        } catch (Throwable $error) {
+            pcv_log_exception('reflection.ack_error', 'error', 'failed', 'internal_error', $error, [
+                'phase' => 'ack',
+            ]);
+            return;
+        }
     }
     if (function_exists('pcvReflectionEvaluateAck')) {
         pcvReflectionEvaluateAck($gameRequest);

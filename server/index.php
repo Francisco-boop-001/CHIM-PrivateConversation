@@ -321,7 +321,7 @@ function pcv_render_page(
 <p>' . pcv_html($statusText) . '</p>
 ' . $scopeSummary . '
 <p class="small-note">' . pcv_html($playerSummary) . ' Other NPCs can be excluded or present but silent.</p>
-<p class="small-note">An existing exchange may finish before the boundary. Use the in-game Stop All Dialogue control to stop it immediately.</p>
+<p class="small-note">An already-started exchange may finish; use the in-game Stop All Dialogue control to stop playback immediately.</p>
 <p class="small-note">Scene direction only: it does not supply exact dialogue or NPC-authored lines. Standard text/STT input is supported; Close and Whisper are stopped while a scene is active, and Director mode is outside scope.</p>
 <p class="small-note">This is not a privacy barrier; vanilla greetings can still occur, and a model may not follow the scene direction.</p>
 <p class="small-note">Only current nearby/audience context is scoped; existing history, memories, and profiles may still mention the player or bystanders. Silent mode adds generic scenery guidance only.</p>
@@ -353,13 +353,13 @@ function pcv_render_page(
 <form method="post" class="end-form">
 <input type="hidden" name="csrf" value="' . $csrf . '">
 <input type="hidden" name="action" value="end">
-<button class="quiet-button" type="submit">End on next input</button>
+<button class="quiet-button" type="submit">End now</button>
 </form>
 </section>
 </div>
 </div>
 </main>
-<footer class="footer-note">The selected scene changes at the next eligible ordinary input. It does not interrupt speech already in the queue. <a class="logs-link" href="?view=logs">Operational logs</a></footer>
+<footer class="footer-note">ARM or update takes effect on the next eligible ordinary input. END clears the active scene immediately but does not interrupt speech already in the queue. <a class="logs-link" href="?view=logs">Operational logs</a></footer>
 </div>
 <script src="assets/ui-refresh.js" defer></script>
 </body>
@@ -960,8 +960,8 @@ function pcv_run_page(): void
                     } else {
                         $state = $loaded;
                         $notice = $stageAction === 'enable'
-                            ? 'The selected pair was staged. The status below reflects the latest settings.'
-                            : 'The end request was staged. The status below reflects the latest settings.';
+                            ? 'The selected scene was staged. The status below reflects the latest settings.'
+                            : 'The active and pending private scene state was cleared immediately.';
                     }
                 }
             }

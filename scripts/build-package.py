@@ -17,6 +17,7 @@ from zipfile import ZIP_DEFLATED, ZIP_STORED, BadZipFile, ZipFile, ZipInfo
 
 
 SERVER_FILES = (
+    ".htaccess",
     "assets/private-conversation-scene.png",
     "assets/style.css",
     "assets/ui-refresh.js",
@@ -33,6 +34,7 @@ SERVER_FILES = (
     "preprocessing.php",
     "prerequest.php",
     "reflection.php",
+    "reflection_receipt.php",
     "scope.php",
     "state.php",
 )

@@ -202,3 +202,68 @@ Review: 0.1.5 PRE-ALPHA published after focused checks, clean commit/tag exports
 - [x] Verify clean exports/packages and downloaded drafts; publish PRE-ALPHA before advancing main.
 
 Review: release-v0.1.6-evidence.md records matched MP 0.1.14/PCV 0.1.6 sources, focused fixtures, exact package hashes, public asset checks and migration. Registration remains after output flush, so early ACK recovery and live integration remain unproven. No installed CHIM, modlist or live data changes.
+
+## Maintenance - 2026-10-01
+
+- [x] Narrow private-scene routing and provide immediate END.
+- [x] Make unmatched ACK diagnostics cheap; contain optional module failures; assess delivery race.
+- [x] Protect runtime state from HTTP in all package formats, with isolated HTTP evidence.
+- [x] Review owner diffs/checks and cross-task failure paths; document behavior/limits.
+- [x] Clearly label rejected build and legacy authoring folder without deletion.
+
+Plan: tasks/maintenance-2026-10-01/plan.md. Source-only development; no publication, installation or pin advancement authorized in this maintenance task.
+
+Review: tasks/maintenance-2026-10-01/final-review.md records owner RED/GREEN gates, lead corrections, caller/failure review and protected-file comparison. Accepted for source integration only; early ACK recovery and live installation/gameplay remain unverified. Existing version pins and published assets were not advanced.
+
+## Early-ACK handoff investigation - 2026-10-01
+
+- [x] Trace native delivery, ACK ingestion and reusable exact evidence.
+- [x] Verify Mind Poisoning API and captured-context requirements.
+- [x] Review concurrency, expiry, END, replay and crash behavior.
+- [x] Reconcile evidence and report extension-only feasibility and verification gates.
+
+Plan: tasks/ack-handoff-investigation-2026-10-01/plan.md. Investigation only; existing source changes are preserved.
+
+Review: tasks/ack-handoff-investigation-2026-10-01/final-report.md records the PCV-only persisted-native-ACK plus bounded private receipt design, including the stale ACK-header counterexample, both arrival orders, once-only claims, unresolved-registration capacity and crash limits. No mandatory core/Papyrus/MP code change demonstrated; runtime recovery remains unverified and unimplemented. Product/protected-file hashes unchanged.
+
+## Early-ACK fix implementation — 2026-10-01
+
+- [x] Reproduce early ACK loss and implement the reviewed bounded receipt/dual reconciliation.
+- [x] Verify exact MP v1 integration, epoch/freshness/duplicate/capacity/failure guards.
+- [x] Verify isolated SQL/shutdown bootstrap where available; label remaining runtime limits.
+- [x] Review all diffs, affected package/docs gates, protected files and unchanged pins.
+
+Plan: tasks/ack-handoff-fix-2026-10-01/plan.md. No installation, publication or collaborator edits.
+
+Review: tasks/ack-handoff-fix-2026-10-01/final-review.md accepts extension-only source integration after actual MP evaluator fixtures, ten disposable PostgreSQL reader cases, four production-hook shutdown scenarios and affected logger/package gates. Lead returned defects to the same owners and reviewed final output. Legacy v1 direct compatibility, receipt expiry/capacity and crash/ambient-transaction limits are explicit. All 52 protected files and pins remain unchanged. Full installed CHIM/provider/Skyrim behavior remains unverified.
+
+## ACK recovery bug run — 2026-10-01
+
+- [x] Independently audit claim/effect, receipt/SQL and actual hook/bootstrap/diagnostic boundaries.
+- [x] Reproduce material suspected defects with the smallest meaningful checks.
+- [x] Review confirmed defects, proposed minimal fixes and reproduction output with the original owners.
+- [x] Verify current-task scope, protected files and unchanged pins; record final judgment and limits.
+
+Plan: tasks/ack-bug-run-2026-10-01/plan.md. Preserve all accepted work; no installed, collaborator or release changes.
+
+Review: tasks/ack-bug-run-2026-10-01/final-review.md reports two confirmed P2 defects: an early receipt can expire before claim yet reach model work, and a delayed stale ACK can prune newer valid receipt evidence. Two focused regressions remain intentionally RED against unchanged product source. Cross-request unmatched-ACK tracing is a separate documented privacy limitation. Lead reviewed each owner finding, source path and actual output. All baseline/protected files and pins are unchanged; no live CHIM/provider/Skyrim proof or product fix is claimed.
+
+## Two ACK bug fixes — 2026-10-01
+
+- [x] Fix TTL admission at atomic claim without limiting already claimed providers.
+- [x] Reject stale receipt writers before they can prune newer valid evidence.
+- [x] Verify the two regressions and directly affected public-hook/direct-ACK/package behavior.
+- [x] Review independent findings, every current diff and protected-file/pin evidence.
+
+Plan: tasks/ack-bug-fix-2026-10-01/plan.md. Product fixes only; no installation, collaborator or release changes.
+
+Review: tasks/ack-bug-fix-2026-10-01/final-review.md accepts both minimal fixes after targeted expiry/timestamp and stale-admission regressions, existing evaluator/direct/hook checks, isolated PostgreSQL shutdown cases and package/syntax gates. The lead reviewed all current-task diffs, returned fixture corrections to the same owner and examined both independent reports and actual verification output. Exactly two runtime files and three tests changed; 52 protected files and pins are unchanged. Live CHIM/provider/Skyrim behavior remains unverified.
+
+## Publish Private Conversation 0.1.7
+
+- [ ] Prepare and review metadata, intended source inventory and PCV-only hub route.
+- [ ] Commit scoped source and verify immutable exports/reproducible packages.
+- [ ] Verify draft assets, publish, then advance update manifests.
+- [ ] Verify public releases/refs/downloads and record the review.
+
+Plan: tasks/release-0.1.7/plan.md. User authorized commit, push and publication; Mind Poisoning stays separate and installed environments remain untouched.

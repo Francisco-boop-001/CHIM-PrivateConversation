@@ -145,7 +145,7 @@ check(pcv_form_desired_state([
 ], 'valid-token', ['101' => 'A', '202' => 'B'])['exclude_player'] === false, 'Unchecked player exclusion must be preserved as false.');
 
 $off = pcv_form_desired_state(['csrf' => 'valid-token', 'action' => 'end'], 'valid-token', []);
-check($off === ['enabled' => false], 'End submission must stage only the disabled state.');
+check($off === ['enabled' => false], 'End submission must not require actor selections.');
 check(pcv_form_can_stage($off, 'a-valid-playthrough-key', false), 'End must remain available when the NPC catalog is unavailable.');
 check(!pcv_form_can_stage($off, null, false), 'End must not stage without a current playthrough identity.');
 check(!pcv_form_can_stage($arm, 'a-valid-playthrough-key', false), 'Arming a pair must require a current NPC catalog.');
@@ -208,8 +208,12 @@ check(str_contains($html, 'assets/ui-refresh.js') && str_contains($html, 'data-r
     'Automatic refresh must use a local external script and same-origin route.');
 check(str_contains($html, 'href="?view=logs"') && str_contains($html, 'data-logs-url="?view=logs"'),
     'The scene page must expose a standalone diagnostics route and same-origin client-report target.');
-check(str_contains($html, 'class="scope-form"') && str_contains($html, 'End on next input'),
+check(str_contains($html, 'class="scope-form"') && str_contains($html, 'type="submit">End now</button>')
+    && !str_contains($html, 'End on next input'),
     'Diagnostics-only access checks must leave the existing scene ARM and END controls intact.');
+check(str_contains($html, 'An already-started exchange may finish')
+    && str_contains($html, 'Stop All Dialogue control to stop playback immediately'),
+    'Immediate END must preserve the limit for already-started dialogue and audio.');
 check(str_contains($html, 'This list polls automatically for updates')
     && str_contains($html, 'Uses CHIM’s broader nearby range')
     && str_contains($html, 'AI observations expire after 45 seconds')
@@ -268,7 +272,7 @@ check(str_contains($stalePicker, 'Fresh nearby and AI activity could not be conf
 $catalogFailure = pcv_render_page('valid-token', ['status' => 'off', 'scope' => null, 'pending' => false],
     [], '', 'unavailable', false);
 check(str_contains($catalogFailure, 'ARM is unavailable; END remains available')
-    && str_contains($catalogFailure, 'type="submit">End on next input</button>'), 'END must remain available if the catalog fails.');
+    && str_contains($catalogFailure, 'type="submit">End now</button>'), 'END must remain available if the catalog fails.');
 $armedPicker = pcv_render_page('valid-token', [
     'status' => 'pending', 'scope' => null, 'pending' => true,
     'pending_scope' => ['enabled' => true, 'actor_a' => '101', 'actor_b' => '202', 'exclude_player' => true, 'bystander_mode' => 'exclude'],

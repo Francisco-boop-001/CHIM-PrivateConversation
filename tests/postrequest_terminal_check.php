@@ -119,6 +119,101 @@ PHP;
         'Registration exception fixture did not produce its expected result.');
 }
 
+function checkReflectionLoadFailure(string $root, string $hook): void
+{
+    $serverDirectory = $root . DIRECTORY_SEPARATOR . $hook . DIRECTORY_SEPARATOR . 'webroot'
+        . DIRECTORY_SEPARATOR . 'HerikaServer' . DIRECTORY_SEPARATOR . 'ext'
+        . DIRECTORY_SEPARATOR . 'private_conversation' . DIRECTORY_SEPARATOR . 'server';
+    $logDirectory = $root . DIRECTORY_SEPARATOR . $hook . DIRECTORY_SEPARATOR . 'logs';
+    if (!mkdir($serverDirectory, 0700, true) || !mkdir($logDirectory, 0700, true)) {
+        throw new RuntimeException('Could not create the isolated reflection-load fixture.');
+    }
+    foreach (['log.php', 'scope.php', $hook . '.php'] as $file) {
+        if (!copy(dirname(__DIR__) . '/server/' . $file, $serverDirectory . DIRECTORY_SEPARATOR . $file)) {
+            throw new RuntimeException('Could not copy an isolated reflection-load fixture file.');
+        }
+    }
+    if (file_put_contents($serverDirectory . DIRECTORY_SEPARATOR . 'reflection.php', "<?php\nfunction broken(\n") === false) {
+        throw new RuntimeException('Could not prepare the malformed optional reflection module.');
+    }
+
+    $child = $root . DIRECTORY_SEPARATOR . $hook . '_load_failure.php';
+    $childSource = "<?php\n"
+        . "define('PCV_LOG_TESTING', true);\n"
+        . 'require_once ' . var_export($serverDirectory . DIRECTORY_SEPARATOR . 'log.php', true) . ";\n"
+        . 'require_once ' . var_export($serverDirectory . DIRECTORY_SEPARATOR . 'scope.php', true) . ";\n"
+        . '$logDirectory = ' . var_export($logDirectory, true) . ";\n"
+        . "if (!pcv_log_set_test_directory(\$logDirectory)) { throw new RuntimeException('Could not set isolated logs.'); }\n";
+    if ($hook === 'prerequest') {
+        $childSource .= '$GLOBALS["gameRequest"] = ["_speech", "", "", json_encode(["speaker" => "Aela", "listener" => "Player", "speech" => "private fixture speech", "utterance_id" => "utt_1234567890abcdef"], JSON_THROW_ON_ERROR)];' . "\n"
+            . 'include ' . var_export($serverDirectory . DIRECTORY_SEPARATOR . 'prerequest.php', true) . ";\n"
+            . '$expectedEvent = "reflection.ack_error";' . "\n";
+    } else {
+        $childSource .= <<<'PHP'
+$scope = [
+    'status' => 'active',
+    'config_id' => '123e4567-e89b-42d3-a456-426614174000',
+    'actor_a_id' => '11',
+    'actor_b_id' => null,
+    'origin_request_type' => 'inputtext',
+    'origin_mode' => 'STANDARD',
+    'route' => 'solo_reflection',
+    'origin_dialogue' => 'private fixture dialogue',
+    'scope' => ['scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true],
+];
+$GLOBALS['PCV_REQUEST_SCOPE'] = $scope;
+$GLOBALS['gameRequest'] = ['inputtext', '', '', 'private fixture dialogue'];
+$GLOBALS['CHIM_EXECUTION_MODE'] = 'STANDARD';
+$GLOBALS['HERIKA_NAME'] = 'Aela';
+$GLOBALS['RELATIONSHIP_SYSTEM_ENABLED'] = true;
+pcvRoutingLogSetState($scope);
+pcvRoutingLogStart('inputtext');
+PHP;
+        $childSource .= "\ninclude " . var_export($serverDirectory . DIRECTORY_SEPARATOR . 'prepostrequest.php', true) . ";\n"
+            . '$expectedEvent = "reflection.registration_error";' . "\n";
+    }
+    $childSource .= '$expectedPhase = ' . var_export($hook === 'prerequest' ? 'ack' : 'registration', true) . ";\n"
+        . '$expectSoloRoute = ' . var_export($hook === 'prepostrequest', true) . ";\n";
+    $childSource .= <<<'PHP'
+$path = pcv_log_path();
+$text = is_string($path) && is_file($path) ? (string)file_get_contents($path) : '';
+$entries = array_map(static fn(string $line): array => json_decode($line, true, 32, JSON_THROW_ON_ERROR),
+    array_filter(explode("\n", $text), static fn(string $line): bool => $line !== ''));
+$failures = array_values(array_filter($entries, static fn(array $entry): bool =>
+    ($entry['event'] ?? null) === $expectedEvent
+    && ($entry['reason'] ?? null) === 'internal_error'
+    && ($entry['context']['phase'] ?? null) === $expectedPhase
+    && (!$expectSoloRoute
+        ? !array_key_exists('route', $entry['context'] ?? [])
+        : ($entry['context']['route'] ?? null) === 'solo_reflection')
+    && ($entry['context']['exception_class'] ?? null) === 'ParseError'
+    && ($entry['context']['source_file'] ?? null) === 'reflection.php'
+    && is_int($entry['context']['source_line'] ?? null)));
+if (count($failures) !== 1 || str_contains($text, 'private fixture speech')
+    || str_contains($text, 'private fixture dialogue')
+    || str_contains($text, 'broken(')) {
+    fwrite(STDERR, "FAIL: optional reflection load error was missing or exposed private content.\n");
+    exit(1);
+}
+echo "PASS: optional reflection load error contained\n";
+PHP;
+    if (file_put_contents($child, $childSource) === false) {
+        throw new RuntimeException('Could not write the isolated reflection-load runner.');
+    }
+    $process = proc_open([PHP_BINARY, $child], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (!is_resource($process)) {
+        throw new RuntimeException('Could not run the isolated reflection-load fixture.');
+    }
+    fclose($pipes[0]);
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    terminalCheck(proc_close($process) === 0, ucfirst($hook) . ' reflection load failure was not contained: ' . $stderr);
+    terminalCheck($stdout === "PASS: optional reflection load error contained\n",
+        ucfirst($hook) . ' reflection load fixture did not produce its expected result.');
+}
+
 $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'pcv-postrequest-' . bin2hex(random_bytes(8));
 if (!mkdir($directory, 0700) || !pcv_log_set_test_directory($directory)) {
     throw new RuntimeException('Could not create isolated logger fixture.');
@@ -176,6 +271,8 @@ try {
         'A hook observation must not imply transcript or playback evidence.');
 
     checkRegistrationException($directory . DIRECTORY_SEPARATOR . 'exception_fixture');
+    checkReflectionLoadFailure($directory . DIRECTORY_SEPARATOR . 'load_failure_fixtures', 'prerequest');
+    checkReflectionLoadFailure($directory . DIRECTORY_SEPARATOR . 'load_failure_fixtures', 'prepostrequest');
 
     echo "PASS: empty-output postrequest is logged as hook observation only\n";
 } finally {

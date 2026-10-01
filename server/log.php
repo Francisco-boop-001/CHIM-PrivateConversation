@@ -253,7 +253,8 @@ function pcv_log_reason_codes(): array
         'solo_rechat_unsupported', 'solo_unrouted_request', 'pair_continuation_player_excluded', 'mode_changed',
         'scope_ineligible', 'baseline_stale', 'output_unavailable', 'output_malformed', 'sentinel_mismatch',
         'event_unmatched', 'registry_unavailable', 'registry_corrupt', 'registration_missing', 'registration_stale',
-        'claim_taken', 'ack_mismatch', 'source_aborted', 'scope_changed', 'identity_changed',
+        'claim_taken', 'registration_busy', 'receipt_busy', 'receipt_unavailable', 'receipt_corrupt', 'ack_conflict',
+        'interaction_stale', 'native_ack_ambiguous', 'ack_mismatch', 'source_aborted', 'scope_changed', 'identity_changed',
         'mind_poisoning_unavailable', 'reflection_api_incompatible', 'evaluation_rejected', 'database_unavailable', 'observer_unsupported',
         'actors_unavailable', 'player_identity_unavailable', 'profile_switch_failed', 'actions_unavailable',
         'context_unavailable', 'hook_exception', 'debug_detail', 'presence_unavailable', 'presence_stale',
@@ -362,13 +363,15 @@ function pcv_log_reason_allowed(string $event, ?string $reason, ?string $outcome
             'scope_ineligible', 'baseline_stale', 'output_unavailable', 'output_malformed', 'sentinel_mismatch',
             'event_unmatched', 'registry_unavailable', 'registry_corrupt', 'registration_missing', 'registration_stale',
             'claim_taken', 'ack_mismatch', 'source_aborted', 'scope_changed', 'identity_changed',
-            'mind_poisoning_unavailable', 'reflection_api_incompatible', 'evaluation_rejected',
+            'mind_poisoning_unavailable', 'reflection_api_incompatible', 'evaluation_rejected', 'registration_busy',
+            'receipt_busy', 'ack_conflict', 'interaction_stale', 'native_ack_ambiguous',
         ], true);
     }
     if (in_array($event, ['reflection.registration_error', 'reflection.ack_error'], true)) {
         return in_array($reason, [
             'registry_unavailable', 'registry_corrupt', 'database_unavailable',
             'mind_poisoning_unavailable', 'reflection_api_incompatible', 'evaluation_failed', 'internal_error',
+            'receipt_unavailable', 'receipt_corrupt',
         ], true);
     }
     if ($event === 'reflection.output_registered') {

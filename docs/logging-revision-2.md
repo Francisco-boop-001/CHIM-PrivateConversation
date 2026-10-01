@@ -1,6 +1,6 @@
 # Follow the llama's paperwork
 
-Logging revision 2 shipped in Private Conversation 0.1.5 and remains in 0.1.6. The guide describes the published diagnostics contract; source checks and isolated PHP/browser fixtures are not a deployed CHIM or Skyrim test. The release notes record focused evidence, rather than letting the llama certify itself.
+Logging revision 2 shipped in Private Conversation 0.1.5 and remains in 0.1.6 and the 0.1.7 PRE-ALPHA candidate. The guide describes the diagnostics contract; source checks and isolated PHP/browser fixtures are not a deployed CHIM or Skyrim test. The release notes record focused evidence, rather than letting the llama certify itself.
 
 ## What the records answer
 
@@ -38,8 +38,9 @@ For a bug report, reproduce once, note settings and the observed result, then ex
 
 - `routing.request_prepared` means PCV applied its guards and prepared context.
 - `routing.request_finished` records the final observed PCV lifecycle outcome. `postrequest_observed` means that hook ran; it does not prove generated speech, playback or hearing. `unobserved` means no terminal outcome was observed.
+- The shutdown observer can emit `routing.request_finished` before a later ACK-reconciliation callback runs. Any resulting reflection accepted/skipped/error entry is a separate effect result; the earlier routing event never certifies opinion evaluation.
 - `reflection.output_registered` means the exact fresh native output passed registration checks. It does not prove audio played.
-- `reflection.ack_skipped` explains missing, stale, mismatched or already claimed acknowledgement evidence.
+- `reflection.ack_skipped` explains a missing, stale, mismatched or already claimed acknowledgement at that check. An initial `registration_missing` can be followed by a later separate reflection result if registration and the unique native ACK row reconcile during shutdown or source registration; read the correlated reflection events together.
 - `reflection.ack_error` records operational/integration failure. A returned MP failure never becomes a successful PCV evaluation record.
 - `reflection.evaluation_finished` means the MP adapter returned its committed status. A compatible observer can add bounded solo model and persistence diagnostics; without it, detailed outcomes remain in MP's own diagnostics.
 - Presence observations distinguish available, known empty, aged stale, missing, awaiting an ordering baseline, malformed and operationally unavailable. Missing evidence is never an empty room.
@@ -51,7 +52,7 @@ Routing requests that reached `routing.request_started` register a fatal shutdow
 
 ## Mind Poisoning stays in its own lane
 
-Mind Poisoning 0.1.13 introduced the optional sanitized `RequestLog` observer; 0.1.14 declares reflection API version 1. PCV 0.1.6 checks for exactly that version before invoking the evaluator, and treats a missing or unsupported API as `reflection_api_incompatible`. This companion check is separate from CHIM core compatibility. Scene direction works without Mind Poisoning.
+Mind Poisoning 0.1.13 introduced the optional sanitized `RequestLog` observer; 0.1.14 declares reflection API version 1. PCV 0.1.6 introduced, and 0.1.7 retains, the exact API-v1 check before invoking the evaluator; a missing or unsupported API is `reflection_api_incompatible`. This companion check is separate from CHIM core compatibility. Scene direction works without Mind Poisoning.
 
 When the compatible observer is available, PCV imports allowlisted solo model and persistence records with exact validated correlation IDs, fixed causes, bounded timings and opinion changes, and confirmed/unconfirmed/not-attempted commit state. The observer does not change Mind Poisoning's ordinary evaluation or sink delivery. If a compatible request log has no observer, PCV records `reflection.observer_unavailable`; this means unified telemetry is unavailable, not failed evaluation. Unknown commit stays unknown; zero change remains a legitimate result. These source and fixture checks do not establish live adapter, database, provider or gameplay behavior.
 

@@ -43,7 +43,12 @@ if (!is_file($reflectionPath) || is_link($reflectionPath)) {
     pcv_log_event('reflection.registration_error', 'error', 'failed', 'mind_poisoning_unavailable', $eventContext);
     return;
 }
-require_once $reflectionPath;
+try {
+    require_once $reflectionPath;
+} catch (Throwable $error) {
+    pcv_log_exception('reflection.registration_error', 'error', 'failed', 'internal_error', $error, $eventContext);
+    return;
+}
 if (!function_exists('pcvReflectionRegisterLastOutput')) {
     pcv_log_event('reflection.registration_error', 'error', 'failed', 'mind_poisoning_unavailable', $eventContext);
     return;

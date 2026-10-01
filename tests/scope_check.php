@@ -355,6 +355,13 @@ try {
         && ($unprefixed['game_request'][3] ?? null) === 'Player: Begin with a greeting.',
         'Unprefixed input did not gain the exact known prefix required by the core instruction parser.');
 
+    $colonPlayerRequest = ['inputtext', 't', 'g', 'Runa: Skyrim: Meet at dusk.', 'raw'];
+    $colonPlayer = pcvPrepareScopedInput($colonPlayerRequest, $snapshot, $scope, 'Runa: Skyrim', 'STANDARD');
+    scopeCheck(($colonPlayer['status'] ?? null) === 'blocked'
+        && ($colonPlayer['reason'] ?? null) === 'invalid_input_prefix'
+        && ($colonPlayer['game_request'] ?? null) === $colonPlayerRequest,
+        'An excluded-player name containing a colon was rewritten ambiguously instead of rejected unchanged.');
+
     $ambiguousRequest = ['inputtext_s', 't', 'g', 'Someone Else: say hello.', 'raw'];
     $ambiguousSnapshot = ['audience' => '|Aela|Bryn|', 'present_actors' => []];
     $ambiguous = pcvPrepareScopedInput($ambiguousRequest, $ambiguousSnapshot, $scope, 'Player', 'STANDARD');
@@ -832,32 +839,36 @@ try {
     $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => $soloStoredScope, 'pending' => false, 'config_id' => $fixtureConfigId];
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
     scopeCheck(scopeCheckHookStops($hookDir . '/preprocessing.php') === false
-        && scopeCheckHookStops($hookDir . '/context_pre.php')
+        && scopeCheckHookStops($hookDir . '/context_pre.php') === false
         && ($GLOBALS['HERIKA_NAME'] ?? null) === 'Nazeem'
         && ($GLOBALS['FUNCTIONS_ARE_ENABLED'] ?? null) === true
         && ($GLOBALS['PROMPT_NEARBY_SECTIONS'] ?? null) === 'unmodified internal prompt',
-        'An unstamped internal instruction bypassed the active solo-turn boundary or mutated profile/context before rejection.');
+        'An unrelated internal instruction inherited an active solo scene or mutated its ordinary context.');
 
     scopeCheckBeginSimulatedRequest();
     $GLOBALS['gameRequest'] = ['instruction', 't', 'g', 'an eligible pair event', 'raw'];
     $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => $storedScope, 'pending' => false, 'config_id' => $fixtureConfigId];
     $GLOBALS['HERIKA_NAME'] = 'Aela';
     $GLOBALS['CHIM_EXECUTION_MODE'] = 'STANDARD';
+    $GLOBALS['FUNCTIONS_ARE_ENABLED'] = true;
+    $GLOBALS['PROMPT_NEARBY_SECTIONS'] = 'ordinary generated-event context';
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
+    $cacheReadsBefore = $GLOBALS['pcv_fixture_cache_read_calls'] ?? 0;
+    $catalogReadsBefore = $GLOBALS['pcv_fixture_catalog_calls'] ?? 0;
     scopeCheck(scopeCheckHookStops($hookDir . '/preprocessing.php') === false
         && scopeCheckHookStops($hookDir . '/context_pre.php') === false
-        && ($GLOBALS['PCV_REQUEST_SCOPE']['route'] ?? null) === 'generated_event'
-        && ($GLOBALS['CACHE_PEOPLE'] ?? null) === '|Aela|Bryn|'
-        && ($GLOBALS['structuredOutputTemplate']['json_schema']['schema']['properties']['listener']['enum'] ?? null) === ['Bryn'],
-        'An untagged Standard core instruction did not retain the legacy active-pair context guard: '
-            . json_encode([
-                'scope' => $GLOBALS['PCV_REQUEST_SCOPE'] ?? null,
-                'audience' => $GLOBALS['CACHE_PEOPLE'] ?? null,
-                'listener_enum' => $GLOBALS['structuredOutputTemplate']['json_schema']['schema']['properties']['listener']['enum'] ?? null,
-                'stopped' => $GLOBALS['pcv_fixture_last_stop'] ?? null,
-            ], JSON_PARTIAL_OUTPUT_ON_ERROR));
-    $GLOBALS['head'] = [['role' => 'system', 'content' => $GLOBALS['PROMPT_NEARBY_SECTIONS'] . "\n<actions>Talk</actions>"]];
-    include $hookDir . '/context.php';
+        && !isset($GLOBALS['PCV_REQUEST_SCOPE'])
+        && ($GLOBALS['HERIKA_NAME'] ?? null) === 'Aela'
+        && ($GLOBALS['FUNCTIONS_ARE_ENABLED'] ?? null) === true
+        && ($GLOBALS['PROMPT_NEARBY_SECTIONS'] ?? null) === 'ordinary generated-event context'
+        && ($GLOBALS['pcv_fixture_cache_read_calls'] ?? 0) === $cacheReadsBefore
+        && ($GLOBALS['pcv_fixture_catalog_calls'] ?? 0) === $catalogReadsBefore,
+        'An unrelated Standard instruction inherited stored scene state or triggered actor resolution.');
+
+    scopeCheck(!pcvPairRoutedRequest([
+        'status' => 'active', 'scope' => $scope, 'origin_mode' => 'STANDARD',
+        'origin_request_type' => 'instruction', 'route' => 'generated_event',
+    ]), 'The removed fallback route remained admitted as a private pair request.');
 
     scopeCheckBeginSimulatedRequest();
     $GLOBALS['gameRequest'] = ['instruction', 't', 'g', 'stale pair presence event', 'raw'];
@@ -868,11 +879,13 @@ try {
     $scopeSkipBefore = scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible');
     $requestSkipBefore = scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible');
     $requestErrorBefore = scopeCheckEventCount('routing.request_error');
-    scopeCheck(scopeCheckHookStops($hookDir . '/context_pre.php')
-        && scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible') === $scopeSkipBefore + 1
-        && scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible') === $requestSkipBefore + 1
-        && scopeCheckEventCount('routing.request_error') === $requestErrorBefore,
-        'Expected stale presence in an untagged pair guard was not an informational fail-closed skip.');
+    $cacheReadsBefore = $GLOBALS['pcv_fixture_cache_read_calls'] ?? 0;
+    scopeCheck(scopeCheckHookStops($hookDir . '/context_pre.php') === false
+        && scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible') === $scopeSkipBefore
+        && scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible') === $requestSkipBefore
+        && scopeCheckEventCount('routing.request_error') === $requestErrorBefore
+        && ($GLOBALS['pcv_fixture_cache_read_calls'] ?? 0) === $cacheReadsBefore,
+        'An unrelated Standard event was blocked or consulted stale private-scene presence.');
     $GLOBALS['pcv_fixture_cached_presence'] = ['status' => 'ready', 'known_npcs' => ['101' => 'Aela', '202' => 'Bryn'], 'reason' => null];
 
     scopeCheckBeginSimulatedRequest();
@@ -882,8 +895,10 @@ try {
     $GLOBALS['CHIM_EXECUTION_MODE'] = 'STANDARD';
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
     scopeCheck(scopeCheckHookStops($hookDir . '/preprocessing.php') === false
-        && scopeCheckHookStops($hookDir . '/context_pre.php'),
-        'An untagged Standard narrator-bored generation bypassed the legacy active-pair speaker guard.');
+        && scopeCheckHookStops($hookDir . '/context_pre.php') === false
+        && !isset($GLOBALS['PCV_REQUEST_SCOPE'])
+        && ($GLOBALS['HERIKA_NAME'] ?? null) === 'The Narrator',
+        'An unrelated Standard narrator event inherited the active pair speaker guard.');
 
     scopeCheckBeginSimulatedRequest();
     $GLOBALS['gameRequest'] = $normalRequest;

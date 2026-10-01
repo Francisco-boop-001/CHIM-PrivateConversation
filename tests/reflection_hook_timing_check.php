@@ -35,21 +35,41 @@ $logs = $testRoot . '/logs';
 timingCheck(mkdir($server, 0700, true) && mkdir($mindPoisoning, 0700, true) && mkdir($logs, 0700),
     'Create the isolated extension layout.');
 $source = dirname(__DIR__) . '/server';
-foreach (['reflection.php', 'log.php'] as $file) {
+foreach (['reflection.php', 'reflection_receipt.php', 'log.php'] as $file) {
     timingCheck(copy($source . '/' . $file, $server . '/' . $file), 'Copy isolated ' . $file . '.');
 }
 
 $stateSource = <<<'PHP'
 <?php
-function pcv_current_identity(bool $refresh = false): array { return ['key' => str_repeat('a', 64), 'player_name' => 'Player']; }
+function pcv_current_identity(bool $refresh = false): array
+{
+    if ($refresh) { $GLOBALS['pcv_identity_refresh_calls']++; }
+    return ['key' => str_repeat('a', 64), 'player_name' => 'Player'];
+}
 function pcv_valid_key($key): bool { return is_string($key) && preg_match('/\A[a-f0-9]{64}\z/D', $key) === 1; }
-function pcv_state_directory(?string $directory): string { return $directory ?? (__DIR__ . '/state'); }
-function pcv_lock_state(string $directory, bool $create, int $mode) { return null; }
+function pcv_state_directory(?string $directory): string
+{
+    $path = $directory ?? (__DIR__ . '/state');
+    if (!is_dir($path) && !mkdir($path, 0700, true)) { throw new RuntimeException('Could not create fake state directory.'); }
+    return $path;
+}
+function pcv_lock_state(string $directory, bool $create, int $mode) { return (object)[]; }
 function pcv_unlock_state($handle): void {}
+function pcv_load_store(string $directory): array
+{
+    $GLOBALS['pcv_state_read_calls']++;
+    return $GLOBALS['pcv_test_state'] ?? ['kind' => 'missing'];
+}
+function chimInteractionBegin(): void { $GLOBALS['chim_interaction_generation'] ??= 1; }
+function chimInteractionState(): array { return ['enabled' => true, 'generation' => $GLOBALS['runtime_test_interaction_generation'] ?? 1]; }
 PHP;
 $scopeSource = <<<'PHP'
 <?php
-function pcvReadResolvedScope(): array { return $GLOBALS['pcv_test_scope'] ?? ['status' => 'off']; }
+function pcvReadResolvedScope(): array
+{
+    $GLOBALS['pcv_scope_resolution_calls']++;
+    return $GLOBALS['pcv_test_scope'] ?? ['status' => 'off'];
+}
 function pcv_scope_name_key(string $name): string
 {
     $name = trim($name);
@@ -83,6 +103,16 @@ if (!pcv_log_set_test_directory(__LOGS__)) {
 
 $GLOBALS['pcv_provider_calls'] = 0;
 $GLOBALS['pcv_store_constructions'] = 0;
+$GLOBALS['pcv_identity_refresh_calls'] = 0;
+$GLOBALS['pcv_scope_resolution_calls'] = 0;
+$GLOBALS['pcv_state_read_calls'] = 0;
+$GLOBALS['chim_interaction_generation'] = 1;
+$GLOBALS['runtime_test_interaction_generation'] = 1;
+$GLOBALS['pcv_test_state'] = ['kind' => 'ready', 'state' => [
+    'key' => str_repeat('a', 64),
+    'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
+    'pending' => null,
+]];
 $GLOBALS['pcv_test_scope'] = [
     'status' => 'active',
     'config_id' => '123e4567-e89b-42d3-a456-426614174000',
@@ -109,6 +139,53 @@ if (count($misses) !== 1 || ($misses[0]['severity'] ?? null) !== 'info'
 if (str_contains($logText, $utteranceId)
     || $GLOBALS['pcv_provider_calls'] !== 0 || $GLOBALS['pcv_store_constructions'] !== 0) {
     throw new RuntimeException('An unmatched ACK must not expose its ID or call the store/provider.');
+}
+
+foreach ([
+    ['kind' => 'missing'],
+    ['kind' => 'ready', 'state' => ['active' => null, 'pending' => null]],
+    ['kind' => 'ready', 'state' => ['active' => [
+        'config' => ['enabled' => true, 'scene_mode' => 'pair', 'actor_a' => 'Aela', 'actor_b' => 'Bryn', 'exclude_player' => false], 'expires_at' => time() + 60,
+    ], 'pending' => null]],
+    ['kind' => 'ready', 'state' => ['active' => null, 'pending' => [
+        'config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'expires_at' => time() + 60,
+    ]]],
+    ['kind' => 'ready', 'state' => ['active' => [
+        'config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'expires_at' => time() - 1,
+    ], 'pending' => null]],
+    ['kind' => 'unavailable'],
+] as $inactiveState) {
+    $GLOBALS['pcv_test_state'] = $inactiveState;
+    $GLOBALS['pcv_identity_refresh_calls'] = 0;
+    $GLOBALS['pcv_scope_resolution_calls'] = 0;
+    pcvReflectionEvaluateAck($ack);
+    if ($GLOBALS['pcv_identity_refresh_calls'] !== 0 || $GLOBALS['pcv_scope_resolution_calls'] !== 0) {
+        throw new RuntimeException('Missing, off, pair, pending, expired, or unreadable state must skip fresh identity/scope resolution.');
+    }
+}
+
+$GLOBALS['pcv_test_state'] = ['kind' => 'ready', 'state' => [
+    'key' => str_repeat('b', 64),
+    'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
+    'pending' => null,
+]];
+$GLOBALS['pcv_test_scope'] = ['status' => 'off'];
+$GLOBALS['pcv_identity_refresh_calls'] = 0;
+$GLOBALS['pcv_scope_resolution_calls'] = 0;
+pcvReflectionEvaluateAck($ack);
+if ($GLOBALS['pcv_identity_refresh_calls'] !== 1 || $GLOBALS['pcv_scope_resolution_calls'] !== 1) {
+    throw new RuntimeException('A mismatched active-state hint must still require fresh authoritative scope resolution.');
+}
+$GLOBALS['pcv_test_scope'] = [
+    'status' => 'active',
+    'config_id' => '123e4567-e89b-42d3-a456-426614174000',
+    'actor_a_id' => '11',
+    'scope' => ['scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true],
+];
+$logText = is_string($logPath) && is_file($logPath) ? (string)file_get_contents($logPath) : '';
+$mismatchedStateMisses = substr_count($logText, '"reason":"registration_missing"');
+if ($mismatchedStateMisses !== 1 || $GLOBALS['pcv_provider_calls'] !== 0 || $GLOBALS['pcv_store_constructions'] !== 0) {
+    throw new RuntimeException('A stale playthrough hint must not create an unmatched-ACK diagnostic or opinion effect.');
 }
 
 pcvReflectionEvaluateAck(['_speech', '', '', json_encode(['speaker' => 'Aela', 'speech' => 'malformed no ID'], JSON_THROW_ON_ERROR)]);

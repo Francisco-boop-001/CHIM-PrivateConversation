@@ -7,47 +7,7 @@ $requestType = is_string($GLOBALS['gameRequest'][0] ?? null) ? $GLOBALS['gameReq
 $requestScope = $GLOBALS['PCV_REQUEST_SCOPE'] ?? null;
 $validStatuses = ['active', 'off', 'pending', 'unavailable', 'identity_unavailable', 'ignored'];
 if (!is_array($requestScope) || !in_array($requestScope['status'] ?? null, $validStatuses, true)) {
-    // Preserve the legacy active-pair guard for generated Standard event types
-    // that preprocessing does not route. Solo reflection must remain tied to its
-    // one armed ordinary input and cannot consume an unrelated generated turn.
-    $managedRequestTypes = ['inputtext', 'inputtext_s', 'ginputtext', 'ginputtext_s', 'rechat', 'continue', 'continue_group'];
-    if (in_array($requestType, $managedRequestTypes, true)
-        || pcvEffectiveExecutionMode($GLOBALS['gameRequest'] ?? null) !== 'STANDARD') {
-        return;
-    }
-    try {
-        $resolvedScope = pcvReadResolvedScope();
-    } catch (Throwable $error) {
-        pcvRoutingLogStart($requestType);
-        pcvRoutingLogException('context_pre', $error);
-        throw $error;
-    }
-    if (in_array($resolvedScope['status'] ?? null, ['off', 'pending', 'identity_unavailable'], true)) {
-        pcvRoutingLogDetail(
-            'context_pre',
-            ($resolvedScope['status'] ?? null) === 'pending' ? 'scope_pending'
-                : (($resolvedScope['status'] ?? null) === 'off' ? 'scope_off' : 'identity_unavailable'),
-            $requestType,
-            $resolvedScope
-        );
-        return;
-    }
-    pcvRoutingLogSetState($resolvedScope);
-    pcvRoutingLogStart($requestType);
-    if (($resolvedScope['status'] ?? null) !== 'active' || !is_array($resolvedScope['scope'] ?? null)) {
-        if (($resolvedScope['reason'] ?? null) === 'scene_not_eligible') {
-            pcvBlockRequest('Private Conversation actors are no longer eligible; request stopped for safety.', 'scene_not_eligible', 'context_pre', $resolvedScope);
-        }
-        pcvBlockRequest('Private Conversation state or actors are unavailable; request stopped for safety.', 'state_unavailable', 'context_pre', $resolvedScope, true);
-    }
-    if (($resolvedScope['scope']['scene_mode'] ?? 'pair') === 'solo') {
-        pcvBlockRequest('Solo reflection only runs on its armed ordinary Standard input.', 'solo_unrouted_request', 'context_pre', $resolvedScope);
-    }
-    $requestScope = array_replace($resolvedScope, [
-        'status' => 'active', 'start' => false, 'route' => 'generated_event',
-        'origin_request_type' => $requestType, 'origin_mode' => 'STANDARD',
-    ]);
-    $GLOBALS['PCV_REQUEST_SCOPE'] = $requestScope;
+    return;
 }
 if (in_array($requestScope['status'], ['off', 'pending', 'identity_unavailable', 'ignored'], true)) {
     return;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/log.php';
 require_once __DIR__ . '/state.php';
 require_once __DIR__ . '/scope.php';
+require_once __DIR__ . '/reflection_receipt.php';
 
 const PCV_REFLECTION_REGISTRY_MAX_BYTES = 8192;
 const PCV_REFLECTION_REGISTRY_TTL = 600;
@@ -34,56 +35,185 @@ function pcvReflectionRegisterLastOutput(array $requestScope): void
 
 function pcvReflectionEvaluateAck(array $gameRequest): void
 {
-    if (($gameRequest[0] ?? null) !== '_speech') {
+    $tuple = pcv_reflection_ack_tuple($gameRequest);
+    if ($tuple === null) {
         return;
     }
-    $utteranceId = pcv_reflection_ack_utterance_id($gameRequest);
-    if ($utteranceId === null) {
+    $cheapScope = pcv_reflection_active_solo_precheck();
+    if ($cheapScope === null || pcv_scope_name_key($tuple['speaker']) !== pcv_scope_name_key($cheapScope['actor_name'])) {
         return;
     }
+
+    $ackGeneration = null;
+    if (!pcv_reflection_capture_interaction_generation($ackGeneration)) {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'interaction_stale', $cheapScope);
+        return;
+    }
+    $scope = pcv_reflection_current_solo_scope();
+    if ($scope === null || ($scope['config_id'] ?? null) !== $cheapScope['config_id']
+        || ($scope['pcv_key'] ?? null) !== $cheapScope['pcv_key']
+        || pcv_scope_name_key((string)($scope['scope']['actor_a'] ?? '')) !== pcv_scope_name_key($cheapScope['actor_name'])
+        || !pcv_reflection_ack_matches_solo_scope($gameRequest, $scope)) {
+        return;
+    }
+    $utteranceId = $tuple['utterance_id'];
+    $ackMetadata = [
+        'created_at' => time(),
+        'ack_generation' => $ackGeneration,
+        'tuple_digest' => pcv_reflection_ack_tuple_digest($tuple),
+    ];
     $probe = pcv_reflection_registry_probe();
+    if ($probe['kind'] === 'ready' && $probe['record']['registration']['utterance_id'] === $utteranceId) {
+        if ($probe['record']['status'] !== 'registered') {
+            pcv_reflection_log('reflection.ack_skipped', 'ack', 'claim_taken', $probe['record']);
+            return;
+        }
+        if (!pcv_reflection_record_fresh($probe['record'])) {
+            pcv_reflection_log('reflection.ack_skipped', 'ack', 'registration_stale', $probe['record']);
+            return;
+        }
+        try {
+            $mindPoisoningAvailable = pcv_reflection_load_mind_poisoning();
+        } catch (Throwable $error) {
+            pcv_reflection_log('reflection.ack_error', 'ack', 'internal_error', $probe['record'], $error);
+            return;
+        }
+        if (!$mindPoisoningAvailable) {
+            pcv_reflection_log('reflection.ack_error', 'ack', pcv_reflection_mind_poisoning_unavailable_reason(), $probe['record']);
+            return;
+        }
+
+        try {
+            $store = new \ChimMindPoisoning\PostgresStoreDb();
+            pcv_reflection_evaluate_with_store($gameRequest, $store, null, null, null, null, $ackMetadata);
+        } catch (Throwable $error) {
+            pcv_reflection_log('reflection.ack_error', 'ack', 'database_unavailable', $probe['record'], $error);
+        }
+        return;
+    }
+
+    $storedReceipt = pcv_reflection_store_ack_receipt($tuple, $scope, $ackGeneration);
+    if ($storedReceipt['kind'] !== 'ready') {
+        $event = in_array($storedReceipt['kind'], ['invalid', 'unavailable'], true)
+            ? 'reflection.ack_error' : 'reflection.ack_skipped';
+        $reason = match ($storedReceipt['kind']) {
+            'invalid' => 'receipt_corrupt',
+            'unavailable' => 'receipt_unavailable',
+            'conflict' => 'ack_conflict',
+            'interaction_stale' => 'interaction_stale',
+            'scope_changed' => 'scope_changed',
+            default => 'receipt_busy',
+        };
+        pcv_reflection_log($event, 'ack', $reason, $scope);
+        return;
+    }
+    $receipt = $storedReceipt['receipt'];
     if ($probe['kind'] === 'missing'
         || ($probe['kind'] === 'ready' && $probe['record']['registration']['utterance_id'] !== $utteranceId)) {
-        pcv_reflection_log_unmatched_ack($gameRequest);
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'registration_missing', $scope);
+        pcvReflectionQueueAckReconciliation($gameRequest, $receipt);
         return;
     }
     if ($probe['kind'] === 'invalid' || $probe['kind'] === 'unavailable') {
         pcv_reflection_log('reflection.ack_error', 'ack', $probe['kind'] === 'invalid' ? 'registry_corrupt' : 'registry_unavailable');
-        return;
-    }
-    if ($probe['record']['status'] !== 'registered') {
-        pcv_reflection_log('reflection.ack_skipped', 'ack', 'claim_taken', $probe['record']);
-        return;
-    }
-    if (!pcv_reflection_record_fresh($probe['record'])) {
-        pcv_reflection_log('reflection.ack_skipped', 'ack', 'registration_stale', $probe['record']);
-        return;
-    }
-    try {
-        $mindPoisoningAvailable = pcv_reflection_load_mind_poisoning();
-    } catch (Throwable $error) {
-        pcv_reflection_log('reflection.ack_error', 'ack', 'internal_error', $probe['record'], $error);
-        return;
-    }
-    if (!$mindPoisoningAvailable) {
-        pcv_reflection_log('reflection.ack_error', 'ack', pcv_reflection_mind_poisoning_unavailable_reason(), $probe['record']);
-        return;
-    }
-
-    try {
-        $store = new \ChimMindPoisoning\PostgresStoreDb();
-        pcv_reflection_evaluate_with_store($gameRequest, $store);
-    } catch (Throwable $error) {
-        pcv_reflection_log('reflection.ack_error', 'ack', 'database_unavailable', $probe['record'], $error);
+        pcvReflectionQueueAckReconciliation($gameRequest, $receipt);
     }
 }
 
-function pcv_reflection_log_unmatched_ack(array $gameRequest): void
+function pcv_reflection_active_solo_precheck(?string $stateDirectory = null): ?array
 {
-    $scope = pcv_reflection_current_solo_scope();
-    if ($scope !== null && pcv_reflection_ack_matches_solo_scope($gameRequest, $scope)) {
-        pcv_reflection_log('reflection.ack_skipped', 'ack', 'registration_missing', $scope);
+    try {
+        $directory = pcv_state_directory($stateDirectory);
+        $handle = pcv_lock_state($directory, false, LOCK_SH);
+        if ($handle === null) {
+            return null;
+        }
+        try {
+            $loaded = pcv_load_store($directory);
+            return $loaded['kind'] === 'ready'
+                ? pcv_reflection_active_solo_from_state($loaded['state'] ?? [])
+                : null;
+        } finally {
+            pcv_unlock_state($handle);
+        }
+    } catch (Throwable) {
+        return null;
     }
+}
+
+function pcv_reflection_active_solo_from_state(array $state): ?array
+{
+    $active = $state['active'] ?? null;
+    $config = is_array($active) ? ($active['config'] ?? null) : null;
+    if (!is_array($active) || !is_array($config)
+        || !pcv_valid_key($state['key'] ?? '') || ($config['enabled'] ?? null) !== true
+        || ($config['scene_mode'] ?? null) !== 'solo' || ($config['actor_b'] ?? null) !== null
+        || ($config['exclude_player'] ?? null) !== true
+        || !is_int($active['expires_at'] ?? null) || $active['expires_at'] <= time()
+        || !is_string($active['config_id'] ?? null) || !pcv_log_valid_uuid($active['config_id'])
+        || !is_string($config['actor_a'] ?? null) || trim($config['actor_a']) === '') {
+        return null;
+    }
+    return [
+        'pcv_key' => $state['key'],
+        'config_id' => $active['config_id'],
+        'actor_name' => $config['actor_a'],
+    ];
+}
+
+function pcv_reflection_capture_interaction_generation(?int &$generation): bool
+{
+    $generation = null;
+    try {
+        $reason = null;
+        if (function_exists('ChimMindPoisoning\\speechAckInteractionStatus')) {
+            if (\ChimMindPoisoning\speechAckInteractionStatus($reason) !== 'ok') {
+                return false;
+            }
+        } elseif (function_exists('chimInteractionBegin')) {
+            chimInteractionBegin();
+        }
+        $requestGeneration = $GLOBALS['chim_interaction_generation'] ?? null;
+        if (!is_int($requestGeneration) || !function_exists('chimInteractionState')) {
+            return false;
+        }
+        $state = chimInteractionState();
+        if (!is_array($state) || ($state['enabled'] ?? null) !== true
+            || !is_int($state['generation'] ?? null) || $state['generation'] !== $requestGeneration) {
+            return false;
+        }
+        $generation = $requestGeneration;
+        return true;
+    } catch (Throwable) {
+        return false;
+    }
+}
+
+function pcv_reflection_interaction_epochs_match(int $sourceGeneration, int $ackGeneration): bool
+{
+    try {
+        if (!function_exists('chimInteractionState')) {
+            return false;
+        }
+        $state = chimInteractionState();
+        return is_array($state) && ($state['enabled'] ?? null) === true
+            && is_int($state['generation'] ?? null)
+            && $state['generation'] === $sourceGeneration
+            && $state['generation'] === $ackGeneration;
+    } catch (Throwable) {
+        return false;
+    }
+}
+
+function pcvReflectionQueueAckReconciliation(array $gameRequest, array $receipt): void
+{
+    register_shutdown_function(static function () use ($gameRequest, $receipt): void {
+        try {
+            pcvReflectionReconcileAckReceipt($gameRequest, $receipt);
+        } catch (Throwable $error) {
+            pcv_reflection_log('reflection.ack_error', 'ack', 'internal_error', $receipt, $error);
+        }
+    });
 }
 
 function pcv_reflection_current_solo_scope(): ?array
@@ -102,34 +232,15 @@ function pcv_reflection_current_solo_scope(): ?array
 
 function pcv_reflection_ack_matches_solo_scope(array $gameRequest, array $scope): bool
 {
-    $raw = $gameRequest[3] ?? null;
-    if (($gameRequest[0] ?? null) !== '_speech' || !is_string($raw) || strlen($raw) > 16384 || preg_match('//u', $raw) !== 1) {
-        return false;
-    }
-    try {
-        $payload = json_decode($raw, false, 32, JSON_THROW_ON_ERROR);
-    } catch (JsonException) {
-        return false;
-    }
-    if (!$payload instanceof stdClass) {
-        return false;
-    }
-    $speaker = $payload->speaker ?? null;
-    $listener = $payload->listener ?? null;
-    $speech = $payload->speech ?? null;
-    $utteranceId = $payload->utterance_id ?? null;
-    if (!is_string($speaker) || !is_string($listener) || !is_string($speech) || !is_string($utteranceId)
-        || strlen($speaker) > 256 || strlen($listener) > 256 || strlen($speech) > 12000
-        || trim($speaker) === '' || trim($listener) === '' || trim($speech) === ''
-        || preg_match('//u', $speaker) !== 1 || preg_match('//u', $listener) !== 1 || preg_match('//u', $speech) !== 1
-        || preg_match('/\Autt_[A-Za-z0-9_-]{8,128}\z/D', trim($utteranceId)) !== 1
-        || pcv_scope_name_key($speaker) !== pcv_scope_name_key($scope['scope']['actor_a'])) {
+    $tuple = pcv_reflection_ack_tuple($gameRequest);
+    if (!is_array($tuple)
+        || pcv_scope_name_key($tuple['speaker']) !== pcv_scope_name_key((string)($scope['scope']['actor_a'] ?? ''))) {
         return false;
     }
     $playerName = function_exists('pcv_current_player_name') ? pcv_current_player_name() : null;
     foreach ([$playerName, 'Player', 'the Player', 'Dragonborn', 'the Dragonborn'] as $candidate) {
         if (is_string($candidate) && trim($candidate) !== ''
-            && pcv_scope_name_key($listener) === pcv_scope_name_key($candidate)) {
+            && pcv_scope_name_key($tuple['listener']) === pcv_scope_name_key($candidate)) {
             return true;
         }
     }
@@ -143,6 +254,9 @@ function pcvReflectionRevalidate(array $registration, string $phase, string $cla
 
 function pcv_reflection_load_mind_poisoning(): bool
 {
+    if (pcv_reflection_mind_poisoning_api_compatible()) {
+        return true;
+    }
     $path = dirname(__DIR__, 2) . '/ext/mind_poisoning/reflection.php';
     if (is_link($path) || !is_file($path)) {
         return false;
@@ -334,7 +448,9 @@ function pcv_reflection_register_with_store(
     array $requestScope,
     \ChimMindPoisoning\StoreDb $store,
     ?string $stateDirectory = null,
-    ?callable $freshScopeReader = null
+    ?callable $freshScopeReader = null,
+    ?callable $nativeAckReader = null,
+    ?callable $requestModel = null
 ): string {
     if (($requestScope['route'] ?? null) !== 'solo_reflection') {
         return 'not_applicable';
@@ -342,6 +458,12 @@ function pcv_reflection_register_with_store(
     if (!pcv_reflection_request_is_eligible($requestScope)) {
         pcv_reflection_log('reflection.registration_skipped', 'registration', 'scope_ineligible', $requestScope);
         return 'scope_ineligible';
+    }
+    $sourceGeneration = $GLOBALS['chim_interaction_generation'] ?? null;
+    if (!is_int($sourceGeneration) || $sourceGeneration < 0
+        || !pcv_reflection_interaction_epochs_match($sourceGeneration, $sourceGeneration)) {
+        pcv_reflection_log('reflection.registration_skipped', 'registration', 'interaction_stale', $requestScope);
+        return 'interaction_stale';
     }
 
     $baselineId = $requestScope['baseline_utterance_id'] ?? null;
@@ -392,7 +514,7 @@ function pcv_reflection_register_with_store(
         return 'output_malformed';
     }
     $expectedRecord = [
-        'version' => 1,
+        'version' => 2,
         'pcv_key' => $freshScope['pcv_key'] ?? null,
         'config_id' => $requestScope['config_id'],
         'actor_id' => (int)$actorId,
@@ -403,6 +525,8 @@ function pcv_reflection_register_with_store(
         'created_at' => time(),
         'status' => 'registered',
         'claim_token' => null,
+        'source_generation' => $sourceGeneration,
+        'ack_receipt' => null,
         'registration' => null,
     ];
     $scopeRecord = $expectedRecord;
@@ -484,16 +608,34 @@ function pcv_reflection_register_with_store(
         $directory = pcv_state_directory($stateDirectory);
         $handle = pcv_lock_state($directory, true, LOCK_EX);
         $skipReason = null;
+        $shouldReconcile = true;
         try {
             $existing = pcv_reflection_read_locked($directory);
-            if ($existing['kind'] === 'invalid') {
+            $receipts = pcv_reflection_read_receipts_locked($directory);
+            if ($existing['kind'] === 'invalid' || $receipts['kind'] === 'invalid') {
                 $skipReason = 'registry_corrupt';
-            } elseif ($existing['kind'] === 'unavailable') {
+            } elseif ($existing['kind'] === 'unavailable' || $receipts['kind'] === 'unavailable') {
                 $skipReason = 'registry_unavailable';
-            } elseif ($existing['kind'] === 'ready'
-                && $existing['record']['status'] === 'claimed'
-                && pcv_reflection_record_fresh($existing['record'])) {
-                $skipReason = 'claim_taken';
+            } elseif ($existing['kind'] === 'ready' && pcv_reflection_record_fresh($existing['record'])) {
+                $existingRecord = $existing['record'];
+                $sameId = $existingRecord['registration']['utterance_id'] === $utteranceId;
+                if ($sameId && $existingRecord['status'] !== 'registered') {
+                    $skipReason = 'claim_taken';
+                } elseif ($sameId && ($existingRecord['version'] !== 2
+                    || !pcv_reflection_registration_matches($existingRecord['registration'], $record['registration'])
+                    || $existingRecord['source_generation'] !== $record['source_generation']
+                    || $existingRecord['pcv_key'] !== $record['pcv_key'])) {
+                    $skipReason = 'registration_busy';
+                } elseif ($sameId) {
+                    $record = $existingRecord;
+                    $shouldReconcile = false;
+                } elseif ($existingRecord['status'] === 'claimed') {
+                    $skipReason = 'claim_taken';
+                } elseif ($existingRecord['status'] === 'registered') {
+                    $skipReason = 'registration_busy';
+                } else {
+                    pcv_reflection_write_locked($directory, $record);
+                }
             } else {
                 pcv_reflection_write_locked($directory, $record);
             }
@@ -512,7 +654,189 @@ function pcv_reflection_register_with_store(
     }
 
     pcv_reflection_log('reflection.output_registered', 'registration', '', $record);
+    if ($shouldReconcile) {
+        pcv_reflection_reconcile_registration($record, $store, $stateDirectory, $freshScopeReader, $nativeAckReader, $requestModel);
+    }
     return 'registered';
+}
+
+function pcv_reflection_reconcile_registration(
+    array $record,
+    \ChimMindPoisoning\StoreDb $store,
+    ?string $stateDirectory,
+    ?callable $freshScopeReader,
+    ?callable $nativeAckReader = null,
+    ?callable $requestModel = null
+): string {
+    if (($record['version'] ?? null) !== 2 || !pcv_reflection_valid_record($record)) {
+        return 'registration_stale';
+    }
+    $receipt = pcv_reflection_receipt_for_registration($record, $stateDirectory);
+    if ($receipt['kind'] === 'missing') {
+        return 'registration_missing';
+    }
+    if ($receipt['kind'] !== 'ready') {
+        $reason = $receipt['kind'] === 'invalid' ? 'receipt_corrupt' : 'receipt_unavailable';
+        pcv_reflection_log('reflection.ack_error', 'ack', $reason, $record);
+        return $receipt['kind'] === 'invalid' ? 'receipt_corrupt' : 'receipt_unavailable';
+    }
+    return pcv_reflection_reconcile_receipt_with_store(
+        $receipt['receipt'], $store, null, $stateDirectory, $freshScopeReader, $nativeAckReader, $requestModel
+    );
+}
+
+function pcvReflectionReconcileAckReceipt(array $gameRequest, array $receipt): string
+{
+    if (!pcv_reflection_load_mind_poisoning()) {
+        pcv_reflection_log('reflection.ack_error', 'ack', pcv_reflection_mind_poisoning_unavailable_reason(), $receipt);
+        return 'mind_poisoning_unavailable';
+    }
+    $store = new \ChimMindPoisoning\PostgresStoreDb();
+    return pcv_reflection_reconcile_receipt_with_store($receipt, $store, $gameRequest);
+}
+
+function pcv_reflection_receipt_for_registration(array $record, ?string $stateDirectory): array
+{
+    try {
+        $directory = pcv_state_directory($stateDirectory);
+        $handle = pcv_lock_state($directory, false, LOCK_SH);
+        if ($handle === null) {
+            return ['kind' => 'missing'];
+        }
+        try {
+            $loaded = pcv_reflection_read_receipts_locked($directory);
+            if ($loaded['kind'] !== 'ready') {
+                return ['kind' => $loaded['kind']];
+            }
+            foreach ($loaded['receipts'] as $receipt) {
+                if ($receipt['utterance_id'] === $record['registration']['utterance_id']) {
+                    return pcv_reflection_receipt_fresh($receipt)
+                        ? ['kind' => 'ready', 'receipt' => $receipt]
+                        : ['kind' => 'missing'];
+                }
+            }
+            return ['kind' => 'missing'];
+        } finally {
+            pcv_unlock_state($handle);
+        }
+    } catch (Throwable) {
+        return ['kind' => 'unavailable'];
+    }
+}
+
+function pcv_reflection_reconcile_receipt_with_store(
+    array $receipt,
+    \ChimMindPoisoning\StoreDb $store,
+    ?array $originalGameRequest = null,
+    ?string $stateDirectory = null,
+    ?callable $freshScopeReader = null,
+    ?callable $nativeAckReader = null,
+    ?callable $requestModel = null
+): string {
+    if (!pcv_reflection_valid_receipt($receipt) || !pcv_reflection_receipt_fresh($receipt)) {
+        return 'registration_stale';
+    }
+    try {
+        $directory = pcv_state_directory($stateDirectory);
+        $handle = pcv_lock_state($directory, false, LOCK_SH);
+        if ($handle === null) {
+            return 'registration_missing';
+        }
+        try {
+            $registry = pcv_reflection_read_locked($directory);
+            $receipts = pcv_reflection_read_receipts_locked($directory);
+            if ($registry['kind'] === 'invalid' || $receipts['kind'] === 'invalid') {
+                pcv_reflection_log('reflection.ack_error', 'ack', 'registry_corrupt');
+                return 'registry_corrupt';
+            }
+            if ($registry['kind'] === 'unavailable' || $receipts['kind'] === 'unavailable') {
+                pcv_reflection_log('reflection.ack_error', 'ack', 'registry_unavailable');
+                return 'registry_unavailable';
+            }
+            if ($registry['kind'] !== 'ready' || $receipts['kind'] !== 'ready') {
+                return 'registration_missing';
+            }
+            $record = $registry['record'];
+            $storedReceipt = null;
+            foreach ($receipts['receipts'] as $candidate) {
+                if ($candidate['utterance_id'] === $receipt['utterance_id']) {
+                    $storedReceipt = $candidate;
+                    break;
+                }
+            }
+            if ($record['version'] !== 2 || $record['status'] !== 'registered'
+                || !pcv_reflection_record_fresh($record)
+                || $record['registration']['utterance_id'] !== $receipt['utterance_id']
+                || !is_array($storedReceipt) || !pcv_reflection_receipts_match($storedReceipt, $receipt)
+                || $record['pcv_key'] !== $receipt['pcv_key']
+                || $record['config_id'] !== $receipt['config_id']
+                || $record['actor_id'] !== $receipt['actor_id']
+                || $record['actor_name'] !== $receipt['actor_name']) {
+                return 'registration_missing';
+            }
+        } finally {
+            pcv_unlock_state($handle);
+        }
+    } catch (Throwable $error) {
+        pcv_reflection_log('reflection.ack_error', 'ack', 'registry_unavailable', $receipt, $error);
+        return 'registry_unavailable';
+    }
+
+    if (!pcv_reflection_interaction_epochs_match($record['source_generation'], $receipt['ack_generation'])) {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'interaction_stale', $record);
+        return 'interaction_stale';
+    }
+    try {
+        $native = $nativeAckReader !== null
+            ? $nativeAckReader($receipt['utterance_id'])
+            : pcv_reflection_lookup_native_ack($receipt['utterance_id']);
+    } catch (Throwable $error) {
+        pcv_reflection_log('reflection.ack_error', 'ack', 'database_unavailable', $record, $error);
+        return 'database_unavailable';
+    }
+    if (!is_array($native) || !is_string($native['kind'] ?? null)) {
+        pcv_reflection_log('reflection.ack_error', 'ack', 'database_unavailable', $record);
+        return 'database_unavailable';
+    }
+    if ($native['kind'] === 'missing') {
+        return 'registration_missing';
+    }
+    if ($native['kind'] === 'ambiguous') {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'native_ack_ambiguous', $record);
+        return 'native_ack_ambiguous';
+    }
+    if ($native['kind'] === 'unavailable') {
+        pcv_reflection_log('reflection.ack_error', 'ack', 'database_unavailable', $record);
+        return 'database_unavailable';
+    }
+    if ($native['kind'] !== 'row') {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $record);
+        return 'ack_mismatch';
+    }
+    $gameRequest = pcv_reflection_native_ack_request($native['row'] ?? []);
+    $tuple = is_array($gameRequest) ? pcv_reflection_ack_tuple($gameRequest) : null;
+    $digest = is_array($tuple) ? pcv_reflection_ack_tuple_digest($tuple) : null;
+    if (!is_array($gameRequest) || !is_array($tuple)
+        || $tuple['utterance_id'] !== $receipt['utterance_id']
+        || !is_string($digest) || !hash_equals($receipt['tuple_digest'], $digest)) {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $record);
+        return 'ack_mismatch';
+    }
+    if ($originalGameRequest !== null) {
+        $originalTuple = pcv_reflection_ack_tuple($originalGameRequest);
+        $originalDigest = is_array($originalTuple) ? pcv_reflection_ack_tuple_digest($originalTuple) : null;
+        if (!is_string($originalDigest) || !hash_equals($receipt['tuple_digest'], $originalDigest)) {
+            pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $record);
+            return 'ack_mismatch';
+        }
+    }
+    if (!pcv_reflection_load_mind_poisoning()) {
+        pcv_reflection_log('reflection.ack_error', 'ack', pcv_reflection_mind_poisoning_unavailable_reason(), $record);
+        return 'mind_poisoning_unavailable';
+    }
+    return pcv_reflection_evaluate_with_store(
+        $gameRequest, $store, $requestModel, $stateDirectory, $freshScopeReader, null, $receipt
+    );
 }
 
 function pcv_reflection_evaluate_with_store(
@@ -521,7 +845,8 @@ function pcv_reflection_evaluate_with_store(
     ?callable $requestModel = null,
     ?string $stateDirectory = null,
     ?callable $freshScopeReader = null,
-    ?\ChimMindPoisoning\RequestLog $requestLog = null
+    ?\ChimMindPoisoning\RequestLog $requestLog = null,
+    ?array $ackReceipt = null
 ): string {
     $utteranceId = pcv_reflection_ack_utterance_id($gameRequest);
     if ($utteranceId === null) {
@@ -573,6 +898,49 @@ function pcv_reflection_evaluate_with_store(
         pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $record);
         return 'ack_mismatch';
     }
+    $tuple = pcv_reflection_ack_tuple($gameRequest);
+    $digest = is_array($tuple) ? pcv_reflection_ack_tuple_digest($tuple) : null;
+    if (!is_array($tuple) || !is_string($digest)) {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $record);
+        return 'ack_mismatch';
+    }
+    if ($ackReceipt === null) {
+        $ackGeneration = null;
+        if (!pcv_reflection_capture_interaction_generation($ackGeneration)) {
+            pcv_reflection_log('reflection.ack_skipped', 'ack', 'interaction_stale', $record);
+            return 'interaction_stale';
+        }
+        $ackReceipt = [
+            'created_at' => time(),
+            'ack_generation' => $ackGeneration,
+            'tuple_digest' => $digest,
+        ];
+    }
+    $receiptMetadata = pcv_reflection_valid_receipt_metadata($ackReceipt)
+        ? $ackReceipt
+        : (pcv_reflection_valid_receipt($ackReceipt) ? pcv_reflection_receipt_metadata($ackReceipt) : null);
+    if (!is_array($receiptMetadata) || $receiptMetadata['created_at'] > time()
+        || !hash_equals($receiptMetadata['tuple_digest'], $digest)
+        || $receiptMetadata['ack_generation'] < 0) {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $record);
+        return 'ack_mismatch';
+    }
+    if (pcv_reflection_valid_receipt($ackReceipt)) {
+        if (!pcv_reflection_receipt_fresh($ackReceipt)
+            || $ackReceipt['utterance_id'] !== $utteranceId
+            || $ackReceipt['pcv_key'] !== $record['pcv_key']
+            || $ackReceipt['config_id'] !== $record['config_id']
+            || $ackReceipt['actor_id'] !== $record['actor_id']
+            || $ackReceipt['actor_name'] !== $record['actor_name']) {
+            pcv_reflection_log('reflection.ack_skipped', 'ack', 'registration_stale', $record);
+            return 'registration_stale';
+        }
+    }
+    if ($record['version'] === 2
+        && !pcv_reflection_interaction_epochs_match($record['source_generation'], $receiptMetadata['ack_generation'])) {
+        pcv_reflection_log('reflection.ack_skipped', 'ack', 'interaction_stale', $record);
+        return 'interaction_stale';
+    }
     try {
         $profile = $store->activePlaythrough();
     } catch (Throwable $error) {
@@ -615,9 +983,38 @@ function pcv_reflection_evaluate_with_store(
                 $claimFailure = 'claim_taken';
             } else {
                 $record = $latest['record'];
-                $record['status'] = 'claimed';
-                $record['claim_token'] = bin2hex(random_bytes(16));
-                pcv_reflection_write_locked($directory, $record);
+                if ($record['version'] === 2) {
+                    if ($record['ack_receipt'] !== null && $record['ack_receipt'] !== $receiptMetadata) {
+                        $claimFailure = 'ack_conflict';
+                    } elseif (pcv_reflection_valid_receipt($ackReceipt)) {
+                        $receiptState = pcv_reflection_read_receipts_locked($directory);
+                        $storedReceipt = null;
+                        if ($receiptState['kind'] === 'ready') {
+                            foreach ($receiptState['receipts'] as $candidate) {
+                                if ($candidate['utterance_id'] === $utteranceId) {
+                                    $storedReceipt = $candidate;
+                                    break;
+                                }
+                            }
+                        }
+                        if ($receiptState['kind'] !== 'ready') {
+                            $claimFailure = $receiptState['kind'] === 'invalid' ? 'receipt_corrupt' : 'receipt_unavailable';
+                        } elseif (!is_array($storedReceipt) || !pcv_reflection_receipts_match($storedReceipt, $ackReceipt)) {
+                            $claimFailure = 'ack_conflict';
+                        } elseif ($storedReceipt['created_at'] !== $ackReceipt['created_at']
+                            || !pcv_reflection_receipt_fresh($storedReceipt)) {
+                            $claimFailure = 'registration_stale';
+                        }
+                    }
+                    if ($claimFailure === null) {
+                        $record['ack_receipt'] = $receiptMetadata;
+                    }
+                }
+                if ($claimFailure === null) {
+                    $record['status'] = 'claimed';
+                    $record['claim_token'] = bin2hex(random_bytes(16));
+                    pcv_reflection_write_locked($directory, $record);
+                }
             }
         } finally {
             pcv_unlock_state($handle);
@@ -628,6 +1025,7 @@ function pcv_reflection_evaluate_with_store(
     }
     if ($claimFailure !== null) {
         $event = in_array($claimFailure, ['registry_corrupt', 'registry_unavailable'], true)
+            || in_array($claimFailure, ['receipt_corrupt', 'receipt_unavailable'], true)
             ? 'reflection.ack_error' : 'reflection.ack_skipped';
         pcv_reflection_log($event, 'ack', $claimFailure, $record);
         return $claimFailure;
@@ -655,7 +1053,8 @@ function pcv_reflection_evaluate_with_store(
                     $record['claim_token'],
                     $stateDirectory,
                     $freshScopeReader,
-                    $revalidationReason
+                    $revalidationReason,
+                    $record
                 );
             },
             $requestModel,
@@ -681,7 +1080,7 @@ function pcv_reflection_evaluate_with_store(
         } elseif ($status === 'failed') {
             pcv_reflection_log('reflection.ack_error', 'ack', 'evaluation_failed', $record);
         } else {
-            $reason = in_array($revalidationReason, ['identity_changed', 'scope_changed'], true)
+            $reason = in_array($revalidationReason, ['identity_changed', 'scope_changed', 'interaction_stale'], true)
                 ? $revalidationReason : 'evaluation_rejected';
             pcv_reflection_log('reflection.ack_skipped', 'ack', $reason, $record);
         }
@@ -715,7 +1114,8 @@ function pcv_reflection_revalidate(
     string $claimToken,
     ?string $stateDirectory,
     ?callable $freshScopeReader,
-    ?string &$reason = null
+    ?string &$reason = null,
+    ?array $claimedRecord = null
 ): bool {
     $reason = null;
     if (!in_array($phase, ['pre_model', 'transaction'], true)
@@ -751,8 +1151,17 @@ function pcv_reflection_revalidate(
     }
     if ($record['status'] !== 'claimed' || !hash_equals($record['claim_token'], $claimToken)
         || !pcv_reflection_record_fresh($record)
-        || !pcv_reflection_registration_matches($record['registration'], $registration)) {
+        || !pcv_reflection_registration_matches($record['registration'], $registration)
+        || ($claimedRecord !== null && !pcv_reflection_records_match($record, $claimedRecord))) {
         $reason = 'registration_stale';
+        return false;
+    }
+    if ($record['version'] === 2
+        && !pcv_reflection_interaction_epochs_match(
+            $record['source_generation'],
+            $record['ack_receipt']['ack_generation']
+        )) {
+        $reason = 'interaction_stale';
         return false;
     }
     $scope = pcv_reflection_fresh_scope($freshScopeReader);
@@ -800,12 +1209,15 @@ function pcv_reflection_consume_claim(array $claimedRecord, ?string $stateDirect
 function pcv_reflection_records_match(array $left, array $right): bool
 {
     return pcv_reflection_valid_record($left) && pcv_reflection_valid_record($right)
+        && $left['version'] === $right['version']
         && $left['pcv_key'] === $right['pcv_key']
         && $left['config_id'] === $right['config_id']
         && $left['actor_id'] === $right['actor_id']
         && $left['actor_name'] === $right['actor_name']
         && $left['origin_request_type'] === $right['origin_request_type']
         && $left['created_at'] === $right['created_at']
+        && ($left['version'] !== 2 || ($left['source_generation'] === $right['source_generation']
+            && $left['ack_receipt'] === $right['ack_receipt']))
         && pcv_reflection_registration_matches($left['registration'], $right['registration']);
 }
 
@@ -840,14 +1252,17 @@ function pcv_reflection_valid_registration(array $registration): bool
 
 function pcv_reflection_valid_record(array $record): bool
 {
-    $keys = ['version', 'pcv_key', 'config_id', 'actor_id', 'actor_name', 'origin_request_type', 'origin_mode', 'route', 'created_at', 'status', 'claim_token', 'registration'];
+    $version = $record['version'] ?? null;
+    $keys = $version === 1
+        ? ['version', 'pcv_key', 'config_id', 'actor_id', 'actor_name', 'origin_request_type', 'origin_mode', 'route', 'created_at', 'status', 'claim_token', 'registration']
+        : ['version', 'pcv_key', 'config_id', 'actor_id', 'actor_name', 'origin_request_type', 'origin_mode', 'route', 'created_at', 'status', 'claim_token', 'registration', 'source_generation', 'ack_receipt'];
     $actual = array_keys($record);
     sort($actual, SORT_STRING);
     sort($keys, SORT_STRING);
     $status = $record['status'] ?? null;
     $claim = $record['claim_token'] ?? null;
     return $actual === $keys
-        && ($record['version'] ?? null) === 1
+        && in_array($version, [1, 2], true)
         && is_string($record['pcv_key'] ?? null) && pcv_valid_key($record['pcv_key'])
         && is_string($record['config_id'] ?? null) && pcv_log_valid_uuid($record['config_id'])
         && is_int($record['actor_id'] ?? null) && $record['actor_id'] > 0
@@ -860,6 +1275,11 @@ function pcv_reflection_valid_record(array $record): bool
         && in_array($status, ['registered', 'claimed', 'consumed'], true)
         && (($status === 'registered' && $claim === null)
             || ($status !== 'registered' && is_string($claim) && preg_match('/\\A[a-f0-9]{32}\\z/D', $claim) === 1))
+        && ($version === 1
+            || (is_int($record['source_generation'] ?? null) && $record['source_generation'] >= 0
+                && (($record['ack_receipt'] ?? null) === null
+                    ? $status === 'registered'
+                    : (is_array($record['ack_receipt']) && pcv_reflection_valid_receipt_metadata($record['ack_receipt'])))))
         && is_array($record['registration'] ?? null)
         && pcv_reflection_valid_registration($record['registration'])
         && $record['registration']['config_id'] === $record['config_id']

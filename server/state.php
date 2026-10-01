@@ -1401,6 +1401,7 @@ function pcv_config_actors_are_eligible(array $config, ?array $eligibleNpcMap): 
     return true;
 }
 
+/** Stage enabled settings for the next eligible input; disabled settings clear both slots immediately. */
 function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $stateDirectory = null): array
 {
     if (!pcv_valid_key($key)) {
@@ -1444,12 +1445,25 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
             $expired[] = ['target' => 'pending', 'config_id' => $state['pending']['config_id'] ?? null];
             $state['pending'] = null;
         }
-        $state['pending'] = [
-            'config' => $config,
-            'config_id' => pcv_log_new_uuid(),
-            'staged_at' => $now,
-            'expires_at' => $now + PCV_PENDING_TTL,
-        ];
+        $endConfigId = null;
+        if ($config['enabled']) {
+            $state['pending'] = [
+                'config' => $config,
+                'config_id' => pcv_log_new_uuid(),
+                'staged_at' => $now,
+                'expires_at' => $now + PCV_PENDING_TTL,
+            ];
+        } else {
+            foreach (['active', 'pending'] as $slot) {
+                $configId = $state[$slot]['config_id'] ?? null;
+                if (is_string($configId) && pcv_log_valid_uuid($configId)) {
+                    $endConfigId = $configId;
+                    break;
+                }
+            }
+            $state['active'] = null;
+            $state['pending'] = null;
+        }
         pcv_write_store($directory, $state);
         if (is_array($invalidated)) {
             pcv_log_set_playthrough_ref($invalidated['key']);
@@ -1463,6 +1477,11 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
         foreach ($expired as $expiredEntry) {
             pcv_log_set_config_id(pcv_valid_config_id($expiredEntry['config_id']) ? $expiredEntry['config_id'] : null);
             pcv_log_event('state.scope_expired', 'info', 'expired', $expiredEntry['target'] . '_ttl', ['target' => $expiredEntry['target']]);
+        }
+        if (!$config['enabled']) {
+            pcv_log_set_config_id($endConfigId);
+            pcv_log_event('state.scope_activated', 'info', 'ok', null, pcv_state_log_context($config));
+            return pcv_visible_state($state, $now);
         }
         $pendingConfigId = $state['pending']['config_id'];
         pcv_log_set_config_id($pendingConfigId);
