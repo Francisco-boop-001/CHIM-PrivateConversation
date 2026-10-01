@@ -8,6 +8,8 @@ require_once __DIR__ . '/reflection_receipt.php';
 
 const PCV_REFLECTION_REGISTRY_MAX_BYTES = 8192;
 const PCV_REFLECTION_REGISTRY_TTL = 600;
+// Direct ACKs keep the full lifetime until a newer output supersedes an unclaimed registration.
+const PCV_REFLECTION_REGISTERED_SUPERSESSION_TTL = 60;
 
 function pcvReflectionRegisterLastOutput(array $requestScope): void
 {
@@ -631,7 +633,8 @@ function pcv_reflection_register_with_store(
                     $shouldReconcile = false;
                 } elseif ($existingRecord['status'] === 'claimed') {
                     $skipReason = 'claim_taken';
-                } elseif ($existingRecord['status'] === 'registered') {
+                } elseif ($existingRecord['status'] === 'registered'
+                    && time() - $existingRecord['created_at'] < PCV_REFLECTION_REGISTERED_SUPERSESSION_TTL) {
                     $skipReason = 'registration_busy';
                 } else {
                     pcv_reflection_write_locked($directory, $record);

@@ -269,3 +269,24 @@ Review: tasks/ack-bug-fix-2026-10-01/final-review.md accepts both minimal fixes 
 Plan: tasks/release-0.1.7/plan.md. User authorized commit, push and publication; Mind Poisoning stays separate and installed environments remain untouched.
 
 Review: tasks/release-0.1.7/publication-evidence.md records 0.1.7 PRE-ALPHA publication in the dedicated repository and CHIM-Plugins hub. Lead reviewed owner diffs, source/packaging gates, exact hub subtree identity and downloaded assets before publication. Both main branches advanced afterward without force. Mind Poisoning root payload and all 52 protected authoring files are unchanged; installed CHIM/provider/Skyrim behavior remains unverified.
+
+## Critique follow-up — 2026-10-01
+
+- [x] Fix unclaimed solo registration liveness while preserving claimed-effect safety.
+- [x] Move default runtime state outside the webroot with safe legacy handling.
+- [x] Improve bounded logging contention/fallback and END event semantics.
+- [x] Add only useful CHIM skill lessons and concise operator guidance.
+- [x] Review all changes, meaningful checks, protected files and runtime limits.
+
+Plan: tasks/critique-followup-2026-10-01/plan.md. No installation, publication, Mind Poisoning changes or pin advancement.
+
+Review: tasks/critique-followup-2026-10-01/final-review.md accepts the 60-second unclaimed lease, private-state migration, bounded contention fallback and accurate END event after focused regressions, final shared-module integration, isolated HTTP checks and independent source review. The CHIM skill received three narrow additions. Manual operator checks remain unrun; source fixes are unreleased and all 52 protected files and pins are unchanged.
+
+## Publish Private Conversation 0.1.8
+
+- [ ] Prepare reviewed release metadata and scoped source commit.
+- [ ] Verify clean exports, deterministic assets and PCV-only hub synchronization.
+- [ ] Verify draft downloads, publish, then advance update manifests.
+- [ ] Verify public state and record final evidence.
+
+Plan: tasks/release-0.1.8/plan.md. User authorized commit, push and publish Private Conversation only; installed environments remain unchanged.

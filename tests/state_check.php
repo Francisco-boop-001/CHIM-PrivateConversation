@@ -53,6 +53,28 @@ function pcvCleanLogFixture(string $directory): void
     @rmdir($directory);
 }
 
+function pcvCleanMigrationFixture(string $directory): void
+{
+    $temporaryRoot = realpath(sys_get_temp_dir());
+    $resolved = realpath($directory);
+    if ($temporaryRoot === false || $resolved === false
+        || !str_starts_with($resolved, $temporaryRoot . DIRECTORY_SEPARATOR . 'pcv-state-migrate-')) {
+        return;
+    }
+    $items = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($resolved, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+    foreach ($items as $item) {
+        if ($item->isLink() || !$item->isDir()) {
+            @unlink($item->getPathname());
+        } else {
+            @rmdir($item->getPathname());
+        }
+    }
+    @rmdir($resolved);
+}
+
 $fixture = sys_get_temp_dir() . '/chim-private-conversation-' . bin2hex(random_bytes(8));
 $isolatedLockState = $fixture . '-logger-lock';
 $oldErrorLog = ini_get('error_log');
@@ -68,8 +90,206 @@ $homeState = [
         'player_name' => 'Runa',
     ]],
 ];
+$privateRootBefore = pcv_log_default_directory(false);
+$privateRootExistedBefore = is_string($privateRootBefore) && is_dir($privateRootBefore);
 
 try {
+    $defaultStateDirectory = pcv_state_directory(null);
+    $privateLogRoot = pcv_log_default_directory(false);
+    pcvCheck(is_string($privateLogRoot)
+        && $defaultStateDirectory === $privateLogRoot . DIRECTORY_SEPARATOR . 'state',
+        'default state must live below the stable private logger root');
+    pcvCheck($defaultStateDirectory !== dirname(__DIR__) . '/server/state'
+        && !str_starts_with($defaultStateDirectory . DIRECTORY_SEPARATOR, $logFixture . DIRECTORY_SEPARATOR),
+        'default state must not live in the webroot or follow the logger test override');
+    $explicitFixture = sys_get_temp_dir() . '/pcv-state-migrate-explicit-' . bin2hex(random_bytes(8));
+    pcvCheck(pcv_state_directory($explicitFixture) === $explicitFixture,
+        'explicit state directory fixtures must retain their supplied path');
+
+    require_once dirname(__DIR__) . '/server/reflection.php';
+    require_once dirname(__DIR__) . '/server/scope.php';
+    $migrationRoot = sys_get_temp_dir() . '/pcv-state-migrate-' . bin2hex(random_bytes(8));
+    $legacyDirectory = $migrationRoot . '/legacy';
+    $privateDirectory = $migrationRoot . '/private/state';
+    mkdir($legacyDirectory, 0700, true);
+    mkdir(dirname($privateDirectory), 0700, true);
+    $migrationLock = pcv_lock_state($legacyDirectory, true, LOCK_EX);
+    pcvCheck(is_resource($migrationLock), 'could not lock the legacy migration fixture');
+    $migrationKey = str_repeat('c', 64);
+    $migrationConfigId = '123e4567-e89b-42d3-a456-426614174000';
+    $migrationStore = pcv_empty_store($migrationKey);
+    $migrationNow = time();
+    $migrationStore['active'] = [
+        'config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => '101', 'actor_b' => null,
+            'exclude_player' => true, 'bystander_mode' => 'silent'],
+        'config_id' => $migrationConfigId,
+        'activated_at' => $migrationNow,
+        'expires_at' => $migrationNow + PCV_ACTIVE_TTL,
+    ];
+    $migrationStore['pending'] = [
+        'config' => ['enabled' => true, 'actor_a' => '101', 'actor_b' => '202',
+            'exclude_player' => true, 'bystander_mode' => 'exclude'],
+        'config_id' => '123e4567-e89b-42d3-a456-426614174001',
+        'staged_at' => $migrationNow,
+        'expires_at' => $migrationNow + PCV_PENDING_TTL,
+    ];
+    pcv_write_store($legacyDirectory, $migrationStore);
+    $migrationRegistration = [
+        'event_id' => 17,
+        'utterance_id' => 'utt_migrate12345678',
+        'actor_id' => 11,
+        'actor_name' => 'Aela',
+        'playthrough_id' => 'fixture-profile',
+        'config_id' => $migrationConfigId,
+        'rechat_target_hint' => 'explicit_disable_rechat',
+        'speech_hash' => hash('sha256', 'private fixture output'),
+    ];
+    pcv_reflection_write_locked($legacyDirectory, [
+        'version' => 2,
+        'pcv_key' => $migrationKey,
+        'config_id' => $migrationConfigId,
+        'actor_id' => 11,
+        'actor_name' => 'Aela',
+        'origin_request_type' => 'inputtext',
+        'origin_mode' => 'STANDARD',
+        'route' => 'solo_reflection',
+        'created_at' => time(),
+        'status' => 'registered',
+        'claim_token' => null,
+        'registration' => $migrationRegistration,
+        'source_generation' => 1,
+        'ack_receipt' => null,
+    ]);
+    pcv_reflection_write_receipts_locked($legacyDirectory, [[
+        'created_at' => time(),
+        'utterance_id' => 'utt_migrate12345678',
+        'pcv_key' => $migrationKey,
+        'config_id' => $migrationConfigId,
+        'actor_id' => 11,
+        'actor_name' => 'Aela',
+        'ack_generation' => 1,
+        'tuple_digest' => hash('sha256', 'native ACK fixture'),
+    ]]);
+    $migrationPresence = [
+        'version' => 1,
+        'key' => $migrationKey,
+        'observed_at' => time(),
+        'radius' => 3000,
+        'actors' => [],
+        'autonomous_order' => ['request_timestamp' => time(), 'observed_at' => time()],
+    ];
+    $migrationBackground = [
+        'version' => PCV_BACKGROUND_PRESENCE_VERSION,
+        'source' => 'infonpc_close_v1',
+        'key' => null,
+        'player_name' => null,
+        'state' => 'unavailable',
+        'reason' => 'identity_unavailable',
+        'observed_at' => time(),
+        'heartbeat_timestamp' => null,
+        'baseline_timestamp' => null,
+        'actors' => [],
+    ];
+    file_put_contents($legacyDirectory . '/presence.json', json_encode($migrationPresence, JSON_THROW_ON_ERROR) . "\n");
+    file_put_contents($legacyDirectory . '/background_presence.json', json_encode($migrationBackground, JSON_THROW_ON_ERROR) . "\n");
+    $migrationFiles = ['state.json', 'presence.json', 'background_presence.json', 'reflection.json', 'reflection_receipts.json'];
+    $migrationBytes = [];
+    foreach ($migrationFiles as $name) {
+        $migrationBytes[$name] = (string)file_get_contents($legacyDirectory . '/' . $name);
+    }
+    pcv_unlock_state($migrationLock);
+    pcv_state_migrate_legacy_directory($legacyDirectory, $privateDirectory);
+    pcvCheck(!file_exists($legacyDirectory) && is_dir($privateDirectory),
+        'legacy state should move as one directory out of its webroot');
+    foreach ($migrationFiles as $name) {
+        pcvCheck((string)file_get_contents($privateDirectory . '/' . $name) === $migrationBytes[$name],
+            "migration must preserve $name byte-for-byte");
+    }
+    $migratedStore = pcv_load_store($privateDirectory);
+    pcvCheck(($migratedStore['kind'] ?? null) === 'ready'
+        && ($migratedStore['state']['active']['config_id'] ?? null) === $migrationConfigId
+        && ($migratedStore['state']['pending']['config_id'] ?? null) === '123e4567-e89b-42d3-a456-426614174001',
+        'migration must preserve active and pending configuration');
+    pcvCheck(pcv_reflection_read_locked($privateDirectory)['kind'] === 'ready'
+        && pcv_reflection_read_receipts_locked($privateDirectory)['kind'] === 'ready',
+        'migration must preserve readable registry and receipt metadata');
+    pcvCheck(pcvScopeStoredStateExists($privateDirectory),
+        'scope state detection must follow the resolved private directory');
+    echo "PASS: default state path and atomic legacy migration preserved active/pending, registry, receipts, and presence\n";
+
+    $corruptRoot = sys_get_temp_dir() . '/pcv-state-migrate-' . bin2hex(random_bytes(8));
+    $corruptLegacy = $corruptRoot . '/legacy';
+    $corruptPrivate = $corruptRoot . '/private/state';
+    mkdir($corruptLegacy, 0700, true);
+    mkdir(dirname($corruptPrivate), 0700, true);
+    file_put_contents($corruptLegacy . '/state.json', '{broken state');
+    $corruptBytes = (string)file_get_contents($corruptLegacy . '/state.json');
+    $corruptLock = pcv_lock_state($corruptLegacy, false, LOCK_EX);
+    pcvCheck(is_resource($corruptLock), 'could not lock the corrupt migration fixture');
+    pcv_unlock_state($corruptLock);
+    $corruptRefused = false;
+    try {
+        pcv_state_migrate_legacy_directory($corruptLegacy, $corruptPrivate);
+    } catch (RuntimeException) {
+        $corruptRefused = true;
+    }
+    pcvCheck($corruptRefused && !file_exists($corruptPrivate)
+        && (string)file_get_contents($corruptLegacy . '/state.json') === $corruptBytes
+        && pcvScopeStoredStateExists($corruptLegacy),
+        'corrupt legacy state must remain intact and be treated as present, never as empty');
+
+    $conflictLegacy = $migrationRoot . '/conflict-legacy';
+    $conflictPrivate = $migrationRoot . '/conflict/state';
+    mkdir($conflictLegacy, 0700, true);
+    mkdir($conflictPrivate, 0700, true);
+    file_put_contents($conflictLegacy . '/state.json', json_encode(pcv_empty_store($migrationKey), JSON_THROW_ON_ERROR) . "\n");
+    $conflictLock = pcv_lock_state($conflictLegacy, false, LOCK_EX);
+    pcvCheck(is_resource($conflictLock), 'could not lock the conflict migration fixture');
+    pcv_unlock_state($conflictLock);
+    file_put_contents($conflictPrivate . '/keep.txt', 'existing destination');
+    $conflictRefused = false;
+    try {
+        pcv_state_migrate_legacy_directory($conflictLegacy, $conflictPrivate);
+    } catch (RuntimeException) {
+        $conflictRefused = true;
+    }
+    pcvCheck($conflictRefused && is_file($conflictLegacy . '/state.json')
+        && is_dir($privateDirectory) && is_file($conflictPrivate . '/keep.txt'),
+        'an existing destination must not be merged with or replace another store');
+
+    $crossDeviceRoot = '/dev/shm/pcv-state-migrate-' . bin2hex(random_bytes(8));
+    $crossDeviceLegacy = $crossDeviceRoot . '/legacy';
+    $crossDeviceParent = sys_get_temp_dir() . '/pcv-state-migrate-' . bin2hex(random_bytes(8));
+    $crossDevicePrivate = $crossDeviceParent . '/state';
+    $tmpStat = @stat(sys_get_temp_dir());
+    $shmStat = @stat('/dev/shm');
+    if (is_array($tmpStat) && is_array($shmStat) && $tmpStat['dev'] !== $shmStat['dev']) {
+        mkdir($crossDeviceLegacy, 0700, true);
+        mkdir($crossDeviceParent, 0700, true);
+        $crossDeviceStore = json_encode(pcv_empty_store($migrationKey), JSON_THROW_ON_ERROR) . "\n";
+        file_put_contents($crossDeviceLegacy . '/state.json', $crossDeviceStore);
+        $crossDeviceLock = pcv_lock_state($crossDeviceLegacy, false, LOCK_EX);
+        pcvCheck(is_resource($crossDeviceLock), 'could not lock the cross-device fixture');
+        pcv_unlock_state($crossDeviceLock);
+        $crossDeviceRefused = false;
+        try {
+            pcv_state_migrate_legacy_directory($crossDeviceLegacy, $crossDevicePrivate);
+        } catch (RuntimeException) {
+            $crossDeviceRefused = true;
+        }
+        pcvCheck($crossDeviceRefused && !file_exists($crossDevicePrivate)
+            && (string)file_get_contents($crossDeviceLegacy . '/state.json') === $crossDeviceStore,
+            'cross-device migration must fail closed and preserve source bytes');
+        echo "PASS: cross-device migration refusal preserved source bytes\n";
+        @unlink($crossDeviceLegacy . '/state.json');
+        @unlink($crossDeviceLegacy . '/state.lock');
+        @rmdir($crossDeviceLegacy);
+        @rmdir($crossDeviceRoot);
+        pcvCleanMigrationFixture($crossDeviceParent);
+    } else {
+        echo "SKIP: /dev/shm is not a separate filesystem; EXDEV migration refusal not exercised\n";
+    }
+
     $identity = pcv_identity_from_home_state($homeState);
     pcvCheck(is_string($identity['key'] ?? null) && preg_match('/^[a-f0-9]{64}$/D', $identity['key']) === 1,
         'valid active profile and character should produce a SHA-256 key');
@@ -359,25 +579,34 @@ try {
         static fn(string $line) => json_decode($line, true, 16, JSON_THROW_ON_ERROR),
         file($logPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)
     );
-    $endActivationLogged = false;
+    $endEventLogged = false;
     foreach ($entries as $entry) {
-        if (($entry['event'] ?? null) === 'state.scope_activated'
+        if (($entry['event'] ?? null) === 'state.scope_ended'
             && ($entry['context']['action'] ?? null) === 'end') {
-            $endActivationLogged = true;
+            $endEventLogged = true;
             break;
         }
     }
-    pcvCheck($endActivationLogged, 'immediate END should use the existing scope activation event with action=end');
+    pcvCheck($endEventLogged, 'immediate END should use the dedicated scope-ended event with action=end');
     pcvCheck(!str_contains((string)file_get_contents($logPath), 'Aela the Huntress'), 'operational logs must not contain NPC names');
     pcvCheck(!str_contains((string)file_get_contents($logPath), $key), 'operational logs must not contain the state key');
 
-    echo "PASS: identity, config correlation, legacy compatibility, invalidation/expiry logs, corruption preservation and isolated state logs\n";
+    echo "PASS: identity, config correlation, legacy compatibility, invalidation/expiry logs, corrupt-state preservation and isolated state logs\n";
 } catch (Throwable $error) {
     fwrite(STDERR, 'FAIL: ' . $error->getMessage() . "\n");
     $exitCode = 1;
 } finally {
     pcvCleanFixture($fixture);
     pcvCleanFixture($isolatedLockState);
+    if (isset($migrationRoot)) {
+        pcvCleanMigrationFixture($migrationRoot);
+    }
+    if (isset($corruptRoot)) {
+        pcvCleanMigrationFixture($corruptRoot);
+    }
+    if (!$privateRootExistedBefore && is_string($privateRootBefore)) {
+        @rmdir($privateRootBefore);
+    }
     pcvCleanLogFixture($logFixture);
     if (is_string($oldErrorLog)) {
         ini_set('error_log', $oldErrorLog);

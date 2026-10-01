@@ -86,6 +86,45 @@ if (($argv[1] ?? null) === '--debug-child' || ($argv[1] ?? null) === '--writer-c
     exit(0);
 }
 
+if (($argv[1] ?? null) === '--lock-contention-child') {
+    define('PCV_LOG_TESTING', true);
+    require_once dirname(__DIR__) . '/server/log.php';
+    $directory = $argv[2] ?? '';
+    $fallback = $argv[3] ?? '';
+    $count = filter_var($argv[4] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 100]]);
+    if (!pcv_log_set_test_directory($directory) || $count === false) {
+        exit(2);
+    }
+    ini_set('error_log', $fallback);
+    pcv_log_begin_request(pcv_log_new_uuid());
+    fwrite(STDOUT, "READY\n");
+    fflush(STDOUT);
+    if (fgets(STDIN) === false) {
+        exit(3);
+    }
+    fwrite(STDOUT, "ATTEMPT\n");
+    fflush(STDOUT);
+    $started = hrtime(true);
+    for ($index = 0; $index < $count; $index++) {
+        pcv_log_event('state.scope_staged', 'info', 'ok', null, [
+            'action' => 'enable',
+            'scene_mode' => 'solo',
+            'actor_a_id' => '101',
+            'actor_b_id' => '202',
+            'exclude_player' => true,
+            'bystander_mode' => 'exclude',
+            'dialogue' => 'PRIVATE-DIALOGUE-SHOULD-NEVER-LEAVE-THIS-CHILD',
+            'prompt' => 'PRIVATE-PROMPT-SHOULD-NEVER-LEAVE-THIS-CHILD',
+            'claim_token' => 'PRIVATE-CLAIM-TOKEN-SHOULD-NEVER-LEAVE-THIS-CHILD',
+        ]);
+    }
+    echo json_encode([
+        'elapsed_ms' => round((hrtime(true) - $started) / 1000000, 2),
+        'health' => pcv_log_storage_health(),
+    ], JSON_THROW_ON_ERROR);
+    exit(0);
+}
+
 define('PCV_LOG_TESTING', true);
 require_once dirname(__DIR__) . '/server/log.php';
 
@@ -149,9 +188,13 @@ function cleanLogFixture(string $directory, string $fallback): bool
         } else {
             $rootFiles = $logFiles;
             $rootFiles['fallback.log'] = [$regularFile];
+            $rootFiles['lock-retry.log'] = [$regularFile];
+            $rootFiles['lock-timeout.log'] = [$regularFile];
             $rootDirectories = [
                 'debug' => $logFiles,
                 'concurrent' => $logFiles,
+                'lock-retry' => $logFiles,
+                'lock-timeout' => $logFiles,
                 'unsafe' => ['marker' => [$regularFile]],
                 'fifo-lock' => [
                     'events.jsonl' => [$regularFile],
@@ -708,6 +751,128 @@ try {
     logCheck(!str_contains($fifoOutput . $fifoError, 'DO NOT LOG'),
         'FIFO lock rejection must not emit private fixture details');
 
+    $startLockChild = static function (string $directory, string $childFallback, int $count): array {
+        $process = proc_open([PHP_BINARY, __FILE__, '--lock-contention-child', $directory, $childFallback, (string)$count],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        logCheck(is_resource($process), 'could not start lock contention fixture');
+        $ready = fgets($pipes[1]);
+        logCheck($ready === "READY\n", 'lock contention child did not reach its synchronization point');
+        fwrite($pipes[0], "go\n");
+        fflush($pipes[0]);
+        fclose($pipes[0]);
+        $attempt = fgets($pipes[1]);
+        logCheck($attempt === "ATTEMPT\n", 'lock contention child did not start its writes');
+        return ['process' => $process, 'stdout' => $pipes[1], 'stderr' => $pipes[2]];
+    };
+    $finishLockChild = static function (array $child, float $timeoutSeconds): array {
+        stream_set_blocking($child['stdout'], false);
+        stream_set_blocking($child['stderr'], false);
+        $output = '';
+        $error = '';
+        $deadline = microtime(true) + $timeoutSeconds;
+        $finished = false;
+        do {
+            $output .= stream_get_contents($child['stdout']);
+            $error .= stream_get_contents($child['stderr']);
+            $status = proc_get_status($child['process']);
+            if (!$status['running']) {
+                $finished = true;
+                break;
+            }
+            usleep(10000);
+        } while (microtime(true) < $deadline);
+        if (!$finished) {
+            proc_terminate($child['process'], 9);
+        }
+        $output .= stream_get_contents($child['stdout']);
+        $error .= stream_get_contents($child['stderr']);
+        fclose($child['stdout']);
+        fclose($child['stderr']);
+        $exit = proc_close($child['process']);
+        if ($exit === -1 && isset($status['exitcode'])) {
+            $exit = $status['exitcode'];
+        }
+        return ['finished' => $finished, 'exit' => $exit, 'output' => $output, 'error' => $error];
+    };
+
+    $retryDirectory = $fixture . '/lock-retry';
+    mkdir($retryDirectory, 0700);
+    $retryLock = fopen($retryDirectory . '/events.lock', 'c');
+    chmod($retryDirectory . '/events.lock', 0600);
+    logCheck(is_resource($retryLock) && flock($retryLock, LOCK_EX | LOCK_NB), 'could not hold short-contention lock');
+    $retryChild = $startLockChild($retryDirectory, $fixture . '/lock-retry.log', 1);
+    usleep(25000);
+    $retryStillWaiting = proc_get_status($retryChild['process'])['running'];
+    usleep(15000);
+    flock($retryLock, LOCK_UN);
+    fclose($retryLock);
+    $retryResult = $finishLockChild($retryChild, 2.0);
+    logCheck($retryStillWaiting && $retryResult['finished'] && $retryResult['exit'] === 0,
+        'short lock contention should wait for the lock and finish within the bounded window: waiting='
+            . var_export($retryStillWaiting, true) . ' finished=' . var_export($retryResult['finished'], true)
+            . ' exit=' . $retryResult['exit'] . ' output=' . $retryResult['output'] . ' error=' . $retryResult['error']);
+    $retryLines = is_file($retryDirectory . '/events.jsonl')
+        ? file($retryDirectory . '/events.jsonl', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+    $retryRows = array_map(static fn(string $line): array => json_decode($line, true, 16, JSON_THROW_ON_ERROR), $retryLines);
+    logCheck(count($retryRows) === 1 && ($retryRows[0]['event'] ?? null) === 'state.scope_staged'
+        && ($retryRows[0]['context']['action'] ?? null) === 'enable'
+        && !array_key_exists('dialogue', $retryRows[0]['context']),
+        'brief contention should append exactly one sanitized scope event');
+    logCheck(!is_file($fixture . '/lock-retry.log') || filesize($fixture . '/lock-retry.log') === 0,
+        'recovered short contention should not use the PHP error-log fallback');
+
+    $timeoutDirectory = $fixture . '/lock-timeout';
+    mkdir($timeoutDirectory, 0700);
+    $timeoutLock = fopen($timeoutDirectory . '/events.lock', 'c');
+    chmod($timeoutDirectory . '/events.lock', 0600);
+    logCheck(is_resource($timeoutLock) && flock($timeoutLock, LOCK_EX | LOCK_NB), 'could not hold persistent-contention lock');
+    $timeoutChild = $startLockChild($timeoutDirectory, $fixture . '/lock-timeout.log', 8);
+    $timeoutResult = $finishLockChild($timeoutChild, 2.0);
+    logCheck($timeoutResult['finished'] && $timeoutResult['exit'] === 0,
+        'persistent lock contention should return without blocking indefinitely: ' . $timeoutResult['error']);
+    $timeoutSummary = json_decode($timeoutResult['output'], true, 16, JSON_THROW_ON_ERROR);
+    logCheck(($timeoutSummary['health']['write_status'] ?? null) === 'degraded'
+        && in_array('lock_unavailable', $timeoutSummary['health']['failure_codes'] ?? [], true),
+        'persistent contention must expose degraded lock health');
+    logCheck(is_float($timeoutSummary['elapsed_ms'] ?? null) || is_int($timeoutSummary['elapsed_ms'] ?? null),
+        'persistent contention child must report its total write latency');
+    logCheck($timeoutSummary['elapsed_ms'] >= 50 && $timeoutSummary['elapsed_ms'] < 500,
+        'a burst should consume one bounded request wait budget, not one budget per event');
+    $timeoutText = is_file($fixture . '/lock-timeout.log') ? (string)file_get_contents($fixture . '/lock-timeout.log') : '';
+    preg_match_all('/Private Conversation event fallback: (\{[^\r\n]*\})/', $timeoutText, $fallbackMatches);
+    logCheck(count($fallbackMatches[1] ?? []) === 8,
+        'every already-sanitized bounded event should reach the PHP error-log fallback');
+    foreach ($fallbackMatches[1] as $fallbackLine) {
+        $fallbackEntry = json_decode($fallbackLine, true, 16, JSON_THROW_ON_ERROR);
+        logCheck(($fallbackEntry['event'] ?? null) === 'state.scope_staged'
+            && ($fallbackEntry['outcome'] ?? null) === 'ok'
+            && ($fallbackEntry['context']['action'] ?? null) === 'enable'
+            && ($fallbackEntry['context']['scene_mode'] ?? null) === 'solo'
+            && ($fallbackEntry['context']['actor_a_id'] ?? null) === '101'
+            && !array_key_exists('dialogue', $fallbackEntry['context']),
+            'fallback should preserve the full sanitized event record');
+    }
+    logCheck(!str_contains($timeoutText, 'PRIVATE-DIALOGUE-SHOULD-NEVER-LEAVE-THIS-CHILD')
+        && !str_contains($timeoutText, 'PRIVATE-PROMPT-SHOULD-NEVER-LEAVE-THIS-CHILD')
+        && !str_contains($timeoutText, 'PRIVATE-CLAIM-TOKEN-SHOULD-NEVER-LEAVE-THIS-CHILD')
+        && !str_contains($timeoutResult['output'] . $timeoutResult['error'], 'PRIVATE-DIALOGUE-SHOULD-NEVER-LEAVE-THIS-CHILD')
+        && !str_contains($timeoutResult['output'] . $timeoutResult['error'], 'PRIVATE-PROMPT-SHOULD-NEVER-LEAVE-THIS-CHILD')
+        && !str_contains($timeoutResult['output'] . $timeoutResult['error'], 'PRIVATE-CLAIM-TOKEN-SHOULD-NEVER-LEAVE-THIS-CHILD'),
+        'contention fallback must not expose the private fixture');
+
+    $failedSinkChild = $startLockChild($timeoutDirectory, $fixture . '/missing-fallback/error.log', 1);
+    $failedSinkResult = $finishLockChild($failedSinkChild, 2.0);
+    flock($timeoutLock, LOCK_UN);
+    fclose($timeoutLock);
+    $failedSinkSummary = json_decode($failedSinkResult['output'], true, 16, JSON_THROW_ON_ERROR);
+    logCheck($failedSinkResult['finished'] && $failedSinkResult['exit'] === 0
+        && ($failedSinkSummary['health']['write_status'] ?? null) === 'degraded'
+        && in_array('lock_unavailable', $failedSinkSummary['health']['failure_codes'] ?? [], true)
+        && !str_contains($failedSinkResult['output'] . $failedSinkResult['error'], 'PRIVATE-DIALOGUE-SHOULD-NEVER-LEAVE-THIS-CHILD'),
+        'a failed PHP error-log sink must not escape the logger or expose the fixture');
+    logCheck(!file_exists($fixture . '/missing-fallback') && !is_link($fixture . '/missing-fallback'),
+        'fallback must not create its own directory when the configured PHP error-log path is unavailable');
+
     foreach (glob($fallbackTemp . '/private-conversation-*') ?: [] as $fallbackDirectory) {
         foreach (glob($fallbackDirectory . '/*') ?: [] as $fallbackFile) {
             @unlink($fallbackFile);
@@ -726,11 +891,40 @@ try {
     flock($lock, LOCK_UN);
     fclose($lock);
     $fallbackLines = is_file($fallback) ? file($fallback, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
-    logCheck(is_array($fallbackLines) && count($fallbackLines) === 1, 'lock contention should trigger one generic fallback per request');
+    $genericFallbacks = array_filter($fallbackLines ?: [], static fn(string $line): bool => str_contains($line, 'Private Conversation logger: lock_unavailable'));
+    preg_match_all('/Private Conversation event fallback: (\{[^\r\n]*\})/', (string)file_get_contents($fallback), $eventFallbacks);
+    logCheck(count($genericFallbacks) === 1 && count($eventFallbacks[1] ?? []) === 2,
+        'lock contention should keep one generic warning and preserve each bounded event line');
+    foreach ($eventFallbacks[1] as $eventFallback) {
+        $fallbackEntry = json_decode($eventFallback, true, 16, JSON_THROW_ON_ERROR);
+        logCheck(($fallbackEntry['event'] ?? null) === 'ui.page_open'
+            && ($fallbackEntry['outcome'] ?? null) === 'ok',
+            'generic lock fallback should retain full sanitized event records');
+    }
     $fallbackText = (string)file_get_contents($fallback);
     logCheck(str_contains($fallbackText, 'request_id=' . pcv_log_request_id()), 'fallback should identify the request');
     logCheck(str_contains($fallbackText, 'config_id=' . $configId), 'fallback should identify the active config when valid');
     logCheck(!str_contains($fallbackText, 'DO NOT LOG THIS'), 'fallback should not contain raw exception text');
+
+    pcv_log_event('state.scope_ended', 'info', 'ok', null, [
+        'action' => 'end',
+        'exclude_player' => true,
+        'bystander_mode' => 'exclude',
+        'dialogue' => 'DO NOT LOG THIS END SECRET',
+    ]);
+    $scopeEndRows = [];
+    foreach (glob($fixture . '/events*.jsonl') ?: [] as $segment) {
+        foreach (file($segment, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+            $entry = json_decode($line, true);
+            if (is_array($entry) && ($entry['event'] ?? null) === 'state.scope_ended') {
+                $scopeEndRows[] = $entry;
+            }
+        }
+    }
+    logCheck(count($scopeEndRows) === 1 && ($scopeEndRows[0]['outcome'] ?? null) === 'ok'
+        && ($scopeEndRows[0]['context']['action'] ?? null) === 'end'
+        && !array_key_exists('dialogue', $scopeEndRows[0]['context']),
+        'scope end should have its own successful event with only allowlisted context');
 
     $normalShutdown = $fixture . '/normal-shutdown';
     $fatalShutdown = $fixture . '/fatal-shutdown';
@@ -773,7 +967,8 @@ try {
         @rmdir($directory);
     }
 
-    echo "PASS: schema/redaction, IDs, debug window, five-segment rotation, private permissions, concurrent JSONL, unsafe-path rejection, lock fallback\n";
+    $lockLatency = number_format((float)$timeoutSummary['elapsed_ms'], 2, '.', '');
+    echo "PASS: schema/redaction, IDs, debug window, five-segment rotation, private permissions, concurrent JSONL, unsafe-path rejection, bounded lock retry/fallback; eight-event contention elapsed {$lockLatency} ms\n";
 } catch (Throwable $error) {
     fwrite(STDERR, 'FAIL: ' . $error->getMessage() . "\n");
     $exitCode = 1;

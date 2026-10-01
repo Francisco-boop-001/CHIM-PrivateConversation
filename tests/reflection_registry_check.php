@@ -350,6 +350,74 @@ same('registration_busy', reflectionRegister(
 $busyAfter = json_decode((string)file_get_contents($busyDirectory . DIRECTORY_SEPARATOR . 'reflection.json'), true, 16, JSON_THROW_ON_ERROR);
 same($busyFirstId, $busyAfter['registration']['utterance_id'] ?? null, 'Busy registration must preserve the pending source ID.');
 same($busyBefore['created_at'], $busyAfter['created_at'] ?? null, 'Busy registration must not refresh the pending record age.');
+$leasePath = $busyDirectory . DIRECTORY_SEPARATOR . 'reflection.json';
+$leaseRecord = $busyAfter;
+$leaseRecord['created_at'] = time() - 50;
+file_put_contents($leasePath, json_encode($leaseRecord, JSON_THROW_ON_ERROR));
+@chmod($leasePath, 0600);
+same('registered', reflectionRegister(
+    reflectionStore($busyFirstId), $busyDirectory, $busyFirstWire, null, null, null, 1, $busyFirstId
+), 'A duplicate source within the registration lease must remain idempotent.');
+$afterDuplicateLease = json_decode((string)file_get_contents($leasePath), true, 16, JSON_THROW_ON_ERROR);
+same($leaseRecord['created_at'], $afterDuplicateLease['created_at'] ?? null,
+    'A same-ID duplicate must not renew the original registration timestamp.');
+same('registration_busy', reflectionRegister(
+    reflectionStore($busySecondId), $busyDirectory, reflectionWire($subtitle, $busySecondId), null, null, null, 1, $busySecondId
+), 'A distinct output before the supersession lease expires must remain busy.');
+$beforeLeaseExpiry = json_decode((string)file_get_contents($leasePath), true, 16, JSON_THROW_ON_ERROR);
+same($busyFirstId, $beforeLeaseExpiry['registration']['utterance_id'] ?? null,
+    'A pre-expiry registration attempt must preserve the old source ID.');
+$beforeLeaseExpiry['created_at'] = time() - 60;
+file_put_contents($leasePath, json_encode($beforeLeaseExpiry, JSON_THROW_ON_ERROR));
+@chmod($leasePath, 0600);
+same('registered', reflectionRegister(
+    reflectionStore($busySecondId), $busyDirectory, reflectionWire($subtitle, $busySecondId), null, null, null, 1, $busySecondId
+), 'A distinct output may supersede an unclaimed registration at 60 seconds.');
+$afterSupersession = json_decode((string)file_get_contents($leasePath), true, 16, JSON_THROW_ON_ERROR);
+same($busySecondId, $afterSupersession['registration']['utterance_id'] ?? null,
+    'Supersession must atomically install the new source ID.');
+$lateOldModelCalls = 0;
+same('registration_missing', pcv_reflection_evaluate_with_store(
+    reflectionAck($subtitle, $busyFirstId),
+    reflectionStore($busySecondId),
+    static function () use (&$lateOldModelCalls): never {
+        $lateOldModelCalls++;
+        throw new RuntimeException('superseded ACK must not call the provider');
+    },
+    $busyDirectory
+), 'An exact late ACK for the superseded ID must not claim the new registration.');
+same(0, $lateOldModelCalls, 'A superseded late ACK must not invoke the provider.');
+$afterLateOldAck = json_decode((string)file_get_contents($leasePath), true, 16, JSON_THROW_ON_ERROR);
+same($busySecondId, $afterLateOldAck['registration']['utterance_id'] ?? null,
+    'A late old ACK must leave the replacement registration intact.');
+
+$claimedLeaseDirectory = $testRoot . DIRECTORY_SEPARATOR . 'claimed_registration_lease';
+$claimedLeaseId = 'utt_8888888888888881';
+same('registered', reflectionRegister(
+    reflectionStore($claimedLeaseId), $claimedLeaseDirectory,
+    reflectionWire($subtitle, $claimedLeaseId), null, null, null, 1, $claimedLeaseId
+), 'Register a claimed-slot lease fixture.');
+$claimedLeasePath = $claimedLeaseDirectory . DIRECTORY_SEPARATOR . 'reflection.json';
+$claimedLeaseRecord = json_decode((string)file_get_contents($claimedLeasePath), true, 16, JSON_THROW_ON_ERROR);
+$claimedLeaseRecord['created_at'] = time() - 60;
+$claimedLeaseRecord['status'] = 'claimed';
+$claimedLeaseRecord['claim_token'] = str_repeat('a', 32);
+$claimedLeaseTuple = pcv_reflection_ack_tuple(reflectionAck($subtitle, $claimedLeaseId));
+$claimedLeaseReceipt = reflectionStoreAckReceipt($claimedLeaseTuple, reflectionScopeFixture(), 1, $claimedLeaseDirectory);
+$claimedLeaseRecord['ack_receipt'] = pcv_reflection_receipt_metadata($claimedLeaseReceipt['receipt']);
+check(pcv_reflection_valid_record($claimedLeaseRecord), 'The age-bound claimed fixture must remain a valid registry record.');
+file_put_contents($claimedLeasePath, json_encode($claimedLeaseRecord, JSON_THROW_ON_ERROR));
+@chmod($claimedLeasePath, 0600);
+$claimedLeaseNextId = 'utt_8888888888888882';
+same('claim_taken', reflectionRegister(
+    reflectionStore($claimedLeaseNextId), $claimedLeaseDirectory,
+    reflectionWire($subtitle, $claimedLeaseNextId), null, null, null, 1, $claimedLeaseNextId
+), 'A claimed effect remains protected at 60 seconds.');
+$afterClaimedLeaseAttempt = json_decode((string)file_get_contents($claimedLeasePath), true, 16, JSON_THROW_ON_ERROR);
+same($claimedLeaseId, $afterClaimedLeaseAttempt['registration']['utterance_id'] ?? null,
+    'A new output must not supersede the 60-second claimed slot.');
+same('claimed', $afterClaimedLeaseAttempt['status'] ?? null,
+    'The claimed status must remain unchanged after a supersession attempt.');
 $busyLogEntries = array_values(array_filter(reflectionPcvLogEntries(), static fn(array $entry): bool =>
     ($entry['event'] ?? null) === 'reflection.registration_skipped'
     && ($entry['reason'] ?? null) === 'registration_busy'
@@ -834,6 +902,23 @@ $receiptCorruptLog = array_values(array_filter(reflectionPcvLogEntries(), static
     && ($entry['reason'] ?? null) === 'receipt_corrupt'
     && ($entry['context']['correlation']['utterance_id'] ?? null) === $id));
 same(1, count($receiptCorruptLog), 'A corrupt receipt ledger must emit one fixed ACK error record.');
+
+$directLeaseDirectory = $testRoot . DIRECTORY_SEPARATOR . 'direct_ack_after_supersession_lease';
+same('registered', reflectionRegister(reflectionStore($id), $directLeaseDirectory, $wire),
+    'Register a direct-ACK compatibility fixture.');
+$directLeasePath = $directLeaseDirectory . DIRECTORY_SEPARATOR . 'reflection.json';
+$directLeaseRecord = json_decode((string)file_get_contents($directLeasePath), true, 16, JSON_THROW_ON_ERROR);
+$directLeaseRecord['created_at'] = time() - 60;
+file_put_contents($directLeasePath, json_encode($directLeaseRecord, JSON_THROW_ON_ERROR));
+@chmod($directLeasePath, 0600);
+$directLeaseCalls = 0;
+same('committed', pcv_reflection_evaluate_with_store(
+    reflectionAck($subtitle, $id), reflectionStore($id), static function () use (&$directLeaseCalls): string {
+        $directLeaseCalls++;
+        return validModelResponse([['subject' => 'npc:33', 'delta' => 2, 'reason' => 'The exact ACK remains eligible.', 'evidence' => 'Jarl Balgruuf betrayed me']]);
+    }, $directLeaseDirectory, static fn(): array => reflectionScopeFixture()
+), 'A direct exact ACK may still use the existing registry lifetime before a replacement arrives.');
+same(1, $directLeaseCalls, 'A direct ACK at the supersession age must evaluate exactly once.');
 
 $pcvPath = pcv_log_path();
 $pcvLogs = is_string($pcvPath) && is_file($pcvPath) ? (string)file_get_contents($pcvPath) : '';

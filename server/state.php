@@ -218,11 +218,163 @@ function pcv_valid_config_id($configId): bool
     return $configId === null || (is_string($configId) && pcv_log_valid_uuid($configId));
 }
 
+function pcv_state_validate_legacy_json_object(string $path, int $maximumBytes): void
+{
+    $size = @filesize($path);
+    if (!is_int($size) || $size > $maximumBytes) {
+        throw new RuntimeException('Legacy state file is unavailable.');
+    }
+    $contents = @file_get_contents($path);
+    if (!is_string($contents)) {
+        throw new RuntimeException('Legacy state file is unavailable.');
+    }
+    try {
+        $document = json_decode($contents, false, 16, JSON_THROW_ON_ERROR);
+    } catch (JsonException) {
+        throw new RuntimeException('Legacy state file is invalid.');
+    }
+    if (!is_object($document)) {
+        throw new RuntimeException('Legacy state file is invalid.');
+    }
+}
+
+/** The directory lock must be held by the caller. */
+function pcv_state_validate_legacy_directory(string $directory): void
+{
+    $files = [
+        'state.lock' => 4096,
+        'state.json' => 16384,
+        'presence.json' => 32768,
+        'background_presence.json' => 32768,
+        'reflection.json' => 8192,
+        'reflection_receipts.json' => 8192,
+    ];
+    $entries = @scandir($directory);
+    if (!is_array($entries) || count($entries) > 64) {
+        throw new RuntimeException('Legacy state directory is unavailable.');
+    }
+
+    foreach ($entries as $name) {
+        if ($name === '.' || $name === '..') {
+            continue;
+        }
+        $path = $directory . DIRECTORY_SEPARATOR . $name;
+        if (is_link($path) || !is_file($path)) {
+            throw new RuntimeException('Legacy state directory is not safe.');
+        }
+        if (array_key_exists($name, $files)) {
+            $size = @filesize($path);
+            if (!is_int($size) || $size > $files[$name]) {
+                throw new RuntimeException('Legacy state file is unavailable.');
+            }
+            continue;
+        }
+        if (preg_match('/\\A\\.(?:state|background-presence|presence|reflection|reflection-receipts)-[A-Za-z0-9]{6}\\z/D', $name) === 1) {
+            $size = @filesize($path);
+            if (!is_int($size) || $size > 65536) {
+                throw new RuntimeException('Legacy state temporary file is unavailable.');
+            }
+            continue;
+        }
+        throw new RuntimeException('Legacy state directory contains an unknown file.');
+    }
+
+    $store = pcv_load_store($directory);
+    if (!in_array($store['kind'] ?? null, ['missing', 'ready'], true)) {
+        throw new RuntimeException('Legacy state is invalid.');
+    }
+    foreach (['presence.json', 'background_presence.json'] as $name) {
+        $path = $directory . DIRECTORY_SEPARATOR . $name;
+        if (file_exists($path)) {
+            pcv_state_validate_legacy_json_object($path, $files[$name]);
+        }
+    }
+
+    $hasReflectionData = file_exists($directory . DIRECTORY_SEPARATOR . 'reflection.json')
+        || file_exists($directory . DIRECTORY_SEPARATOR . 'reflection_receipts.json');
+    if ($hasReflectionData) {
+        require_once __DIR__ . '/reflection.php';
+        if (file_exists($directory . DIRECTORY_SEPARATOR . 'reflection.json')
+            && pcv_reflection_read_locked($directory)['kind'] !== 'ready') {
+            throw new RuntimeException('Legacy reflection registry is invalid.');
+        }
+        if (file_exists($directory . DIRECTORY_SEPARATOR . 'reflection_receipts.json')
+            && pcv_reflection_read_receipts_locked($directory)['kind'] !== 'ready') {
+            throw new RuntimeException('Legacy reflection receipts are invalid.');
+        }
+    }
+}
+
+/** Move a legacy web-root store whole; never merge or copy partial state. */
+function pcv_state_migrate_legacy_directory(string $legacyDirectory, string $privateDirectory): void
+{
+    clearstatcache(true, $legacyDirectory);
+    clearstatcache(true, $privateDirectory);
+    if (is_link($legacyDirectory)) {
+        throw new RuntimeException('Legacy state directory is not safe.');
+    }
+    if (!file_exists($legacyDirectory)) {
+        if (is_link($privateDirectory) || (file_exists($privateDirectory) && !is_dir($privateDirectory))) {
+            throw new RuntimeException('Private state directory is not safe.');
+        }
+        if (is_dir($privateDirectory) && !@chmod($privateDirectory, 0700)) {
+            throw new RuntimeException('Private state directory permissions are unavailable.');
+        }
+        return;
+    }
+    if (!is_dir($legacyDirectory) || is_link($privateDirectory) || file_exists($privateDirectory)) {
+        throw new RuntimeException('State migration has a conflicting directory.');
+    }
+
+    $handle = pcv_lock_state($legacyDirectory, false, LOCK_EX);
+    if ($handle === null) {
+        throw new RuntimeException('Legacy state directory is unavailable.');
+    }
+    try {
+        clearstatcache(true, $legacyDirectory);
+        clearstatcache(true, $privateDirectory);
+        if (!file_exists($legacyDirectory)) {
+            if (!is_dir($privateDirectory) || is_link($privateDirectory)) {
+                throw new RuntimeException('State migration could not be resolved.');
+            }
+            if (!@chmod($privateDirectory, 0700)) {
+                throw new RuntimeException('Private state directory permissions are unavailable.');
+            }
+            return;
+        }
+        if (!is_dir($legacyDirectory) || is_link($legacyDirectory)
+            || is_link($privateDirectory) || file_exists($privateDirectory)) {
+            throw new RuntimeException('State migration has a conflicting directory.');
+        }
+        pcv_state_validate_legacy_directory($legacyDirectory);
+        if (!@rename($legacyDirectory, $privateDirectory)) {
+            throw new RuntimeException('Legacy state could not be moved to private storage.');
+        }
+        if (!@chmod($privateDirectory, 0700)) {
+            throw new RuntimeException('Private state directory permissions are unavailable.');
+        }
+    } finally {
+        pcv_unlock_state($handle);
+    }
+}
+
 function pcv_state_directory(?string $stateDirectory): string
 {
-    $directory = $stateDirectory ?? (__DIR__ . '/state');
+    if ($stateDirectory === null) {
+        $privateRoot = pcv_log_default_directory(true);
+        if (!is_string($privateRoot)) {
+            throw new RuntimeException('Private state storage is unavailable.');
+        }
+        $directory = $privateRoot . DIRECTORY_SEPARATOR . 'state';
+        pcv_state_migrate_legacy_directory(__DIR__ . DIRECTORY_SEPARATOR . 'state', $directory);
+    } else {
+        $directory = $stateDirectory;
+    }
     if ($directory === '' || str_contains($directory, "\0")) {
         throw new InvalidArgumentException('Invalid state directory.');
+    }
+    if (is_link($directory) || (file_exists($directory) && !is_dir($directory))) {
+        throw new RuntimeException('State directory is not safe.');
     }
     return rtrim($directory, DIRECTORY_SEPARATOR) ?: DIRECTORY_SEPARATOR;
 }
@@ -1480,7 +1632,7 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
         }
         if (!$config['enabled']) {
             pcv_log_set_config_id($endConfigId);
-            pcv_log_event('state.scope_activated', 'info', 'ok', null, pcv_state_log_context($config));
+            pcv_log_event('state.scope_ended', 'info', 'ok', null, pcv_state_log_context($config));
             return pcv_visible_state($state, $now);
         }
         $pendingConfigId = $state['pending']['config_id'];

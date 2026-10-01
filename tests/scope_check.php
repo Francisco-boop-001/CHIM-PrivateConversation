@@ -29,6 +29,11 @@ function pcv_read(string $key): array
     return $GLOBALS['pcv_fixture_state'];
 }
 
+function pcv_state_directory(?string $stateDirectory = null): string
+{
+    return $stateDirectory ?? $GLOBALS['pcv_fixture_state_directory'];
+}
+
 function pcv_capture_presence_snapshot(?string $key, $raw): array
 {
     $GLOBALS['pcv_fixture_capture_raw'][] = $raw;
@@ -204,6 +209,7 @@ if (!@mkdir($logTestDirectory, 0700) && !is_dir($logTestDirectory)) {
     exit(1);
 }
 @chmod($logTestDirectory, 0700);
+$GLOBALS['pcv_fixture_state_directory'] = $logTestDirectory . DIRECTORY_SEPARATOR . 'state';
 if (!pcv_log_set_test_directory($logTestDirectory)) {
     fwrite(STDERR, "FAIL: Logger rejected the isolated fixture directory.\n");
     exit(1);

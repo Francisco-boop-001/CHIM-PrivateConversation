@@ -483,10 +483,14 @@ function pcvScopePresenceFailureReason(array $presence): string
 }
 
 /** A present state file cannot safely be matched while the live playthrough identity is unknown. */
-function pcvScopeStoredStateExists(): bool
+function pcvScopeStoredStateExists(?string $stateDirectory = null): bool
 {
-    $path = __DIR__ . '/state/state.json';
-    return file_exists($path) || is_link($path);
+    try {
+        $path = pcv_state_directory($stateDirectory) . DIRECTORY_SEPARATOR . 'state.json';
+        return file_exists($path) || is_link($path);
+    } catch (Throwable) {
+        return true;
+    }
 }
 
 function pcvScopeLogSceneIneligible(string $operation, array $storedScope): void

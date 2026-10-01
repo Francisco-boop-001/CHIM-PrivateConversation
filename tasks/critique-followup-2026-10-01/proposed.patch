@@ -1,0 +1,16 @@
+--- a/references/platform.md
++++ b/references/platform.md
+@@ -27,1 +27,3 @@
+ The author runtime note describes this lifecycle; the named source callers were inspected for this revision. `_speech` passes prerequest, is handled in `processor/comm.php` and exits before context/postrequest. Do not use a hook map as a promise that every endpoint runs every hook.
++
++At the inspected revision, `main.php` flushes output before loading `prepostrequest.php` (`main.php:2919-2943`). Moving registration to an earlier post-output hook does not by itself close a cross-request race. Prefer a supported pre-delivery registration point when one exists; otherwise require exact, bounded evidence for reconciliation or explicitly document that early acknowledgements may be lost.
+@@ -81,1 +83,3 @@
+ Inner `manifest.json` `config_url` links a page; it supplies neither authentication nor a persistence API. The inspected manager gates Plugin Page and its update/switch controls on a nonempty `config_url` (`ui/server_plugins.php:453-475,504-518`). Updates additionally require schema 2 and `git_repo`. A minimal local plugin can omit both and have no automatic update controls. The published guide documents optional `config_url_target` (commonly `_blank`) as navigation behavior only. A working settings page requires its own checked bootstrap, authorization, CSRF defense, validation and output escaping. Inspect the deployment's actual access control; do not assume all CHIM pages have a login gate.
++
++Prefer confidential mutable files outside the webroot. If `.htaccess` is the control, package presence alone proves nothing: the actual vhost/port must honor the required module and `AllowOverride`. Test exact protected files and directories on that endpoint and confirm intended public assets remain reachable.
+--- a/references/async-and-atomicity.md
++++ b/references/async-and-atomicity.md
+@@ -17,1 +17,3 @@
+ For a custom worker, first decide whether it is needed at all. A short bounded hook may be simpler. If work must leave the request path, define stable operation IDs, bounded payloads, a unique claim/ownership rule, captured data scope, stale-job rejection after restore/switch, provider timeout, retry classification and limit, idempotent completion, interruption/shutdown behavior, and an observable failure state. Keep provider work outside the write transaction; re-read and validate state under the transaction/lock before commit. Process launch is not completion evidence.
++
++Keep evidence TTL, unclaimed lease/supersession age, and claimed or in-flight uncertainty lifetime distinct. Revalidate evidence at atomic claim; after ownership, the claim, phase revalidation and retry policy govern rather than the evidence TTL. Pruning or invalidating is a write: validate mutable scope/epoch under the same lock before pruning or admitting a record.

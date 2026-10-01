@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
+import pwd
+import re
 import shutil
 import socket
 import subprocess
@@ -15,16 +17,16 @@ from urllib.request import ProxyHandler, build_opener
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "/HerikaServer/ext/private_conversation"
 PUBLIC_PATHS = ("manifest.json", "assets/style.css", "assets/ui-refresh.js")
-STATE_FILES = (
-    "state/state.json",
-    "state/state.lock",
-    "state/.state-temp",
-    "state/registry.json",
-    "State/case.json",
-)
 STATE_PATHS = (
     "state/",
-    *STATE_FILES,
+    "state/state.json",
+    "state/state.lock",
+    "state/.state-ABC123",
+    "state/reflection.json",
+    "state/reflection_receipts.json",
+    "state/presence.json",
+    "state/background_presence.json",
+    "State/case.json",
     "st%61te/state.json",
     "state%2fstate.json",
 )
@@ -38,27 +40,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Verify state denial with an isolated Apache process.")
     parser.add_argument("apache", type=Path, help="Apache executable, for example /usr/sbin/apache2")
     parser.add_argument("modules", type=Path, help="Apache module directory")
+    parser.add_argument("--php", type=Path, default=Path("/usr/bin/php"), help="PHP CLI executable")
     args = parser.parse_args()
-    if not args.apache.is_file() or not args.modules.is_dir():
-        parser.error("Apache executable or module directory does not exist")
+    if not args.apache.is_file() or not args.modules.is_dir() or not args.php.is_file():
+        parser.error("Apache, module directory, or PHP executable does not exist")
 
+    private_state: Path | None = None
     with tempfile.TemporaryDirectory(prefix="pcv-http-") as temp_name:
         temp = Path(temp_name)
         webroot = temp / "www"
         extension = webroot / BASE.lstrip("/")
-        (extension / "assets").mkdir(parents=True)
+        shutil.copytree(ROOT / "server", extension)
         (extension / "state").mkdir()
-        (extension / "manifest.json").write_text('{"name":"fixture"}\n', encoding="utf-8")
-        (extension / "assets/style.css").write_text("body { color: black; }\n", encoding="utf-8")
-        (extension / "assets/ui-refresh.js").write_text("void 0;\n", encoding="utf-8")
-        for relative in STATE_FILES:
-            path = extension / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("private fixture data\n", encoding="utf-8")
-
-        source_htaccess = ROOT / "server" / ".htaccess"
-        if source_htaccess.is_file():
-            shutil.copyfile(source_htaccess, extension / ".htaccess")
+        state_bytes = ('{"version":1,"key":"' + 'a' * 64 + '","active":null,"pending":null}\n').encode()
+        (extension / "state/state.json").write_bytes(state_bytes)
+        (extension / "state/state.lock").write_text("", encoding="utf-8")
+        (extension / "state/.state-ABC123").write_text("interrupted staging fixture\n", encoding="utf-8")
 
         for path in (temp, webroot, *webroot.rglob("*")):
             os.chmod(path, 0o755 if path.is_dir() else 0o644)
@@ -83,7 +80,7 @@ def main() -> None:
                     f"TypesConfig {apache_quote(Path('/etc/mime.types'))}",
                     f"DocumentRoot {apache_quote(webroot)}",
                     f"<Directory {apache_quote(webroot)}>",
-                    "    AllowOverride All",
+                    "    AllowOverride None",
                     "    Options None",
                     "    Require all granted",
                     "</Directory>",
@@ -131,6 +128,48 @@ def main() -> None:
             else:
                 raise RuntimeError("Isolated Apache did not become ready")
 
+            before = status(f"{BASE}/state/state.json")
+            print(f"RED: HTTP {before} {BASE}/state/state.json with AllowOverride None", flush=True)
+            if before != 200:
+                raise AssertionError("The pre-migration fixture did not reproduce the web-root exposure")
+
+            php_command = [str(args.php)]
+            expected_uid = os.getuid()
+            if os.geteuid() == 0:
+                service = pwd.getpwnam("www-data")
+                runuser = shutil.which("runuser")
+                if runuser is None:
+                    raise RuntimeError("runuser is required to match PHP CLI and Apache worker identities")
+                expected_uid = service.pw_uid
+                for path in (extension, *extension.rglob("*")):
+                    os.chown(path, service.pw_uid, service.pw_gid)
+                php_command = [runuser, "-u", "www-data", "--", str(args.php)]
+            migration = subprocess.run(
+                [
+                    *php_command,
+                    "-r",
+                    "require " + repr(str(extension / "state.php")) + "; "
+                    + "echo pcv_state_directory(null);",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if migration.returncode:
+                raise RuntimeError(f"PHP migration fixture failed:\n{migration.stdout}{migration.stderr}")
+            private_state = Path(migration.stdout.strip()).resolve()
+            private_root = Path(tempfile.gettempdir()).resolve()
+            if (private_state.name != "state" or private_state.parent.parent != private_root
+                    or not re.fullmatch(r"private-conversation-" + str(expected_uid) + r"-[a-f0-9]{16}", private_state.parent.name)
+                    or webroot.resolve() == private_state or webroot.resolve() in private_state.parents):
+                raise AssertionError("The migrated state path did not resolve to the isolated private temp root")
+            if (
+                (extension / "state").exists()
+                or (private_state / "state.json").read_bytes() != state_bytes
+                or (private_state / ".state-ABC123").read_text(encoding="utf-8") != "interrupted staging fixture\n"
+            ):
+                raise AssertionError("The PHP resolver did not move and preserve the legacy state directory")
+
             for relative in PUBLIC_PATHS:
                 actual = status(f"{BASE}/{relative}")
                 print(f"HTTP {actual} {BASE}/{relative}", flush=True)
@@ -153,8 +192,14 @@ def main() -> None:
                 stderr = process.stderr.read() if process.stderr is not None else ""
                 if error_log or stderr:
                     raise RuntimeError(f"Apache exited {process.returncode}:\n{error_log}{stderr}")
+            if private_state is not None and private_state.exists():
+                private_root = Path(tempfile.gettempdir()).resolve()
+                if (private_state.parent.parent == private_root
+                        and re.fullmatch(r"private-conversation-" + str(expected_uid) + r"-[a-f0-9]{16}", private_state.parent.name)):
+                    shutil.rmtree(private_state)
+                    private_state.parent.rmdir()
 
-    print("PASS: isolated Apache serves manifest/assets and denies state paths (403/404)")
+    print("PASS: with AllowOverride None, the pre-migration state was HTTP-readable; PHP moved it outside DocumentRoot, public resources stayed available, and legacy state URLs returned 403/404")
 
 
 if __name__ == "__main__":
