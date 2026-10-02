@@ -21,6 +21,11 @@ client* evidence — never as gameplay evidence.
   default `DwemerAI4Skyrim3-test`).
 - Do not run `/etc/start_env` in the clone: it starts TTS servers, may auto-update and opens a dashboard.
 - Keep the export tar (`H:\DwemerAI4Skyrim3-<date>.tar`) as the backup of the gaming server.
+- This applies to **every** tool and agent on the machine, including other AI sessions. On 2026-10-02 another
+  agent ran `wsl.exe -d DwemerAI4Skyrim3 -- php …/tests/*.php` to borrow the server's PHP, which booted the gaming
+  distro repeatedly (07:58–10:26) and wrote to its disk. Use the test distro for any PHP run.
+- Check after a session: `(Get-Item D:\DwemerAI4Skyrim3\ext4.vhdx).LastWriteTime` must be unchanged. If it moved,
+  `Get-WinEvent -LogName Microsoft-Windows-VHDMP-Operational` hourly I/O summaries show when that disk was active.
 
 ## 2. Create the clone (one time)
 
@@ -125,6 +130,14 @@ installation is synchronous and the last chunk returns the finished job. Facts o
 | 5 End | `end`, then a normal input | `state.scope_ended`; next input `scope_off` |
 | 6 Uninstall | Plugin Manager delete, then a heartbeat | no new PCV log lines |
 | Crowd | `scripts/live-test/crowd_live.py` (replays a real 60+ token report) | page lists catalog NPCs |
+
+**Smoke test:** `.\scripts\live-test\sim.ps1 -Script smoke.py` runs baseline chat, one pair turn with ACKs, one
+solo reflection with ACKs and a duplicate-ACK failure case, and stops before `PCV_SMOKE_BUDGET` AI calls (default
+12). It counts dialogue turns, Mind Poisoning model calls and relationship-worker items. First run: 8 calls.
+
+Mind Poisoning writes its records through CHIM's `Logger` to `/var/www/html/HerikaServer/log/chim.log` (not
+Apache's error log); its opinion ledger is `core_npc_master.plugin_extended_data->'mind_poisoning'` of the listener
+(pair) or the reflecting NPC (solo).
 
 Useful database checks (inside the clone, `psql -h localhost -U dwemer -d dwemer`, password from
 `/home/dwemer/.pgpass`): `eventlog` rows with `ts > 1900000000000000` (type, data, people,

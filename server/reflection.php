@@ -118,6 +118,19 @@ function pcvReflectionEvaluateAck(array $gameRequest): void
         return;
     }
 
+    // An ACK for a line older than the registered final line can never trigger evaluation. Ignore it quietly
+    // instead of parking a receipt: earlier lines used to fill the receipt map and log registration_missing.
+    if ($probe['kind'] === 'ready' && pcv_reflection_record_fresh($probe['record'])) {
+        try {
+            if (pcv_reflection_load_mind_poisoning()
+                && pcv_reflection_ack_predates_registration(new \ChimMindPoisoning\PostgresStoreDb(), $probe['record'], $utteranceId)) {
+                return;
+            }
+        } catch (Throwable) {
+            // Fall through to the existing receipt path.
+        }
+    }
+
     $storedReceipt = pcv_reflection_store_ack_receipt($tuple, $scope, $ackGeneration);
     if ($storedReceipt['kind'] !== 'ready') {
         $event = in_array($storedReceipt['kind'], ['invalid', 'unavailable'], true)
@@ -316,6 +329,21 @@ function pcv_reflection_mp_evaluator(array $registration): string
     return array_key_exists('lines', $registration)
         ? 'ChimMindPoisoning\\mindPoisoningEvaluateReflectionReply'
         : 'ChimMindPoisoning\\mindPoisoningEvaluateReflection';
+}
+
+/** True when the ACK's eventlog row precedes the registered final line (an earlier line of that reply or older). */
+function pcv_reflection_ack_predates_registration(\ChimMindPoisoning\StoreDb $store, array $record, string $utteranceId): bool
+{
+    $registeredEventId = $record['registration']['event_id'] ?? null;
+    if (!is_int($registeredEventId) || $utteranceId === ($record['registration']['utterance_id'] ?? null)) {
+        return false;
+    }
+    try {
+        $event = $store->acknowledgedEvent($utteranceId);
+    } catch (Throwable) {
+        return false;
+    }
+    return is_array($event) && is_int($event['event_id'] ?? null) && $event['event_id'] < $registeredEventId;
 }
 
 /** True when the ACK is for an earlier registered line of a full reply (only the final line triggers). */
