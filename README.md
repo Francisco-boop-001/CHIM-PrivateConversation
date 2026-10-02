@@ -10,7 +10,13 @@
 
 **0.1.8 candidate additions:** a distinct output may supersede an unclaimed registration after 60 seconds from its original timestamp; duplicate registration does not renew that lease, while exact direct-ACK and claimed-effect protection remains up to 600 seconds. Runtime state now defaults to a validated private per-install temporary root and migrates a valid legacy state directory on first resolution by whole-directory atomic rename. Logging retries lock acquisition within one cumulative 100 ms request budget, then attempts each sanitized bounded event line in PHP's `error_log`; health stays degraded and fallback remains best effort, outside the Logs reader and without a total-I/O or no-loss guarantee.
 
-The [operator acceptance checklist](docs/operator-acceptance.md) is manual and has not been run.
+**0.1.9 in development (unreleased; install 0.1.8 below).** The first live-server run — a disposable clone of a real CHIM server and player database, driven by a simulated game client ([procedure](docs/live-server-testing.md)) — found three defects that isolated fixtures missed, now fixed on this branch:
+
+- **Solo opinion effects never fired in 0.1.7–0.1.8.** Stored scenes hold catalog IDs, but the ACK precheck compared the ACK speaker's *name* with that ID, so every solo ACK was silently dropped. ACKs now bind the scene by ID and the speaker by the live-resolved name, and a rejected reflection line logs its reason.
+- **Eligibility flickered.** A read in the same second as a heartbeat dropped every NPC (about one check in ten: ARM, rechat, solo checks).
+- **Busy places had no eligible NPCs.** 22.9% of 13,224 real heartbeats listed more than 33 names and were discarded. Up to 128 actors are now accepted; duplicate names stay ambiguous.
+
+0.1.9 also removes the legacy `ext_pcv_presence` companion command and logs routine presence only when it changes. The [operator checklist](docs/operator-acceptance.md) has been run on the cloned server with a simulated client; it has **not** been run in game.
 
 ## Start here
 
@@ -56,7 +62,7 @@ MO2 may warn that CHIM-only data does not look like Skyrim content. Retain the i
 
 **Replace the old enabled package; do not stack versions.** The published [0.1.4](https://github.com/Francisco-boop-001/CHIM-Plugins/releases/tag/private_conversation-v0.1.4) and [0.1.5](https://github.com/Francisco-boop-001/CHIM-Plugins/releases/tag/private_conversation-v0.1.5) manifests use literal old-hub asset URLs, so their update buttons cannot move themselves to this repository. Install 0.1.8 by file sync or through a candidate channel explicitly configured for `Francisco-boop-001/CHIM-PrivateConversation`, then verify installed version and `git_repo`. When switching to Plugin Manager, disable/remove the old sync source first. Use this plugin's version-specific release assets, not repository-wide `releases/latest`. Official CHIM catalog listing has not been submitted or approved.
 
-**0.1.8 requires no separate Papyrus companion, ESP or ESL and consumes no Skyrim plugin slot.** It reads CHIM's existing background reports. The older 0.1.3 companion was a historical experimental candidate, not a requirement; its artifacts remain untouched.
+**0.1.8 requires no separate Papyrus companion, ESP or ESL and consumes no Skyrim plugin slot.** It reads CHIM's existing background reports. The older 0.1.3 companion was a historical experimental candidate, not a requirement; 0.1.9 also stops accepting its `ext_pcv_presence` command.
 
 Optional opinion effects need [Mind Poisoning 0.1.14](https://github.com/Francisco-boop-001/CHIM-MindPoisoning/releases/tag/mind_poisoning-v0.1.14), enabled alongside it. PCV checks `\ChimMindPoisoning\MIND_POISONING_REFLECTION_API_VERSION === 1` before model or database work. The observer is optional; when supported, PCV imports accepted sanitized reflection records while Mind Poisoning continues its ordinary evaluation and sink delivery. Scene direction works without Mind Poisoning.
 
@@ -73,6 +79,8 @@ While the player is excluded, supported ordinary input is scene direction. To sp
 For solo, enable **Solo reflection**, select the **Reflecting NPC**, arm it and enter: `Lydia thinks aloud about her recent encounters with Nazeem and whether her first impression was fair.` One generated response follows. Solo remains selected for further inputs until changed, ended or expired; it does not continuously generate monologues.
 
 **END clears active and pending scene settings immediately**, without fresh actor reports or another in-game input. An already-started request or queued audio may finish; use CHIM's **Stop All Dialogue** for a playback-stop request. The source checks do not verify that external control in-game. ARM/update still waits for eligible Standard input. Pending settings expire after **15 minutes**, active settings after **60 minutes**. One scene is active per validated scope.
+
+**Remember END.** While a scene is active, everything you type or say in Standard mode is scene direction, not your character speaking — in live testing, a forgotten solo scene turned "Aela, are you ready to go?" into a reflection prompt for someone else.
 
 While active, ordinary Standard inputs and supported CHIM continuations remain subject to the scene's guards. Stale or missing eligibility stops those private requests; your direction is not quietly replayed as Player speech. Close/Whisper inputs are blocked. Use **END** to return ordinary inputs to normal handling. Unrelated generated Standard events keep their normal CHIM context and are not vetoed by stored private-scene settings. This does not globally silence other AI activity. Director and a separate early rolemaster child path remain outside these guards; avoid them when evaluating isolation.
 
@@ -102,6 +110,8 @@ The plugin changes request data as well as guidance:
 - `PROMPT_NEARBY_SECTIONS` replaces the ordinary nearby section with pair/solo guidance and optional generic silent scenery.
 - Listener constraints/rechat guards restrict supported turns. Actions are disabled/constrained to conversation, and action instructions are removed from the composed system prompt.
 
+**How CHIM stores it (seen live).** CHIM records an excluded-player direction as an `instruction` row reading `The Narrator: <your direction>`, witnessed only by the selected speaker(s). Later prompts therefore show your direction as something the Narrator said, and models tend to treat narrator lines as fact: phrase allegations as allegations. Solo lines are stored as `… (talking to explicit_disable_rechat)` with the marker listed among the people present. Both are CHIM core storage behavior that PCV cannot change.
+
 **The whole prompt is not scrubbed of other people.** History, memories, profiles and other retained contributions may mention the player or bystanders. Lydia can remember travelling with the Dragonborn while the Dragonborn is absent from the current conversation, and discuss Nazeem without summoning him. Complete secrecy remains unproven.
 
 The plugin does not rewrite memories, erase database records, move actors or suppress vanilla dialogue. A model can still disregard guidance. Report that as behavior to investigate, not proof that the inn acquired telepathy.
@@ -123,6 +133,14 @@ Pending receipts live for **45 seconds** (eight entries/8 KiB total). Duplicate 
 
 The parser accepts only the final complete `DEBUG_DATA.OUTPUT_LOG` line paired with its utterance ID; earlier chunks are not joined. `/` and `|` are wire separators, so subtitles containing either are rejected as `output_malformed`. The ACK proves a matching line attempt, not audio playback or hearing. Older version-1 records remain eligible for the historical direct-ACK path until expiry; they lack a saved source generation, so the new source/ACK two-epoch check applies to version-2 registrations and recovered receipts. CHIM's A↔B processing is separate; neither plugin sets native Skyrim relationship ranks, quest outcomes or shared world truth.
 
+**What limits solo effects today (live-server findings).** Even with the 0.1.9 fix, an opinion change needs every link to hold:
+
+- **Only the final line is evaluated.** CHIM splits a reply into lines of about 125 characters; a subject named only in an earlier line is invisible to Mind Poisoning. Full-reply registration needs Mind Poisoning's reply API (v2), which PCV has not adopted yet.
+- **The subject must resolve in Mind Poisoning.** Mind Poisoning 0.1.14 recognises NPCs by their exact catalog name ("Aela the Huntress", not "Aela"), and only NPCs in your catalog.
+- **The listener must be unambiguous.** Per the client source, the game reports a solo line's listener as your character's in-game name. If your NPC catalog also contains an entry with that name (one test database had `Hawke` and `Dragonborn` rows), Mind Poisoning 0.1.14 rejects the reflection as `reflection-listener-ambiguous`.
+
+Mind Poisoning's maintainer reports fixes for these in its 0.1.15 development line; check its release notes before expecting solo effects. The `_speech` speech field is the subtitle, so phonetic substitutions do not break matching.
+
 Solo evaluation uses the actor's real profile and bounded relevant prior speech history; it is not someone else's testimony. Unchanged evidence cannot repeatedly accumulate changes for the same subject. Disabled/paused processing, locks, stale scope, absent integration or provider/persistence failures leave opinions unchanged. Valid deltas are **-5 to +5**, including zero; affinity is bounded to **-100 to +100**. Zero is a result. The gossip machine is permitted to disappoint you.
 
 ## Automatic character selection
@@ -131,11 +149,13 @@ The server captures existing no-chat `infonpc_close` reports before CHIM's fast-
 
 The page rereads eligibility every **15 seconds while visible**, and on becoming visible again. Polling cannot create reports or renew them. Activity evidence expires at projected age **45 seconds**, not a guaranteed interval from the exact instant AI deactivates.
 
+Heartbeats arrive about every 10 seconds; the first report after a gap longer than 45 seconds (loading screens, long menus) is only a new baseline, so eligibility is unknown for one more heartbeat. In 0.1.9 a report may list up to **128** actors, which covers crowded cities and inns (the largest real report seen had 79 entries); generic repeated names such as guards stay ineligible as ambiguous.
+
 CHIM supplies a broader scan, not precise earshot or door/floor checks. Ambiguous names, stale/missing evidence and uncertain identity fail closed; same-name in-game references are not individually distinguished. Known empty differs from unknown. See [background presence](docs/background-presence.md) for clocks/matching.
 
 ## Logs and troubleshooting
 
-**Logging revision 2 shipped in 0.1.5 and remains in 0.1.6 and 0.1.7.** It adds a protected Logs view/export, richer presence/lifecycle evidence and visible storage/reader health; see the [diagnostics guide](docs/logging-revision-2.md). The 0.1.8 candidate retries log-lock acquisition within one cumulative 100 ms per-request budget, then attempts each sanitized bounded event line in PHP's `error_log`; health stays degraded, the fallback is best effort and is not shown by the Logs reader. `state.scope_ended` identifies a successful END state change. A prior `routing.request_finished` entry remains a routing lifecycle result, not an opinion outcome. Mind Poisoning's observer remains optional; without it, detailed opinion results stay in Mind Poisoning's diagnostics.
+**Logging revision 2 shipped in 0.1.5 and remains in 0.1.6 and 0.1.7.** It adds a protected Logs view/export, richer presence/lifecycle evidence and visible storage/reader health; see the [diagnostics guide](docs/logging-revision-2.md). The 0.1.8 candidate retries log-lock acquisition within one cumulative 100 ms per-request budget, then attempts each sanitized bounded event line in PHP's `error_log`; health stays degraded, the fallback is best effort and is not shown by the Logs reader. `state.scope_ended` identifies a successful END state change. In 0.1.9, routine presence successes are logged when the roster's state or size changes rather than on every heartbeat or page poll; stale, baseline and failed observations are always logged. A prior `routing.request_finished` entry remains a routing lifecycle result, not an opinion outcome. Mind Poisoning's observer remains optional; without it, detailed opinion results stay in Mind Poisoning's diagnostics.
 
 Records explain **when, what, why, success/skip/failure**, with request IDs and configuration UUIDs connecting stages. Ordinary PCV logs omit raw prompts/dialogue; bounded NPC IDs and exception metadata may appear.
 
@@ -193,7 +213,7 @@ Standard input → preprocessing validation + instruction conversion
 | [log.php](server/log.php), [log_reader.php](server/log_reader.php), [diagnostics.php](server/diagnostics.php) | Bounded private diagnostics, shared sanitized reading and CLI export. |
 | [build-package.py](scripts/build-package.py) | Deterministic release formats from an explicit server allowlist; the 0.1.7 release included the shared reader, HTTP state rule and ACK-receipt recovery module. |
 
-The existing native marker `explicit_disable_rechat` is not a pretend second NPC. Exact registration never guesses identity from the newest database row. Filesystem locks are released before model/database work. Invalid optional modules are caught/logged instead of counted as success.
+The existing native marker `explicit_disable_rechat` is not a pretend second NPC to PCV or the client, although CHIM's history records it as the listener of solo lines (see above). Exact registration never guesses identity from the newest database row. Filesystem locks are released before model/database work. Invalid optional modules are caught/logged instead of counted as success.
 
 ### Build and verify source
 
@@ -207,11 +227,15 @@ php tests/scope_check.php
 node tests/ui_refresh_check.mjs
 ```
 
-Use a fresh release-output directory; never overwrite assets from another version. The builder reads the version from the manifest. The canonical development repository is [CHIM-PrivateConversation](https://github.com/Francisco-boop-001/CHIM-PrivateConversation). Its `tests/reflection_registry_check.php` needs matched Mind Poisoning 0.1.14 API fixtures; alternatively run the pinned evaluator/observer/importer check from the MP 0.1.14 source tree. In the separate Mind Poisoning repository, `plugins/private_conversation/` is a pinned integration snapshot, not a second canonical authoring tree; keep it aligned with the tagged standalone source. These checks use isolated stores, not live CHIM. Runtime packages exclude tests, previews, task notes, live state and the historical companion.
+Use a fresh release-output directory; never overwrite assets from another version. The builder reads the version from the manifest. The canonical development repository is [CHIM-PrivateConversation](https://github.com/Francisco-boop-001/CHIM-PrivateConversation). Its `tests/reflection_registry_check.php` needs matched Mind Poisoning 0.1.14 API fixtures; alternatively run the pinned evaluator/observer/importer check from the MP 0.1.14 source tree. In the separate Mind Poisoning repository, `plugins/private_conversation/` is a pinned integration snapshot, not a second canonical authoring tree; keep it aligned with the tagged standalone source. These checks use isolated stores, not live CHIM. Runtime packages exclude tests, previews, task notes, live state, live-test helpers and the historical companion.
+
+For live-server evidence without touching a gaming server, follow [live-server testing](docs/live-server-testing.md): it clones the CHIM WSL distro, installs through CHIM's package API and drives it with `scripts/live-test/` (a guarded client simulator). Windows has no PHP; `scripts/live-test/run-php-tests.sh` runs the PHP fixtures with the clone's PHP 8.2.
 
 ## Limits and verification
 
 Accepted source/isolated checks cover state, identity, eligibility, feed capture, routing, output/ACK correlation, logging, UI and opinion processing. For early ACK, the [core review](tasks/ack-handoff-fix-2026-10-01/core-review.md) records fixtures using production PCV registration/reconciliation paths and the actual MP API v1 evaluator with stubbed store/model dependencies. The [database report](tasks/ack-handoff-fix-2026-10-01/database-review.md) records ten isolated PostgreSQL reader cases and four callback scenarios. The [expiry/stale-writer review](tasks/ack-bug-fix-2026-10-01/final-review.md) records original-timestamp freshness and admission-under-lock checks. Those scenarios use CHIM runtime-state, store, evaluator and provider stubs and disposable PostgreSQL; they are not installed-CHIM, real-provider, or Skyrim gameplay proof. A focused bug run fixed trailing carriage returns in ACK IDs while rejecting interior corruption. Browser review covered artwork/credit in a local fixture preview, not a live scene.
+
+**Live-server run (2026-10-02, 0.1.8 → 0.1.9).** On a clone of a real CHIM server (`cf5030f`) with a real player database and simulated client requests: installation through CHIM's package API, ordinary chat untouched with no scene, a pair scene (A answered B with the player excluded and only the pair recorded as present), solo registration and ACK handling, END, Plugin Manager deletion and crowded heartbeats all behaved as described once the three defects above were fixed. Not covered: the real client and DLL, audio, an active playthrough profile, and gameplay feel. Plugin Manager **Delete** leaves CHIM's package ledger reporting the version as installed, so game sync will not re-upload the same version afterwards.
 
 These checks are not installed-client equivalence, clean installation, provider/database failure recovery, native audio, physical privacy, cross-extension ordering or gameplay proof. Director and the early rolemaster child remain outside the scoped pipeline. Models can disregard directions; vanilla greetings exist; unresolved listeners may produce Player-facing presentation.
 
