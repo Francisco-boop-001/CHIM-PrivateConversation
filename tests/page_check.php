@@ -373,7 +373,7 @@ try {
         && ($endWithoutCatalog['stage_known_npcs'] ?? null) === []
         && ($endWithoutCatalog['eligibility_calls'] ?? null) === []
         && count($endAccepted) === 1 && ($endAccepted[0]['context']['action'] ?? null) === 'end'
-        && str_contains((string)$endWithoutCatalog['body'], 'The end request was staged.')
+        && str_contains((string)$endWithoutCatalog['body'], 'The active and pending private scene state was cleared immediately.')
         && !str_contains((string)$endWithoutCatalog['body'], 'private catalog fixture details'),
         'END depended on presence/catalog or exposed a catalog exception.');
 

@@ -70,9 +70,12 @@ Windows has no PHP; use the clone (reads the repo through `/mnt/k/...`, fixtures
 .\scripts\live-test\sim.ps1 -Script run-php-tests.sh tests/state_check.php tests/scope_check.php
 ```
 
-Known environment failures, identical on unmodified 0.1.8: `page_check.php` (its stubs clash with the
-real `pgsql` extension) and `reflection_ack_shutdown_check.php` (needs a guarded disposable PostgreSQL
-target).
+Not run by default: `reflection_ack_database_check.php` and `reflection_ack_shutdown_check.php` need a guarded
+disposable PostgreSQL target (`PCV_ACK_TEST_*`). `ui_preview.php` renders a preview, not a test. (`page_check.php`
+failed through 0.1.8 because it still expected the older END wording; fixed in 0.1.9.)
+
+For a whole live matrix with an AI-call budget, use `scripts/live-test/standard.py` (all cases) or
+`standard.py 11` (selected case numbers); it stops before `PCV_STANDARD_BUDGET` calls (default 60).
 
 ## 6. Install through CHIM's package installer
 
