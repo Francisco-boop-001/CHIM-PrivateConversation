@@ -31,17 +31,6 @@ if ($requestType === 'infonpc_close') {
     }
     return;
 }
-$fastCommands = $GLOBALS['external_fast_commands'] ?? [];
-if (!is_array($fastCommands)) {
-    $fastCommands = [];
-}
-if ($requestType === 'ext_pcv_presence') {
-    if (!in_array('ext_pcv_presence', $fastCommands, true)) {
-        $fastCommands[] = 'ext_pcv_presence';
-    }
-    $GLOBALS['external_fast_commands'] = $fastCommands;
-    return;
-}
 $ordinaryInputTypes = ['inputtext', 'inputtext_s', 'ginputtext', 'ginputtext_s'];
 $isOrdinaryInput = in_array($requestType, $ordinaryInputTypes, true);
 $isIdentitySync = in_array($requestType, ['playerinfo', 'newgame'], true);

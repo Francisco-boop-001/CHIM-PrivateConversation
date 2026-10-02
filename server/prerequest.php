@@ -2,22 +2,6 @@
 declare(strict_types=1);
 
 $gameRequest = $GLOBALS['gameRequest'] ?? null;
-if (is_array($gameRequest) && ($gameRequest[0] ?? null) === 'ext_pcv_presence') {
-    require_once __DIR__ . '/state.php';
-    try {
-        pcv_capture_autonomous_presence_report(
-            pcv_current_playthrough_key(),
-            $gameRequest[3] ?? null,
-            pcv_current_player_name(),
-            $gameRequest[1] ?? null
-        );
-    } catch (Throwable $error) {
-        pcv_invalidate_eligible_npcs();
-        pcv_log_exception('state.unavailable', 'error', 'unavailable', 'presence_unavailable', $error, ['operation' => 'presence_capture']);
-    }
-    terminate();
-    return;
-}
 
 require_once __DIR__ . '/scope.php';
 

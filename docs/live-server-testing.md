@@ -65,9 +65,9 @@ Windows has no PHP; use the clone (reads the repo through `/mnt/k/...`, fixtures
 .\scripts\live-test\sim.ps1 -Script run-php-tests.sh tests/state_check.php tests/scope_check.php
 ```
 
-Known environment failures, identical on unmodified 0.1.8: `autonomous_presence_check.php` and
-`page_check.php` (their stubs clash with the real `pgsql` extension), and `reflection_ack_shutdown_check.php`
-(needs a guarded disposable PostgreSQL target).
+Known environment failures, identical on unmodified 0.1.8: `page_check.php` (its stubs clash with the
+real `pgsql` extension) and `reflection_ack_shutdown_check.php` (needs a guarded disposable PostgreSQL
+target).
 
 ## 6. Install through CHIM's package installer
 

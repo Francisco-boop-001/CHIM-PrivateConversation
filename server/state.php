@@ -566,7 +566,8 @@ function pcv_presence_result(string $status, array $actors = [], ?float $radius 
     return ['status' => $status, 'actors' => $actors, 'radius' => $radius, 'observed_at' => $observedAt, 'reason' => $reason];
 }
 
-function pcv_presence_observed_result(string $source, array $result): array
+/** Log the observation unless it is a routine success the caller marked as unchanged. */
+function pcv_presence_observed_result(string $source, array $result, bool $logRoutineSuccess = true): array
 {
     $observation = is_array($result['_pcv_observation'] ?? null) ? $result['_pcv_observation'] : [];
     unset($result['_pcv_observation']);
@@ -593,7 +594,9 @@ function pcv_presence_observed_result(string $source, array $result): array
         }
     }
     $actors = $result['known_npcs'] ?? $result['actors'] ?? [];
-    pcv_log_presence_observed($source, $status, is_array($actors) ? count($actors) : 0, $reason);
+    if ($logRoutineSuccess || !in_array($status, ['available', 'empty'], true)) {
+        pcv_log_presence_observed($source, $status, is_array($actors) ? count($actors) : 0, $reason);
+    }
     return $result;
 }
 
@@ -657,58 +660,6 @@ function pcv_parse_presence_snapshot($raw): array
         $actors[] = ['form_id' => (int)$formId, 'name' => $name, 'distance' => $distance];
     }
     return pcv_presence_result($actors === [] ? 'empty' : 'ready', $actors, (float)$radius);
-}
-
-/** Parse the distinct no-dialogue producer; its event type is the source marker. */
-function pcv_parse_autonomous_presence_report($raw): array
-{
-    if (!is_string($raw) || $raw === '' || strlen($raw) > 32768) {
-        return pcv_presence_result('unavailable', reason: 'presence_invalid');
-    }
-    try {
-        $payload = json_decode($raw, true, 12, JSON_THROW_ON_ERROR);
-    } catch (JsonException) {
-        return pcv_presence_result('unavailable', reason: 'presence_invalid');
-    }
-    if (!is_array($payload) || ($payload['version'] ?? null) !== 1
-        || !is_string($payload['player_name'] ?? null)
-        || !is_bool($payload['overflow'] ?? null) || $payload['overflow']
-        || (!is_int($payload['radius'] ?? null) && !is_float($payload['radius'] ?? null))
-        || !is_array($payload['actors'] ?? null) || !array_is_list($payload['actors'])
-        || count($payload['actors']) > 32) {
-        return pcv_presence_result('unavailable', reason: 'presence_invalid');
-    }
-
-    $playerName = trim($payload['player_name']);
-    $radius = (float)$payload['radius'];
-    if ($playerName === '' || strlen($playerName) > 256 || preg_match('//u', $playerName) !== 1
-        || preg_match('/[\x00-\x1f\x7f]/', $playerName) === 1
-        || !is_finite($radius) || $radius <= 0) {
-        return pcv_presence_result('unavailable', reason: 'presence_invalid');
-    }
-
-    $actors = [];
-    foreach ($payload['actors'] as $actor) {
-        if (!is_array($actor) || !is_string($actor['name'] ?? null)
-            || (!is_int($actor['distance'] ?? null) && !is_float($actor['distance'] ?? null))) {
-            return pcv_presence_result('unavailable', reason: 'presence_invalid');
-        }
-        $name = trim($actor['name']);
-        $distance = (float)$actor['distance'];
-        if ($name === '' || strlen($name) > 256 || preg_match('//u', $name) !== 1
-            || preg_match('/[\x00-\x1f\x7f]/', $name) === 1
-            || !is_finite($distance) || $distance < 0) {
-            return pcv_presence_result('unavailable', reason: 'presence_invalid');
-        }
-        if ($distance <= $radius) {
-            $actors[] = ['name' => $name, 'distance' => $distance];
-        }
-    }
-
-    return array_replace(
-        pcv_presence_result($actors === [] ? 'empty' : 'ready', $actors, $radius),
-        ['player_name' => $playerName]
-    );
 }
 
 /** Parse the native request timestamp without treating it as a wall-clock age. */
@@ -890,49 +841,18 @@ function pcv_invalidate_eligible_npcs(?string $stateDirectory = null): array
     }
 }
 
-/** Read a recent per-source ordering marker while the state lock is held. */
-function pcv_presence_order_marker(string $path, string $key, int $now): ?array
-{
-    if (is_link($path) || !is_file($path)) {
-        return null;
-    }
-    $size = @filesize($path);
-    if (!is_int($size) || $size > PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
-        return null;
-    }
-    $contents = @file_get_contents($path);
-    if (!is_string($contents)) {
-        return null;
-    }
-    $document = json_decode($contents, true, 16);
-    $marker = is_array($document) ? ($document['autonomous_order'] ?? null) : null;
-    if (!is_array($document) || !is_string($document['key'] ?? null) || !hash_equals($key, $document['key'])
-        || !is_array($marker) || !is_int($marker['request_timestamp'] ?? null)
-        || $marker['request_timestamp'] < 1 || !is_int($marker['observed_at'] ?? null)
-        || $marker['observed_at'] > $now || $marker['observed_at'] < $now - PCV_PRESENCE_TTL) {
-        return null;
-    }
-    return $marker;
-}
-
 /** Cache bounded presence metadata and receipt time under the current playthrough key. */
-function pcv_store_presence_snapshot(
-    ?string $key,
-    array $parsed,
-    ?string $stateDirectory = null,
-    ?int $requestTimestamp = null,
-    bool $autonomous = false
-): array
+function pcv_store_presence_snapshot(?string $key, array $parsed, ?string $stateDirectory = null): array
 {
     if (!is_string($key) || !pcv_valid_key($key) || !in_array($parsed['status'], ['ready', 'empty'], true)) {
         $cleared = pcv_invalidate_ordinary_presence_snapshot($stateDirectory);
         if (($cleared['status'] ?? null) === 'unavailable') {
-            return pcv_presence_observed_result($autonomous ? 'autonomous_capture' : 'ordinary_capture', pcv_presence_result('unavailable', reason: 'presence_unavailable'));
+            return pcv_presence_observed_result('ordinary_capture', pcv_presence_result('unavailable', reason: 'presence_unavailable'));
         }
         if (!is_string($key) || !pcv_valid_key($key)) {
-            return pcv_presence_observed_result($autonomous ? 'autonomous_capture' : 'ordinary_capture', pcv_presence_result('unavailable', reason: 'identity_unavailable'));
+            return pcv_presence_observed_result('ordinary_capture', pcv_presence_result('unavailable', reason: 'identity_unavailable'));
         }
-        return pcv_presence_observed_result($autonomous ? 'autonomous_capture' : 'ordinary_capture', $parsed);
+        return pcv_presence_observed_result('ordinary_capture', $parsed);
     }
 
     $handle = null;
@@ -944,12 +864,6 @@ function pcv_store_presence_snapshot(
         if (is_link($path)) {
             throw new RuntimeException('Presence report is not safe.');
         }
-        $previousOrder = pcv_presence_order_marker($path, $key, $observedAt);
-        if ($autonomous && $previousOrder !== null && $requestTimestamp !== null
-            && $requestTimestamp <= $previousOrder['request_timestamp']) {
-            pcv_log_event('state.presence_rejected', 'warning', 'rejected', 'presence_stale', ['operation' => 'presence_capture']);
-            return pcv_presence_observed_result('autonomous_capture', pcv_presence_result('stale', reason: 'presence_stale'));
-        }
         $document = [
             'version' => 1,
             'key' => $key,
@@ -957,15 +871,6 @@ function pcv_store_presence_snapshot(
             'radius' => $parsed['radius'],
             'actors' => $parsed['actors'],
         ];
-        if ($autonomous) {
-            $document['autonomous_order'] = [
-                'request_timestamp' => $requestTimestamp,
-                'observed_at' => $observedAt,
-            ];
-        } elseif ($previousOrder !== null) {
-            // Ordinary snapshots refresh shared presence without extending the autonomous clock window.
-            $document['autonomous_order'] = $previousOrder;
-        }
         $contents = json_encode($document, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
         $temporary = tempnam($directory, '.presence-');
         if ($temporary === false) {
@@ -985,21 +890,16 @@ function pcv_store_presence_snapshot(
             }
         }
         pcv_log_set_playthrough_ref($key);
-        if ($autonomous) {
-            pcv_log_event('state.presence_refreshed', 'debug', 'accepted', null, [
-                'actor_count' => count($parsed['actors']),
-            ]);
-        }
-        return pcv_presence_observed_result($autonomous ? 'autonomous_capture' : 'ordinary_capture', pcv_presence_result($parsed['status'], $parsed['actors'], $parsed['radius'], $observedAt));
+        return pcv_presence_observed_result('ordinary_capture', pcv_presence_result($parsed['status'], $parsed['actors'], $parsed['radius'], $observedAt));
     } catch (Throwable $error) {
         pcv_log_exception('state.unavailable', 'error', 'unavailable', 'presence_unavailable', $error, ['operation' => 'presence_capture']);
-        return pcv_presence_observed_result($autonomous ? 'autonomous_capture' : 'ordinary_capture', pcv_presence_result('unavailable', reason: 'presence_unavailable'));
+        return pcv_presence_observed_result('ordinary_capture', pcv_presence_result('unavailable', reason: 'presence_unavailable'));
     } finally {
         pcv_unlock_state($handle);
     }
 }
 
-/** Cache a validated ordinary player-routing snapshot, preserving the no-chat clock marker. */
+/** Cache a validated ordinary player-routing snapshot. */
 function pcv_capture_presence_snapshot(
     ?string $key,
     $raw,
@@ -1018,48 +918,7 @@ function pcv_capture_presence_snapshot(
         }
         return pcv_presence_observed_result('ordinary_capture', $parsed);
     }
-    return pcv_store_presence_snapshot($key, $parsed, $stateDirectory, $requestTimestamp);
-}
-
-/** Capture a distinct autonomous report; invalid matching events clear stale eligibility. */
-function pcv_capture_autonomous_presence_report(
-    ?string $key,
-    $raw,
-    ?string $currentPlayerName,
-    $requestTimestamp,
-    ?string $stateDirectory = null
-): array
-{
-    $parsed = pcv_parse_autonomous_presence_report($raw);
-    $reason = $parsed['reason'] ?? null;
-    $timestamp = pcv_parse_presence_request_timestamp($requestTimestamp);
-    if (!in_array($parsed['status'], ['ready', 'empty'], true)) {
-        $reason = is_string($reason) ? $reason : 'presence_invalid';
-    } elseif (!is_string($key) || !pcv_valid_key($key)) {
-        $reason = 'identity_unavailable';
-    } elseif (!is_string($currentPlayerName) || trim($currentPlayerName) === '') {
-        $reason = 'identity_unavailable';
-    } else {
-        if (!function_exists('pcv_scope_name_key')) {
-            require_once __DIR__ . '/scope.php';
-        }
-        if (pcv_scope_name_key($parsed['player_name']) !== pcv_scope_name_key($currentPlayerName)) {
-            $reason = 'presence_invalid';
-        } elseif ($timestamp === null) {
-            $reason = 'presence_invalid';
-        }
-    }
-
-    if ($reason !== null) {
-        $cleared = pcv_invalidate_ordinary_presence_snapshot($stateDirectory);
-        if (($cleared['status'] ?? null) === 'unavailable') {
-            $reason = 'presence_unavailable';
-        }
-        pcv_log_event('state.unavailable', 'error', 'unavailable', $reason, ['operation' => 'presence_capture']);
-        return pcv_presence_observed_result('autonomous_capture', pcv_presence_result('unavailable', reason: $reason));
-    }
-
-    return pcv_store_presence_snapshot($key, $parsed, $stateDirectory, $timestamp, true);
+    return pcv_store_presence_snapshot($key, $parsed, $stateDirectory);
 }
 
 /** Capture a native close-range heartbeat without making a game or database call. */
@@ -1185,7 +1044,11 @@ function pcv_capture_background_presence_report(
         pcv_log_event('state.presence_refreshed', 'debug', 'accepted', null, [
             'actor_count' => count($parsed['actors']),
         ]);
-        return pcv_presence_observed_result('background_capture', pcv_presence_result($state, $parsed['actors'], observedAt: $now));
+        // Heartbeats repeat every ~10 s: log the roster when its state or size changes, not every time.
+        $rosterChanged = !$sameIdentity || ($previous['state'] ?? null) !== $state
+            || count($previous['actors'] ?? []) !== count($parsed['actors']);
+        return pcv_presence_observed_result('background_capture',
+            pcv_presence_result($state, $parsed['actors'], observedAt: $now), $rosterChanged);
     } catch (Throwable $error) {
         if (is_resource($handle)) {
             try {
@@ -1204,7 +1067,9 @@ function pcv_capture_background_presence_report(
 /** Re-resolve snapshot names against the current catalog on every caller read. */
 function pcv_read_eligible_npcs(?string $key, array $catalogRows, ?string $playerName, ?string $stateDirectory = null): array
 {
-    return pcv_presence_observed_result('background_read', pcv_read_eligible_npcs_unobserved($key, $catalogRows, $playerName, $stateDirectory));
+    // Page polls and ACK checks read often; only non-routine read outcomes are logged.
+    return pcv_presence_observed_result('background_read',
+        pcv_read_eligible_npcs_unobserved($key, $catalogRows, $playerName, $stateDirectory), false);
 }
 
 function pcv_read_eligible_npcs_unobserved(?string $key, array $catalogRows, ?string $playerName, ?string $stateDirectory = null): array
