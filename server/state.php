@@ -10,6 +10,9 @@ const PCV_PRESENCE_TTL = 45;
 // observed_at has whole-second resolution and activity is reported just after its heartbeat,
 // so a same-second read can compute a slightly negative age; tolerate up to one second of it.
 const PCV_PRESENCE_CLOCK_TOLERANCE = 1;
+// Busy places report many actors (live maximum seen: 79); generic duplicates are kept so names stay ambiguous.
+const PCV_PRESENCE_MAX_ACTORS = 128;
+const PCV_PRESENCE_DOCUMENT_MAX_BYTES = 65536;
 const PCV_BACKGROUND_PRESENCE_VERSION = 1;
 
 function pcv_shared_server_identity($playerName): array
@@ -247,8 +250,8 @@ function pcv_state_validate_legacy_directory(string $directory): void
     $files = [
         'state.lock' => 4096,
         'state.json' => 16384,
-        'presence.json' => 32768,
-        'background_presence.json' => 32768,
+        'presence.json' => PCV_PRESENCE_DOCUMENT_MAX_BYTES,
+        'background_presence.json' => PCV_PRESENCE_DOCUMENT_MAX_BYTES,
         'reflection.json' => 8192,
         'reflection_receipts.json' => 8192,
     ];
@@ -629,7 +632,7 @@ function pcv_parse_presence_snapshot($raw): array
     $radius = $payload['audience_radius_units'] ?? null;
     if ((!is_int($radius) && !is_float($radius)) || !is_finite((float)$radius) || $radius <= 0
         || !is_array($payload['present_actors'] ?? null) || !array_is_list($payload['present_actors'])
-        || count($payload['present_actors']) > 32) {
+        || count($payload['present_actors']) > PCV_PRESENCE_MAX_ACTORS) {
         return pcv_presence_result('unavailable', reason: 'presence_invalid');
     }
 
@@ -731,7 +734,8 @@ function pcv_parse_background_presence_report($raw, ?string $currentPlayerName):
     }
 
     $tokens = preg_split('/\//u', trim($raw));
-    if (!is_array($tokens) || count($tokens) > 33) {
+    // Raw reports contain empty tokens ("Name//Player"), so allow them on top of the actor bound.
+    if (!is_array($tokens) || count($tokens) > 2 * PCV_PRESENCE_MAX_ACTORS + 1) {
         return pcv_presence_result('unavailable', reason: 'presence_invalid');
     }
     if (!function_exists('pcv_scope_name_key')) {
@@ -765,7 +769,7 @@ function pcv_parse_background_presence_report($raw, ?string $currentPlayerName):
             continue;
         }
         $actors[] = ['name' => $name];
-        if (count($actors) > 32) {
+        if (count($actors) > PCV_PRESENCE_MAX_ACTORS) {
             return pcv_presence_result('unavailable', reason: 'presence_invalid');
         }
     }
@@ -893,7 +897,7 @@ function pcv_presence_order_marker(string $path, string $key, int $now): ?array
         return null;
     }
     $size = @filesize($path);
-    if (!is_int($size) || $size > 32768) {
+    if (!is_int($size) || $size > PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
         return null;
     }
     $contents = @file_get_contents($path);
@@ -1116,7 +1120,7 @@ function pcv_capture_background_presence_report(
         $previous = null;
         if (is_file($path)) {
             $size = @filesize($path);
-            if (is_int($size) && $size <= 32768) {
+            if (is_int($size) && $size <= PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
                 $contents = @file_get_contents($path);
                 $document = is_string($contents) ? json_decode($contents, true, 16) : null;
                 if (is_array($document)
@@ -1130,7 +1134,7 @@ function pcv_capture_background_presence_report(
                     && is_int($document['baseline_timestamp'] ?? null)
                     && $document['baseline_timestamp'] <= $document['heartbeat_timestamp']
                     && is_array($document['actors'] ?? null) && array_is_list($document['actors'])
-                    && count($document['actors']) <= 32) {
+                    && count($document['actors']) <= PCV_PRESENCE_MAX_ACTORS) {
                     $previous = $document;
                 }
             }
@@ -1230,7 +1234,7 @@ function pcv_read_eligible_npcs_unobserved(?string $key, array $catalogRows, ?st
             return pcv_presence_read_failure($empty, 'presence_unavailable');
         }
         $size = @filesize($path);
-        if (!is_int($size) || $size > 32768) {
+        if (!is_int($size) || $size > PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
             return pcv_presence_read_failure($empty, 'presence_unavailable');
         }
         $contents = @file_get_contents($path);
@@ -1244,7 +1248,7 @@ function pcv_read_eligible_npcs_unobserved(?string $key, array $catalogRows, ?st
             || !is_int($document['observed_at'] ?? null)
             || !is_string($document['player_name'] ?? null)
             || !in_array($document['state'] ?? null, ['baseline', 'ready', 'empty', 'unavailable'], true)
-            || !is_array($document['actors'] ?? null) || !array_is_list($document['actors']) || count($document['actors']) > 32) {
+            || !is_array($document['actors'] ?? null) || !array_is_list($document['actors']) || count($document['actors']) > PCV_PRESENCE_MAX_ACTORS) {
             return pcv_presence_read_failure($empty, 'presence_unavailable');
         }
         if (!hash_equals($key, $document['key'])) {
