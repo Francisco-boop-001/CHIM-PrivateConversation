@@ -391,6 +391,28 @@ $afterLateOldAck = json_decode((string)file_get_contents($leasePath), true, 16, 
 same($busySecondId, $afterLateOldAck['registration']['utterance_id'] ?? null,
     'A late old ACK must leave the replacement registration intact.');
 
+// Live finding: a reflection abandoned by END (ACKs never evaluated) blocked the next scene's reflection for the
+// whole lease. A registered record from another scope can never be evaluated, so a new scope supersedes it at once.
+$endedDirectory = $testRoot . DIRECTORY_SEPARATOR . 'ended_scope_registration';
+$endedOldId = 'utt_7777777777777771';
+$endedNewId = 'utt_7777777777777772';
+same('registered', reflectionRegister(
+    reflectionStore($endedOldId), $endedDirectory, reflectionWire($subtitle, $endedOldId), null, null, null, 1, $endedOldId
+), 'Register a reflection from the scene that will end.');
+$endedPath = $endedDirectory . DIRECTORY_SEPARATOR . 'reflection.json';
+$endedRecord = json_decode((string)file_get_contents($endedPath), true, 16, JSON_THROW_ON_ERROR);
+$endedRecord['config_id'] = '123e4567-e89b-42d3-a456-4266141749ff';
+$endedRecord['registration']['config_id'] = $endedRecord['config_id'];
+check(pcv_reflection_valid_record($endedRecord), 'The previous-scope fixture must remain a valid registry record.');
+file_put_contents($endedPath, json_encode($endedRecord, JSON_THROW_ON_ERROR));
+@chmod($endedPath, 0600);
+same('registered', reflectionRegister(
+    reflectionStore($endedNewId), $endedDirectory, reflectionWire($subtitle, $endedNewId), null, null, null, 1, $endedNewId
+), 'A new scope must supersede a fresh unclaimed registration left by an ended scope.');
+$afterEndedSupersession = json_decode((string)file_get_contents($endedPath), true, 16, JSON_THROW_ON_ERROR);
+same($endedNewId, $afterEndedSupersession['registration']['utterance_id'] ?? null,
+    'The new scope registration must replace the abandoned one.');
+
 $claimedLeaseDirectory = $testRoot . DIRECTORY_SEPARATOR . 'claimed_registration_lease';
 $claimedLeaseId = 'utt_8888888888888881';
 same('registered', reflectionRegister(

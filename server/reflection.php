@@ -858,6 +858,9 @@ function pcv_reflection_register_with_store(
                 } elseif ($existingRecord['status'] === 'claimed') {
                     $skipReason = 'claim_taken';
                 } elseif ($existingRecord['status'] === 'registered'
+                    // A registration from another scope (ended or re-armed scene) can never be evaluated.
+                    && $existingRecord['config_id'] === $record['config_id']
+                    && $existingRecord['pcv_key'] === $record['pcv_key']
                     && time() - $existingRecord['created_at'] < PCV_REFLECTION_REGISTERED_SUPERSESSION_TTL) {
                     $skipReason = 'registration_busy';
                 } else {
