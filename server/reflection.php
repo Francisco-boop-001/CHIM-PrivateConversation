@@ -10,9 +10,17 @@ const PCV_REFLECTION_REGISTRY_MAX_BYTES = 8192;
 const PCV_REFLECTION_REGISTRY_TTL = 600;
 // Direct ACKs keep the full lifetime until a newer output supersedes an unclaimed registration.
 const PCV_REFLECTION_REGISTERED_SUPERSESSION_TTL = 60;
-// Mind Poisoning's reply API accepts at most eight lines; the eventlog scan window is bounded too.
-const PCV_REFLECTION_REPLY_MAX_LINES = 8;
-const PCV_REFLECTION_REPLY_SCAN_ROWS = 64;
+// Mind Poisoning 0.1.16 accepts up to 24 reply lines (0.1.15: 8); its own declared cap wins when lower.
+const PCV_REFLECTION_REPLY_MAX_LINES = 24;
+const PCV_REFLECTION_REPLY_SCAN_ROWS = 128;
+
+function pcv_reflection_reply_max_lines(): int
+{
+    $mindPoisoningCap = defined('ChimMindPoisoning\\MIND_POISONING_REFLECTION_REPLY_MAX_LINES')
+        ? constant('ChimMindPoisoning\\MIND_POISONING_REFLECTION_REPLY_MAX_LINES') : 8;
+    return is_int($mindPoisoningCap) && $mindPoisoningCap > 0
+        ? min(PCV_REFLECTION_REPLY_MAX_LINES, $mindPoisoningCap) : 8;
+}
 
 function pcvReflectionRegisterLastOutput(array $requestScope): void
 {
@@ -422,7 +430,7 @@ function pcv_reflection_reply_lines(
                 return null;
             }
             $lines[] = ['event_id' => $rowId, 'utterance_id' => $utteranceId, 'speech_hash' => hash('sha256', $reflection['text'])];
-            if (count($lines) > PCV_REFLECTION_REPLY_MAX_LINES) {
+            if (count($lines) > pcv_reflection_reply_max_lines()) {
                 return null;
             }
         }

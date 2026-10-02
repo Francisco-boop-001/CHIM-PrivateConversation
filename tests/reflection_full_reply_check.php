@@ -84,13 +84,23 @@ $cases = [
         fullReplyReader(1, $rows)],
     'final_not_last' => [fullReplyStore($lines), fullReplyReader(1, array_slice($rows, 0, 4))],
 ];
-$manyLines = [];
-$manyRows = [];
-for ($i = 1; $i <= 9; $i++) {
-    $manyLines[] = [200 + $i, sprintf('utt_many_line_%05d', $i), 'Aela', "Line $i.", $sentinel, 'spoken'];
-    $manyRows[] = ['rowid' => 200 + $i, 'type' => 'chat', 'utterance_id' => sprintf('utt_many_line_%05d', $i)];
-}
-$cases['nine_lines'] = [fullReplyStore($manyLines), fullReplyReader(1, $manyRows), 209, 'utt_many_line_00009'];
+$replyOf = static function (int $count): array {
+    $lines = [];
+    $rows = [];
+    for ($i = 1; $i <= $count; $i++) {
+        $lines[] = [200 + $i, sprintf('utt_many_line_%05d', $i), 'Aela', "Line $i.", 'explicit_disable_rechat', 'spoken'];
+        $rows[] = ['rowid' => 200 + $i, 'type' => 'chat', 'utterance_id' => sprintf('utt_many_line_%05d', $i)];
+    }
+    return [$lines, $rows];
+};
+// Live replies ran to 13 lines; Mind Poisoning 0.1.16 accepts up to 24 (its text cap is the real bound).
+[$thirteenLines, $thirteenRows] = $replyOf(13);
+$thirteen = pcv_reflection_reply_lines(fullReplyStore($thirteenLines), 'Aela', 213, 'utt_many_line_00013',
+    '1900000000000001', fullReplyReader(1, $thirteenRows));
+echo 'thirteen_lines=' . ($thirteen === null ? 'fallback' : count($thirteen)) . "\n";
+fullReplyCheck(is_array($thirteen) && count($thirteen) === 13, 'A 13-line reply must be registered in full.');
+[$manyLines, $manyRows] = $replyOf(25);
+$cases['over_cap_lines'] = [fullReplyStore($manyLines), fullReplyReader(1, $manyRows), 225, 'utt_many_line_00025'];
 foreach ($cases as $label => $case) {
     $result = pcv_reflection_reply_lines($case[0], 'Aela', $case[2] ?? 104, $case[3] ?? 'utt_line_two_000002',
         '1900000000000001', $case[1]);
