@@ -63,7 +63,7 @@ function reflectionEnsureActiveState(string $directory, array $scope): void
                 'config' => [
                     'enabled' => true,
                     'scene_mode' => $scope['scope']['scene_mode'] ?? 'solo',
-                    'actor_a' => $scope['scope']['actor_a'],
+                    'actor_a' => (string)$scope['actor_a_id'], // production stores the catalog ID
                     'actor_b' => $scope['scope']['actor_b'] ?? null,
                     'exclude_player' => $scope['scope']['exclude_player'] ?? true,
                     'bystander_mode' => 'exclude',

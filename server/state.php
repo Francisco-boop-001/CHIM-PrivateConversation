@@ -7,6 +7,9 @@ const PCV_STATE_VERSION = 1;
 const PCV_PENDING_TTL = 900;
 const PCV_ACTIVE_TTL = 3600;
 const PCV_PRESENCE_TTL = 45;
+// observed_at has whole-second resolution and activity is reported just after its heartbeat,
+// so a same-second read can compute a slightly negative age; tolerate up to one second of it.
+const PCV_PRESENCE_CLOCK_TOLERANCE = 1;
 const PCV_BACKGROUND_PRESENCE_VERSION = 1;
 
 function pcv_shared_server_identity($playerName): array
@@ -1319,7 +1322,7 @@ function pcv_read_eligible_npcs_unobserved(?string $key, array $catalogRows, ?st
                 }
                 $combinedAgeSeconds = (($heartbeat - $statusTimestamp) / 1_000_000_000)
                     + ($now - $document['observed_at']);
-                if ($combinedAgeSeconds >= 0 && $combinedAgeSeconds <= PCV_PRESENCE_TTL) {
+                if ($combinedAgeSeconds >= -PCV_PRESENCE_CLOCK_TOLERANCE && $combinedAgeSeconds <= PCV_PRESENCE_TTL) {
                     $freshNames[$nameKey] = $name;
                 }
                 break;

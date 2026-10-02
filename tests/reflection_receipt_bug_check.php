@@ -47,7 +47,7 @@ function receiptBugWriteActiveState(string $directory, array $scope): void
             'config' => [
                 'enabled' => true,
                 'scene_mode' => 'solo',
-                'actor_a' => $scope['scope']['actor_a'],
+                'actor_a' => (string)$scope['actor_a_id'], // production stores the catalog ID
                 'actor_b' => null,
                 'exclude_player' => true,
                 'bystander_mode' => 'exclude',
@@ -181,7 +181,8 @@ $scopeCasesPassed = true;
 foreach ([
     'config' => array_replace_recursive($scope, ['config_id' => '123e4567-e89b-42d3-a456-426614174001']),
     'key' => array_replace($scope, ['pcv_key' => str_repeat('b', 64)]),
-    'actor' => array_replace_recursive($scope, ['scope' => ['actor_a' => 'Serana']]),
+    // Stored state binds catalog IDs, so a different actor is a different ID (and its resolved name).
+    'actor' => array_replace_recursive($scope, ['actor_a_id' => '12', 'scope' => ['actor_a' => 'Serana']]),
 ] as $label => $staleScope) {
     $scopeResult = receiptBugScopePruneCase($directory, $label, $scope, $staleScope);
     echo $label . '_scope_stale_kind=' . $scopeResult['incoming_kind']
@@ -209,9 +210,11 @@ $priorActorIdCount = count(array_filter($actorIdLedger['receipts'], static fn(ar
     $receipt['utterance_id'] === 'utt_prior_actorid_123456'));
 echo 'actor_id_remap_new_kind=' . ($newActorIdReceipt['kind'] ?? 'missing')
     . ' prior_receipt_count=' . $priorActorIdCount . "\n";
+// The active scene stores catalog ID 11; a receipt for ID 12 is another actor even with the same name,
+// and must neither bind nor prune the existing receipt.
 $scopeCasesPassed = $scopeCasesPassed
     && ($priorActorIdReceipt['kind'] ?? null) === 'ready'
-    && ($newActorIdReceipt['kind'] ?? null) === 'ready'
+    && ($newActorIdReceipt['kind'] ?? null) === 'scope_changed'
     && $priorActorIdCount === 1;
 
 foreach (['missing', 'corrupt'] as $stateFailure) {

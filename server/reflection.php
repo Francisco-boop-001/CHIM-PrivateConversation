@@ -41,8 +41,27 @@ function pcvReflectionEvaluateAck(array $gameRequest): void
     if ($tuple === null) {
         return;
     }
+    // Cheap gate: only a stored active solo scene (catalog ID) can make this ACK relevant.
     $cheapScope = pcv_reflection_active_solo_precheck();
-    if ($cheapScope === null || pcv_scope_name_key($tuple['speaker']) !== pcv_scope_name_key($cheapScope['actor_name'])) {
+    if ($cheapScope === null) {
+        return;
+    }
+    // Other lines (bystanders, the actor's ordinary dialogue) stay quiet; only the registered reflection line is reported.
+    $isRegisteredLine = static function () use ($tuple): bool {
+        $registered = pcv_reflection_registry_probe();
+        return $registered['kind'] === 'ready'
+            && $registered['record']['registration']['utterance_id'] === $tuple['utterance_id'];
+    };
+    $scope = pcv_reflection_current_solo_scope();
+    if ($scope === null || ($scope['config_id'] ?? null) !== $cheapScope['config_id']
+        || ($scope['pcv_key'] ?? null) !== $cheapScope['pcv_key']
+        || !is_string($scope['actor_a_id'] ?? null) || $scope['actor_a_id'] !== $cheapScope['actor_id']) {
+        if ($isRegisteredLine()) {
+            pcv_reflection_log('reflection.ack_skipped', 'ack', 'scope_changed', $cheapScope);
+        }
+        return;
+    }
+    if (pcv_scope_name_key($tuple['speaker']) !== pcv_scope_name_key((string)($scope['scope']['actor_a'] ?? ''))) {
         return;
     }
 
@@ -51,11 +70,10 @@ function pcvReflectionEvaluateAck(array $gameRequest): void
         pcv_reflection_log('reflection.ack_skipped', 'ack', 'interaction_stale', $cheapScope);
         return;
     }
-    $scope = pcv_reflection_current_solo_scope();
-    if ($scope === null || ($scope['config_id'] ?? null) !== $cheapScope['config_id']
-        || ($scope['pcv_key'] ?? null) !== $cheapScope['pcv_key']
-        || pcv_scope_name_key((string)($scope['scope']['actor_a'] ?? '')) !== pcv_scope_name_key($cheapScope['actor_name'])
-        || !pcv_reflection_ack_matches_solo_scope($gameRequest, $scope)) {
+    if (!pcv_reflection_ack_matches_solo_scope($gameRequest, $scope)) {
+        if ($isRegisteredLine()) {
+            pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $scope);
+        }
         return;
     }
     $utteranceId = $tuple['utterance_id'];
@@ -153,13 +171,14 @@ function pcv_reflection_active_solo_from_state(array $state): ?array
         || ($config['exclude_player'] ?? null) !== true
         || !is_int($active['expires_at'] ?? null) || $active['expires_at'] <= time()
         || !is_string($active['config_id'] ?? null) || !pcv_log_valid_uuid($active['config_id'])
-        || !is_string($config['actor_a'] ?? null) || trim($config['actor_a']) === '') {
+        || !is_string($config['actor_a'] ?? null) || preg_match('/\A[1-9][0-9]*\z/D', $config['actor_a']) !== 1) {
         return null;
     }
+    // Stored state holds catalog IDs, never display names; names are resolved from the live catalog later.
     return [
         'pcv_key' => $state['key'],
         'config_id' => $active['config_id'],
-        'actor_name' => $config['actor_a'],
+        'actor_id' => $config['actor_a'],
     ];
 }
 

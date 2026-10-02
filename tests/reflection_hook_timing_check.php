@@ -110,7 +110,7 @@ $GLOBALS['chim_interaction_generation'] = 1;
 $GLOBALS['runtime_test_interaction_generation'] = 1;
 $GLOBALS['pcv_test_state'] = ['kind' => 'ready', 'state' => [
     'key' => str_repeat('a', 64),
-    'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
+    'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => '11', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
     'pending' => null,
 ]];
 $GLOBALS['pcv_test_scope'] = [
@@ -145,13 +145,13 @@ foreach ([
     ['kind' => 'missing'],
     ['kind' => 'ready', 'state' => ['active' => null, 'pending' => null]],
     ['kind' => 'ready', 'state' => ['active' => [
-        'config' => ['enabled' => true, 'scene_mode' => 'pair', 'actor_a' => 'Aela', 'actor_b' => 'Bryn', 'exclude_player' => false], 'expires_at' => time() + 60,
+        'config' => ['enabled' => true, 'scene_mode' => 'pair', 'actor_a' => '11', 'actor_b' => '12', 'exclude_player' => false], 'expires_at' => time() + 60,
     ], 'pending' => null]],
     ['kind' => 'ready', 'state' => ['active' => null, 'pending' => [
-        'config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'expires_at' => time() + 60,
+        'config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => '11', 'actor_b' => null, 'exclude_player' => true], 'expires_at' => time() + 60,
     ]]],
     ['kind' => 'ready', 'state' => ['active' => [
-        'config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'expires_at' => time() - 1,
+        'config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => '11', 'actor_b' => null, 'exclude_player' => true], 'expires_at' => time() - 1,
     ], 'pending' => null]],
     ['kind' => 'unavailable'],
 ] as $inactiveState) {
@@ -166,7 +166,7 @@ foreach ([
 
 $GLOBALS['pcv_test_state'] = ['kind' => 'ready', 'state' => [
     'key' => str_repeat('b', 64),
-    'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
+    'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => '11', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
     'pending' => null,
 ]];
 $GLOBALS['pcv_test_scope'] = ['status' => 'off'];

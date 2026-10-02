@@ -46,7 +46,7 @@ function pcv_load_store(string $directory): array
 {
     return ['kind' => 'ready', 'state' => [
         'key' => str_repeat('a', 64),
-        'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => 'Aela', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
+        'active' => ['config' => ['enabled' => true, 'scene_mode' => 'solo', 'actor_a' => '11', 'actor_b' => null, 'exclude_player' => true], 'config_id' => '123e4567-e89b-42d3-a456-426614174000', 'expires_at' => time() + 60],
         'pending' => null,
     ]];
 }

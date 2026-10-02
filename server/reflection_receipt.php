@@ -255,10 +255,11 @@ function pcv_reflection_store_ack_receipt(array $tuple, array $scope, int $ackGe
             if (!pcv_reflection_interaction_epochs_match($ackGeneration, $ackGeneration)) {
                 return ['kind' => 'interaction_stale'];
             }
+            // Stored state binds the catalog ID; the receipt name is the live-resolved name for that ID.
             if ($receipt['pcv_key'] !== $activeScope['pcv_key']
                 || $receipt['config_id'] !== $activeScope['config_id']
-                || pcv_scope_name_key($receipt['actor_name']) !== pcv_scope_name_key($activeScope['actor_name'])
-                || pcv_scope_name_key($tuple['speaker']) !== pcv_scope_name_key($activeScope['actor_name'])) {
+                || (string)$receipt['actor_id'] !== $activeScope['actor_id']
+                || pcv_scope_name_key($tuple['speaker']) !== pcv_scope_name_key($receipt['actor_name'])) {
                 return ['kind' => 'scope_changed'];
             }
 
@@ -282,7 +283,7 @@ function pcv_reflection_store_ack_receipt(array $tuple, array $scope, int $ackGe
                 && $now - $stored['created_at'] <= PCV_REFLECTION_RECEIPT_TTL
                 && $stored['pcv_key'] === $activeScope['pcv_key']
                 && $stored['config_id'] === $activeScope['config_id']
-                && pcv_scope_name_key($stored['actor_name']) === pcv_scope_name_key($activeScope['actor_name'])
+                && (string)$stored['actor_id'] === $activeScope['actor_id']
                 && $stored['ack_generation'] === $receipt['ack_generation']));
             foreach ($receipts as $stored) {
                 if ($stored['utterance_id'] === $receipt['utterance_id']) {
