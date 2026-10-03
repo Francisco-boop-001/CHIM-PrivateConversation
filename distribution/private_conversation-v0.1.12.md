@@ -33,7 +33,15 @@ or later (whole-reply solo evaluation: 0.1.16). The candidate remains PRE-ALPHA.
 
 ## Verification
 
-See `tasks/free-mode-verification-2026-10-03.md`.
+- **Offline fixtures:** all 40 pass, including four new free mode test files, plus 11 of 11 browser-refresh cases.
+- **Clone run:** a crowd of nine on a disposable clone, 11 AI calls.
+  - The nearest six became the members.
+  - Target, named and nearest openers each opened as expected.
+  - The addressed member answered the rechat.
+  - Witness lists held exactly the six members.
+  - With too few nearby, the scene stayed pending.
+  - Details: `tasks/free-mode-verification-2026-10-03.md`.
+- **Not yet covered:** an in-game check with the real client.
 
 ## Limits
 
