@@ -240,6 +240,14 @@ function pcv_render_page(
     if ($status === 'active' && ($scene = $sceneText($scope)) !== '') {
         $scopeSummary .= '<p>' . ($scopeSceneMode === 'solo' ? 'Current reflection: ' : 'Current pair: ') . $scene . '.</p>';
     }
+    $lastTurn = $status === 'active' && is_string($state['config_id'] ?? null) && function_exists('pcv_log_read_last_turn')
+        ? pcv_log_read_last_turn($state['config_id']) : null;
+    if (is_array($lastTurn)) {
+        $spoke = $lastTurn['outcome'] === 'postrequest_observed';
+        $scopeSummary .= '<p class="last-turn">Last scene turn: ' . ($spoke ? 'spoke' : 'ended without speech')
+            . ' (' . pcv_html(substr($lastTurn['timestamp'], 11, 8)) . ' UTC).'
+            . ($spoke ? '' : ' A silent rechat is normal when CHIM has used its rechat budget.') . '</p>';
+    }
     if ($pending) {
         if ($pendingEnd) {
             $scopeSummary .= '<p class="pending-summary">End is queued for the next eligible ordinary input.</p>';

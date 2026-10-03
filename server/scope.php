@@ -174,6 +174,7 @@ function pcvRoutingLogStart(string $requestType): void
     $GLOBALS['PCV_ROUTING_LOG_STARTED'] = true;
     $GLOBALS['PCV_ROUTING_LOG_REQUEST_TYPE'] = $type;
     pcv_log_begin_request();
+    pcv_log_set_request_type($type);
     pcv_log_event('routing.request_started', 'info', 'ok', null, ['request_type' => $type]);
 }
 

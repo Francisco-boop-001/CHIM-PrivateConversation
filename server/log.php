@@ -68,6 +68,13 @@ function &pcv_log_request_context(): array
     return $request;
 }
 
+/** Remember the request type so a request ending without speech can say what kind it was. */
+function pcv_log_set_request_type(string $requestType): void
+{
+    $request =& pcv_log_request_context();
+    $request['request_type'] = in_array($requestType, pcv_log_enum_values('request_type'), true) ? $requestType : 'other';
+}
+
 function pcv_log_begin_request(?string $configId = null): void
 {
     $request =& pcv_log_request_context();
@@ -1089,8 +1096,62 @@ function pcv_log_event(string $event, string $severity, string $outcome, ?string
             return;
         }
         pcv_log_write_line($line);
+        if ($event === 'routing.request_finished' && in_array($outcome, ['postrequest_observed', 'unobserved'], true)
+            && is_string($entry['config_id'])) {
+            pcv_log_record_last_turn($entry['config_id'], $outcome, $timestamp);
+        }
     } catch (Throwable) {
         pcv_log_fallback_once('append_failed');
+    }
+}
+
+/** Keep the last scene turn's outcome (no dialogue) so the plugin page need not scan the log. Best effort. */
+function pcv_log_record_last_turn(string $configId, string $outcome, string $timestamp): void
+{
+    try {
+        $directory = pcv_log_resolve_directory(false);
+        if (!is_string($directory)) {
+            return;
+        }
+        $path = $directory . DIRECTORY_SEPARATOR . 'last_turn.json';
+        if (is_link($path)) {
+            return;
+        }
+        $contents = json_encode(['config_id' => $configId, 'outcome' => $outcome, 'timestamp' => $timestamp], JSON_THROW_ON_ERROR);
+        $temporary = tempnam($directory, '.last-turn-');
+        if ($temporary === false) {
+            return;
+        }
+        if (file_put_contents($temporary, $contents) === strlen($contents)) {
+            @chmod($temporary, 0600);
+            @rename($temporary, $path);
+        }
+        if (is_file($temporary)) {
+            @unlink($temporary);
+        }
+    } catch (Throwable) {
+        // The status line is optional; logging continues without it.
+    }
+}
+
+/** Read the last scene turn written by pcv_log_record_last_turn, if it belongs to $configId. */
+function pcv_log_read_last_turn(string $configId): ?array
+{
+    try {
+        $directory = pcv_log_resolve_directory(false);
+        $path = is_string($directory) ? $directory . DIRECTORY_SEPARATOR . 'last_turn.json' : null;
+        if ($path === null || !is_file($path) || is_link($path) || (int)@filesize($path) > 512) {
+            return null;
+        }
+        $turn = json_decode((string)@file_get_contents($path), true, 4);
+        if (!is_array($turn) || ($turn['config_id'] ?? null) !== $configId
+            || !in_array($turn['outcome'] ?? null, ['postrequest_observed', 'unobserved'], true)
+            || !is_string($turn['timestamp'] ?? null) || preg_match('/\A\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d/', $turn['timestamp']) !== 1) {
+            return null;
+        }
+        return $turn;
+    } catch (Throwable) {
+        return null;
     }
 }
 
@@ -1163,11 +1224,14 @@ function pcv_log_shutdown_terminal(): void
     if ($request['terminal_emitted'] || !$request['shutdown_registered']) {
         return;
     }
+    // CHIM can end a request without speech on purpose (e.g. its rechat budget, which plugins cannot
+    // observe), so record the request type to tell an ended rechat chain from a failed input.
     $terminal = $request['terminal'] ?? [
         'severity' => 'warning',
         'outcome' => 'unobserved',
         'reason' => 'request_unobserved',
-        'context' => ['phase' => 'shutdown'],
+        'context' => array_filter(['phase' => 'shutdown', 'request_type' => $request['request_type'] ?? null],
+            static fn($value) => $value !== null),
     ];
     $lastError = error_get_last();
     if (is_array($lastError) && in_array($lastError['type'] ?? null, [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR], true)) {
