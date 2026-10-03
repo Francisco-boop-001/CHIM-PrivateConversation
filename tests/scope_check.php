@@ -270,6 +270,8 @@ try {
         'scene_mode' => 'pair',
         'actor_a' => 'Aela',
         'actor_b' => 'Bryn',
+        'members' => ['Aela', 'Bryn'],
+        'opener' => 'Aela',
         'exclude_player' => true,
         'bystander_mode' => 'exclude',
     ], 'A valid stable-ID pair did not resolve to its current canonical names.');

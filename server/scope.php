@@ -139,16 +139,44 @@ function pcvSoloReflectionRequest(array $requestScope): bool
         && ($requestScope['route'] ?? null) === 'solo_reflection';
 }
 
+/** Catalog IDs of a stored config; mirrors pcv_config_actor_ids for callers that load scope.php without state.php. */
+function pcvScopeConfigActorIds(array $config): array
+{
+    if (function_exists('pcv_config_actor_ids')) {
+        return pcv_config_actor_ids($config);
+    }
+    if (($config['scene_mode'] ?? 'pair') === 'solo') {
+        return [$config['actor_a'] ?? null];
+    }
+    return is_array($config['actor_ids'] ?? null) ? array_values($config['actor_ids'])
+        : [$config['actor_a'] ?? null, $config['actor_b'] ?? null];
+}
+
+/** Member names of a resolved scope: the group list, or A/B for scopes resolved before 0.1.11; solo: A. */
+function pcvScopeMembers(array $scope): array
+{
+    if (is_array($scope['members'] ?? null)) {
+        return array_values(array_filter($scope['members'], static fn($name) => is_string($name) && $name !== ''));
+    }
+    $members = [];
+    foreach (['actor_a', 'actor_b'] as $key) {
+        if (is_string($scope[$key] ?? null) && $scope[$key] !== '') {
+            $members[] = $scope[$key];
+        }
+    }
+    return $members;
+}
+
 function pcvPairRoutedRequest(array $requestScope): bool
 {
     $scope = $requestScope['scope'] ?? null;
     $type = $requestScope['origin_request_type'] ?? null;
     $route = $requestScope['route'] ?? null;
+    $members = is_array($scope) ? pcvScopeMembers($scope) : [];
     if (($requestScope['status'] ?? null) !== 'active' || !is_array($scope)
         || ($scope['scene_mode'] ?? null) !== 'pair'
-        || !is_string($scope['actor_a'] ?? null) || $scope['actor_a'] === ''
-        || !is_string($scope['actor_b'] ?? null) || $scope['actor_b'] === ''
-        || $scope['actor_a'] === $scope['actor_b']
+        || count($members) < 2 || count($members) > (defined('PCV_GROUP_MAX_MEMBERS') ? PCV_GROUP_MAX_MEMBERS : 4)
+        || count(array_unique(array_map('pcv_scope_name_key', $members))) !== count($members)
         || !is_bool($scope['exclude_player'] ?? null)
         || ($requestScope['origin_mode'] ?? null) !== 'STANDARD') {
         return false;
@@ -440,15 +468,16 @@ function pcvResolveLiveScopeState(
         return $result;
     }
     $sceneMode = array_key_exists('scene_mode', $storedScope) ? $storedScope['scene_mode'] : 'pair';
-    $idA = $storedScope['actor_a'] ?? null;
-    $idB = $storedScope['actor_b'] ?? null;
     if (!is_array($state['scope'] ?? null) || !is_array($rows)
         || !is_string($playerName) || trim($playerName) === '' || !is_array($eligibleMap)
         || !in_array($sceneMode, ['pair', 'solo'], true)
-        || !is_string($idA) || !array_key_exists($idA, $eligibleMap)
-        || ($sceneMode === 'pair' && (!is_string($idB) || !array_key_exists($idB, $eligibleMap)))
-        || ($sceneMode === 'solo' && $idB !== null)) {
+        || ($sceneMode === 'solo' && ($storedScope['actor_b'] ?? null) !== null)) {
         return array_replace($result, ['status' => 'unavailable']);
+    }
+    foreach (pcvScopeConfigActorIds($state['scope']) as $memberId) {
+        if (!is_string($memberId) || !array_key_exists($memberId, $eligibleMap)) {
+            return array_replace($result, ['status' => 'unavailable']);
+        }
     }
     $knownNpcs = pcvScopeKnownNpcs($rows, $playerName);
     $scope = pcvResolveScopeNames($state['scope'], $knownNpcs, $playerName);
@@ -456,22 +485,34 @@ function pcvResolveLiveScopeState(
         return array_replace($result, ['status' => 'unavailable']);
     }
 
-    $profileIdA = null;
-    $actorAId = (string)($state['scope']['actor_a'] ?? '');
-    foreach ($rows as $row) {
-        if (!is_array($row) || (string)($row['id'] ?? '') !== $actorAId) {
-            continue;
+    // A needs exactly one valid profile row (as before 0.1.11). Other members' profiles are collected when they
+    // are unambiguous so an auto or picked opener can start; an opener without one falls back to A.
+    $memberNames = pcvScopeMembers($scope);
+    $profiles = [];
+    foreach (pcvScopeConfigActorIds($state['scope']) as $index => $memberId) {
+        $profile = null;
+        $ambiguous = false;
+        foreach ($rows as $row) {
+            if (!is_array($row) || (string)($row['id'] ?? '') !== (string)$memberId) {
+                continue;
+            }
+            $candidate = filter_var($row['profile_id'] ?? null, FILTER_VALIDATE_INT);
+            if ($candidate === false || $candidate < 1 || $profile !== null) {
+                $ambiguous = true;
+                break;
+            }
+            $profile = $candidate;
         }
-        $candidate = filter_var($row['profile_id'] ?? null, FILTER_VALIDATE_INT);
-        if ($candidate === false || $candidate < 1 || $profileIdA !== null) {
+        if ($index === 0 && ($ambiguous || !is_int($profile))) {
             return array_replace($result, ['status' => 'unavailable']);
         }
-        $profileIdA = $candidate;
+        if (!$ambiguous && is_int($profile) && isset($memberNames[$index])) {
+            $profiles[$memberNames[$index]] = $profile;
+        }
     }
-    if (!is_int($profileIdA) || $profileIdA < 1) {
-        return array_replace($result, ['status' => 'unavailable']);
-    }
-    return array_replace($result, ['status' => 'active', 'scope' => $scope, 'profile_id_a' => $profileIdA]);
+    return array_replace($result, [
+        'status' => 'active', 'scope' => $scope, 'profile_id_a' => $profiles[$scope['actor_a']], 'profiles' => $profiles,
+    ]);
 }
 
 /** Load one current catalog snapshot for the entire request. */
@@ -538,41 +579,63 @@ function pcvResolveScopeNames(array $storedScope, array $knownNpcs, ?string $pla
         return null;
     }
 
-    $idA = $storedScope['actor_a'] ?? null;
-    $idB = $storedScope['actor_b'] ?? null;
-    if (!is_string($idA) || $idA === '' || !is_string($knownNpcs[$idA] ?? null)) {
+    // Group scenes (0.1.11) list 2-4 members; legacy pairs are A and B; solo is A only.
+    $ids = pcvScopeConfigActorIds($storedScope);
+    $maxMembers = defined('PCV_GROUP_MAX_MEMBERS') ? PCV_GROUP_MAX_MEMBERS : 4;
+    if ($sceneMode === 'pair' && (count($ids) < 2 || count($ids) > $maxMembers)) {
         return null;
     }
-    if ($sceneMode === 'pair'
-        && (!is_string($idB) || $idB === '' || $idA === $idB || !is_string($knownNpcs[$idB] ?? null))) {
-        return null;
-    }
-
-    $nameA = trim($knownNpcs[$idA]);
-    $nameB = $sceneMode === 'pair' ? trim($knownNpcs[$idB]) : null;
-    if ($nameA === '' || preg_match('//u', $nameA) !== 1
-        || preg_match('/[\x00-\x1f\x7f]/', $nameA) === 1
-        || ($sceneMode === 'pair' && (!is_string($nameB) || $nameB === '' || preg_match('//u', $nameB) !== 1
-            || preg_match('/[\x00-\x1f\x7f]/', $nameB) === 1))) {
-        return null;
-    }
-
-    $keyA = pcv_scope_name_key($nameA);
-    $keyB = is_string($nameB) ? pcv_scope_name_key($nameB) : '';
     $playerKey = is_string($playerName) && trim($playerName) !== '' ? pcv_scope_name_key($playerName) : '';
-    $reserved = ['player', 'the player', 'player character', 'the player character', 'dragonborn', 'the dragonborn', 'the narrator', 'explicit_disable_rechat'];
-    if (($sceneMode === 'pair' && $keyA === $keyB) || $keyA === $playerKey || ($sceneMode === 'pair' && $keyB === $playerKey)
-        || str_contains($nameA, '|') || (is_string($nameB) && str_contains($nameB, '|'))
-        || (is_string($playerName) && str_contains($playerName, '|'))
-        || in_array($keyA, $reserved, true) || ($sceneMode === 'pair' && in_array($keyB, $reserved, true))) {
+    if (is_string($playerName) && str_contains($playerName, '|')) {
         return null;
     }
+    $reserved = ['player', 'the player', 'player character', 'the player character', 'dragonborn', 'the dragonborn', 'the narrator', 'explicit_disable_rechat'];
+    $names = [];
+    $keys = [];
+    foreach ($ids as $id) {
+        if (!is_string($id) || $id === '' || isset($names[$id]) || !is_string($knownNpcs[$id] ?? null)) {
+            return null;
+        }
+        $name = trim($knownNpcs[$id]);
+        if ($name === '' || preg_match('//u', $name) !== 1 || preg_match('/[\x00-\x1f\x7f]/', $name) === 1
+            || str_contains($name, '|')) {
+            return null;
+        }
+        $key = pcv_scope_name_key($name);
+        if (isset($keys[$key]) || $key === $playerKey || in_array($key, $reserved, true)) {
+            return null;
+        }
+        $keys[$key] = true;
+        $names[$id] = $name;
+    }
+    $members = array_values($names);
 
+    $opener = $members[0];
+    if ($sceneMode === 'pair' && array_key_exists('opener', $storedScope)) {
+        $opener = $storedScope['opener'] === 'auto' ? null : ($names[$storedScope['opener']] ?? null);
+        if ($storedScope['opener'] !== 'auto' && $opener === null) {
+            return null;
+        }
+    }
+
+    if ($sceneMode === 'solo') {
+        // Solo keeps its pre-0.1.11 shape; reflection code relies on it.
+        return [
+            'enabled' => true,
+            'scene_mode' => 'solo',
+            'actor_a' => $members[0],
+            'actor_b' => null,
+            'exclude_player' => $storedScope['exclude_player'],
+            'bystander_mode' => $storedScope['bystander_mode'],
+        ];
+    }
     return [
         'enabled' => true,
         'scene_mode' => $sceneMode,
-        'actor_a' => $nameA,
-        'actor_b' => $nameB,
+        'actor_a' => $members[0],
+        'actor_b' => $members[1],
+        'members' => $members,
+        'opener' => $opener,
         'exclude_player' => $storedScope['exclude_player'],
         'bystander_mode' => $storedScope['bystander_mode'],
     ];
