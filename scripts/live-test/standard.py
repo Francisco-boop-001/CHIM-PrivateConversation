@@ -20,6 +20,10 @@ turns = 0
 results = []
 heartbeat_on = threading.Event()
 heartbeat_on.set()
+# Real-client behaviours seen in game (0.1.9): partners leave the close range mid-scene while CHIM's
+# wider "beings in range" report (infonpc) may still list them.
+HEARTBEAT_NAMES = list(NAMES)
+wide_on = threading.Event()
 
 
 # ---------- background heartbeat (no cookie jar, safe to run concurrently) ----------
@@ -36,11 +40,15 @@ def raw_post_json(url, body):
 
 def heartbeat_once():
     ts, gamets = s.clock()
-    packet = f"infonpc_close|{ts}|{gamets}|{'/'.join(NAMES)}//{s.PLAYER}"
+    roster = list(HEARTBEAT_NAMES)
+    packet = f"infonpc_close|{ts}|{gamets}|{'/'.join(roster)}//{s.PLAYER}"
     raw_get(f"{s.BASE}/comm.php?DATA={base64.b64encode(packet.encode()).decode()}")
     raw_post_json(f"{s.BASE}/gamedata.php", {"type": "activity_status_bulk", "statuses": [
         {"actor_name": n, "timestamp": ts + 50_000 * (i + 1), "gamets": gamets, "current_action": "idle"}
-        for i, n in enumerate(NAMES)]})
+        for i, n in enumerate(roster)]})
+    if wide_on.is_set():  # same shape as the client: "(beings in range:Name,Name,...,)"
+        wide = f"infonpc|{ts}|{gamets}|(beings in range:{','.join(NAMES)},)"
+        raw_get(f"{s.BASE}/comm.php?DATA={base64.b64encode(wide.encode()).decode()}")
 
 
 def heartbeat_loop():
@@ -344,6 +352,79 @@ def c_end_then_full_reply():
     return f"abandoned {len(abandoned)} lines; gossip {len(gossip)}; reflection {len(lines)} lines, name in lines {named}"
 
 
+def c_partner_leaves():
+    """0.1.10: a partner out of close range keeps the scene through grace, then the wide report; then refused."""
+    print("   arm:", arm_pair(), flush=True)
+    opening = say(B, f"Lidia tells Aela the Huntress that {C} cannot be trusted. Aela weighs the claim.")
+    ack_all(opening)
+    try:
+        HEARTBEAT_NAMES.remove(B)
+        time.sleep(20)                                   # Aela out of close range, inside the 60 s grace
+        one = rechat(A, B, opening[-1]["subtitle"] if opening else "")
+        ack_all(one)
+        time.sleep(45)
+        wide_on.set()
+        time.sleep(12)                                   # grace expired; the wide report still lists her
+        two = rechat(B, A, one[-1]["subtitle"] if one else "")
+        ack_all(two)
+        wide_on.clear()
+        time.sleep(60)                                   # gone from close, grace and wide
+        three = rechat(A, B, two[-1]["subtitle"] if two else "")
+    finally:
+        wide_on.clear()
+        if B not in HEARTBEAT_NAMES:
+            HEARTBEAT_NAMES.append(B)
+    return f"grace={len(one)} wide={len(two)} absent={len(three)} lines (expect >0, >0, 0 with presence_check wide_absent)"
+
+
+def c_gap_then_rechat():
+    """0.1.10: the first close report after a long gap is a baseline; an active scene still counts its names."""
+    print("   arm:", arm_pair(), flush=True)
+    opening = say(B, f"Lidia tells Aela the Huntress something unflattering about {C}.")
+    ack_all(opening)
+    heartbeat_on.clear()
+    try:
+        time.sleep(70)
+        heartbeat_once()
+        time.sleep(1)
+        turn = rechat(A, B, opening[-1]["subtitle"] if opening else "")
+    finally:
+        heartbeat_on.set()
+    return f"rechat after gap: {len(turn)} lines (expect >0)"
+
+
+def c_early_ack():
+    """0.1.10: an ACK for an early line while the reply is still generating logs reflection.ack_pending."""
+    print("   arm:", arm_solo(), flush=True)
+    start_id = max_event_id()
+    result = {}
+    worker = threading.Thread(target=lambda: result.update(
+        lines=say(A, f"Lidia thinks aloud at length about {C}: what he said, what he offered, and what she answered.")))
+    worker.start()
+    acked = None
+    while worker.is_alive() and acked is None:
+        row = subprocess.run(PG + [
+            "select utterance_id||'|'||data from public.eventlog where type='chat' and data like 'Lidia Sobieska:%' "
+            f"and utterance_id is not null and rowid > {start_id} order by rowid limit 1"],
+            capture_output=True, text=True, env=PG_ENV).stdout.strip()
+        if row:
+            utt, data = row.split("|", 1)
+            text = data.split(":", 1)[1].rsplit("(talking to", 1)[0].strip()
+            ack({"speaker": A, "subtitle": text, "utt": utt}, s.PLAYER)
+            acked = utt
+        time.sleep(0.5)
+    worker.join()
+    ack_all(result.get("lines", []), s.PLAYER)
+    return f"early ACK for {acked} sent while generating; expect reflection.ack_pending reply_in_progress, then normal evaluation"
+
+
+def c_solo_subject_present():
+    """0.1.10: with the subject in the audience, solo lines should not address him ('you')."""
+    lines = solo(f"Lidia thinks aloud about {C}, who is standing right there in the snow.")
+    addressed = [l["subtitle"] for l in lines if re.search(r"\b(you|your|yer|ya)\b", l["subtitle"], re.I)]
+    return f"{len(lines)} lines; lines with 'you': {len(addressed)} -> {addressed[:2]}"
+
+
 CASES = [
     ("1 baseline chat + player gossip (no scene)", "normal reply to Hawke; PCV scope_off; MP may judge the claim", c_baseline),
     ("2 pair: opening + 2 rechats", "only Lidia/Aela speak, to each other; MP updates listener opinions of Bruce", c_pair),
@@ -362,6 +443,13 @@ CASES = [
     ("10 player gossip (no scene)", "MP judges player claims about Bruce for Lidia and Aela", c_player_gossip),
     ("11 END, new basis, then full-reply solo", "next scope registers (not busy); MP sees name from line 1",
      c_end_then_full_reply),
+    ("12 partner leaves mid-scene", "rechat kept by grace, then by wide report; refused when absent from all",
+     c_partner_leaves),
+    ("13 heartbeat gap then rechat", "baseline report after the gap still counts the pair; rechat prepared",
+     c_gap_then_rechat),
+    ("14 early ACK during reply", "reflection.ack_pending reply_in_progress, then normal evaluation", c_early_ack),
+    ("15 solo with subject present", "lines refer to the subject in the third person (compliance is model-dependent)",
+     c_solo_subject_present),
 ]
 # Optional case-number prefixes select a subset, e.g. `standard.py 11`.
 if len(sys.argv) > 1:
