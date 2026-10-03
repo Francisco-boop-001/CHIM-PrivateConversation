@@ -246,6 +246,20 @@ $route = ($resolvedScope['scene_mode'] ?? 'pair') === 'solo'
     : (($resolvedScope['exclude_player'] ?? true) ? 'scene_direction' : 'player_speech');
 $baselineOutputLog = is_array($GLOBALS['DEBUG_DATA'] ?? null) && is_string($GLOBALS['DEBUG_DATA']['OUTPUT_LOG'] ?? null)
     ? $GLOBALS['DEBUG_DATA']['OUTPUT_LOG'] : '';
+// Group scenes: the member named earliest in the direction opens, else the picked opener, else the first member.
+$openerName = (string)($resolvedScope['actor_a'] ?? '');
+$openerSource = 'first';
+$openerProfile = $profileA;
+if ($route !== 'solo_reflection') {
+    $direction = is_string($gameRequest[3] ?? null) ? $gameRequest[3] : '';
+    $pick = pcvGroupPickOpener($direction, pcvScopeMembers($resolvedScope), $resolvedScope['opener'] ?? null);
+    $pickedProfile = $state['profiles'][$pick['name']] ?? null;
+    if ($pick['name'] !== '' && is_int($pickedProfile) && $pickedProfile > 0) {
+        $openerName = $pick['name'];
+        $openerSource = $pick['source'];
+        $openerProfile = $pickedProfile;
+    }
+}
 $GLOBALS['PCV_REQUEST_SCOPE'] = array_replace($state, [
     'status' => 'active', 'scope' => $resolvedScope, 'start' => true,
     'profile_id_a' => $profileA, 'route' => $route,
@@ -253,6 +267,9 @@ $GLOBALS['PCV_REQUEST_SCOPE'] = array_replace($state, [
     'origin_dialogue' => is_string($gameRequest[3] ?? null) ? $gameRequest[3] : null,
     'baseline_utterance_id' => is_string($GLOBALS['SCRIPTLINE_UTTERANCE_ID'] ?? null) ? $GLOBALS['SCRIPTLINE_UTTERANCE_ID'] : null,
     'baseline_output_log' => $baselineOutputLog,
+    'opener_name' => $openerName,
+    'opener_source' => $openerSource,
+    'profile_id_opener' => $openerProfile,
 ]);
 if ($route === 'solo_reflection' && is_string($state['config_id'] ?? null) && is_string($state['actor_a_id'] ?? null)) {
     try {

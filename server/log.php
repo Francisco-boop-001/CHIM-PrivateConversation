@@ -171,7 +171,7 @@ function pcv_log_event_rules(): array
         'ui.scope_stage_rejected' => ['severity' => 'warning', 'outcome' => 'rejected', 'context' => []],
         'ui.scope_stage_failed' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['action', 'operation']],
         'routing.request_started' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['request_type']],
-        'routing.request_prepared' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['phase', 'route', 'actor_a_id', 'actor_b_id', 'speaker_id', 'exclude_player', 'bystander_mode']],
+        'routing.request_prepared' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['phase', 'route', 'actor_a_id', 'actor_b_id', 'speaker_id', 'exclude_player', 'bystander_mode', 'member_count', 'opener_source']],
         'routing.request_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['phase', 'request_type', 'state_status', 'mode']],
         'routing.request_blocked' => ['severity' => 'warning', 'outcome' => 'blocked', 'context' => ['phase', 'request_type', 'actor_a_id', 'actor_b_id']],
         'routing.request_error' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['phase', 'request_type', 'actor_a_id', 'actor_b_id']],

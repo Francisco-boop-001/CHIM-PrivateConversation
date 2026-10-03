@@ -62,6 +62,12 @@ $preparedContext = [
 if ($speakerId !== null) {
     $preparedContext['speaker_id'] = $speakerId;
 }
+if (!$solo) {
+    $preparedContext['member_count'] = count(pcvScopeMembers($requestScope['scope']));
+}
+if (is_string($requestScope['opener_source'] ?? null) && ($requestScope['route'] ?? null) !== 'rechat_clamped') {
+    $preparedContext['opener_source'] = $requestScope['opener_source'];
+}
 pcvRoutingLogDetail('context', 'action_instructions_removed', pcvRoutingLogCurrentType(), $requestScope);
 if (empty($GLOBALS['PCV_ROUTING_LOG_TERMINAL'])) {
     $GLOBALS['PCV_ROUTING_LOG_TERMINAL'] = true;

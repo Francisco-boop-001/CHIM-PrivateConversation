@@ -139,6 +139,51 @@ function pcvSoloReflectionRequest(array $requestScope): bool
         && ($requestScope['route'] ?? null) === 'solo_reflection';
 }
 
+/**
+ * Opener for a group turn: the member named earliest in the direction (full name, or a first word that is unique
+ * among the members; whole words, case-insensitive), else the picked opener, else the first member.
+ * Returns ['name' => member name, 'source' => named|picker|first].
+ */
+function pcvGroupPickOpener(string $direction, array $members, ?string $pickerName): array
+{
+    $members = array_values(array_filter($members, static fn($name) => is_string($name) && trim($name) !== ''));
+    $firstWord = static function (string $name): string {
+        $parts = preg_split('/\s+/u', trim($name));
+        return is_array($parts) ? (string)$parts[0] : '';
+    };
+    $wordCounts = [];
+    foreach ($members as $name) {
+        $key = pcv_scope_name_key($firstWord($name));
+        $wordCounts[$key] = ($wordCounts[$key] ?? 0) + 1;
+    }
+    $best = null;
+    foreach ($members as $name) {
+        $patterns = [trim($name)];
+        $word = $firstWord($name);
+        if ($word !== '' && $word !== trim($name) && ($wordCounts[pcv_scope_name_key($word)] ?? 0) === 1) {
+            $patterns[] = $word;
+        }
+        foreach ($patterns as $pattern) {
+            $regex = '/(?<![\p{L}\p{N}])' . preg_quote($pattern, '/') . '(?![\p{L}\p{N}])/iu';
+            if (preg_match($regex, $direction, $match, PREG_OFFSET_CAPTURE) !== 1) {
+                continue;
+            }
+            $position = $match[0][1];
+            $length = strlen($pattern);
+            if ($best === null || $position < $best['position'] || ($position === $best['position'] && $length > $best['length'])) {
+                $best = ['name' => $name, 'position' => $position, 'length' => $length];
+            }
+        }
+    }
+    if ($best !== null) {
+        return ['name' => $best['name'], 'source' => 'named'];
+    }
+    if (is_string($pickerName) && in_array($pickerName, $members, true)) {
+        return ['name' => $pickerName, 'source' => 'picker'];
+    }
+    return ['name' => $members[0] ?? '', 'source' => 'first'];
+}
+
 /** Catalog IDs of a stored config; mirrors pcv_config_actor_ids for callers that load scope.php without state.php. */
 function pcvScopeConfigActorIds(array $config): array
 {
@@ -237,6 +282,11 @@ function pcvRoutingLogSpeakerId(?string $speaker, ?array $scopeState = null): ?s
 {
     if (!is_string($speaker) || !is_array($scopeState)) {
         return null;
+    }
+    foreach (is_array($scopeState['member_ids'] ?? null) ? $scopeState['member_ids'] : [] as $memberName => $memberId) {
+        if (is_string($memberName) && strcasecmp(trim($speaker), $memberName) === 0 && is_string($memberId)) {
+            return $memberId;
+        }
     }
     if (strcasecmp(trim($speaker), (string)($scopeState['scope']['actor_a'] ?? '')) === 0
         && is_string($scopeState['actor_a_id'] ?? null)) {
@@ -510,8 +560,15 @@ function pcvResolveLiveScopeState(
             $profiles[$memberNames[$index]] = $profile;
         }
     }
+    $memberIds = [];
+    foreach (pcvScopeConfigActorIds($state['scope']) as $index => $memberId) {
+        if (isset($memberNames[$index]) && is_string($memberId)) {
+            $memberIds[$memberNames[$index]] = $memberId;
+        }
+    }
     return array_replace($result, [
         'status' => 'active', 'scope' => $scope, 'profile_id_a' => $profiles[$scope['actor_a']], 'profiles' => $profiles,
+        'member_ids' => $memberIds,
     ]);
 }
 
