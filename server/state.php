@@ -1974,13 +1974,30 @@ function pcv_group_narrow_config(array $config, ?array $eligible): ?array
     return ['config' => $narrowed, 'dropped' => array_values(array_diff($ids, $present))];
 }
 
+/** Members of a free scene: the first $cap candidate IDs (nearest first) that are strictly eligible. */
+function pcv_free_select_members(array $candidateOrder, array $eligible, int $cap = PCV_FREE_MAX_MEMBERS): array
+{
+    $members = [];
+    foreach ($candidateOrder as $id) {
+        $id = (string)$id;
+        if (array_key_exists($id, $eligible) && !in_array($id, $members, true)) {
+            $members[] = $id;
+            if (count($members) >= $cap) {
+                break;
+            }
+        }
+    }
+    return $members;
+}
+
 /**
  * $eligibleNpcMap is the strict map (close report + fresh activity) used for activation.
+ * $freeCandidateOrder lists catalog IDs nearest first for a pending free scene (map order when null).
  * $activeEligibleNpcMap, when given, is the in-scene map (pcv_read_active_scene_npcs) used only to
  * keep an already active scene; $activePresenceCheck names the failed check for the refusal log.
  */
 function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory = null, ?array $eligibleNpcMap = null,
-    ?array $activeEligibleNpcMap = null, ?string $activePresenceCheck = null): array
+    ?array $activeEligibleNpcMap = null, ?string $activePresenceCheck = null, ?array $freeCandidateOrder = null): array
 {
     if (!pcv_valid_key($key)) {
         pcv_log_set_playthrough_ref(null);
@@ -2034,7 +2051,16 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
             $config = $pending['config'];
             $configId = $pending['config_id'] ?? null;
             // Groups start with the checked members who are present (at least 2); pairs and solo need everyone.
-            $narrowed = $config['enabled'] ? pcv_group_narrow_config($config, $eligibleNpcMap) : ['config' => $config, 'dropped' => []];
+            if (($config['free'] ?? false) === true && !isset($config['actor_ids'])) {
+                // Free scenes (0.1.12) take the nearest eligible NPCs, fixed for the scene.
+                $members = is_array($eligibleNpcMap)
+                    ? pcv_free_select_members($freeCandidateOrder ?? array_keys($eligibleNpcMap), $eligibleNpcMap) : [];
+                $narrowed = count($members) >= 2 ? ['config' => array_replace($config, [
+                    'actor_a' => $members[0], 'actor_b' => $members[1], 'actor_ids' => $members, 'opener' => 'auto',
+                ]), 'dropped' => []] : null;
+            } else {
+                $narrowed = $config['enabled'] ? pcv_group_narrow_config($config, $eligibleNpcMap) : ['config' => $config, 'dropped' => []];
+            }
             if (!is_array($narrowed)) {
                 $blockedPending = $pending;
             } else {

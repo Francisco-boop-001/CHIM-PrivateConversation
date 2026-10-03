@@ -83,6 +83,32 @@ function pcvScopeEligibleMapFromPresence(array $actors, array $rows, ?string $pl
     return $eligible;
 }
 
+/**
+ * Catalog IDs of the eligible NPCs ordered nearest first from the input's presence actors (free scenes).
+ * Ties keep the lower catalog ID first.
+ */
+function pcvScopeFreeCandidateOrder(array $actors, array $eligibleMap): array
+{
+    $idByName = [];
+    foreach ($eligibleMap as $id => $name) {
+        $idByName[pcv_scope_name_key((string)$name)] = (string)$id;
+    }
+    $candidates = [];
+    foreach ($actors as $actor) {
+        $name = is_array($actor) && is_string($actor['name'] ?? null) ? $actor['name'] : '';
+        $distance = is_array($actor) && (is_int($actor['distance'] ?? null) || is_float($actor['distance'] ?? null))
+            ? (float)$actor['distance'] : null;
+        $id = $idByName[pcv_scope_name_key($name)] ?? null;
+        if ($id !== null && $distance !== null && !isset($candidates[$id])) {
+            $candidates[$id] = $distance;
+        }
+    }
+    $ids = array_map('strval', array_keys($candidates));
+    usort($ids, static fn(string $x, string $y): int => ($candidates[$x] <=> $candidates[$y])
+        ?: (strlen($x) <=> strlen($y) ?: strcmp($x, $y)));
+    return $ids;
+}
+
 function pcvRoutingLogType(string $requestType): string
 {
     return in_array($requestType, pcv_log_enum_values('request_type'), true) ? $requestType : 'other';
@@ -197,6 +223,15 @@ function pcvScopeConfigActorIds(array $config): array
         : [$config['actor_a'] ?? null, $config['actor_b'] ?? null];
 }
 
+/** Largest member count for a scope: six for free scenes (0.1.12), else four. */
+function pcvScopeMaxMembers(array $scope): int
+{
+    if (($scope['free'] ?? false) === true) {
+        return defined('PCV_FREE_MAX_MEMBERS') ? PCV_FREE_MAX_MEMBERS : 6;
+    }
+    return defined('PCV_GROUP_MAX_MEMBERS') ? PCV_GROUP_MAX_MEMBERS : 4;
+}
+
 /** Member names of a resolved scope: the group list, or A/B for scopes resolved before 0.1.11; solo: A. */
 function pcvScopeMembers(array $scope): array
 {
@@ -220,7 +255,7 @@ function pcvPairRoutedRequest(array $requestScope): bool
     $members = is_array($scope) ? pcvScopeMembers($scope) : [];
     if (($requestScope['status'] ?? null) !== 'active' || !is_array($scope)
         || ($scope['scene_mode'] ?? null) !== 'pair'
-        || count($members) < 2 || count($members) > (defined('PCV_GROUP_MAX_MEMBERS') ? PCV_GROUP_MAX_MEMBERS : 4)
+        || count($members) < 2 || count($members) > pcvScopeMaxMembers($scope)
         || count(array_unique(array_map('pcv_scope_name_key', $members))) !== count($members)
         || !is_bool($scope['exclude_player'] ?? null)
         || ($requestScope['origin_mode'] ?? null) !== 'STANDARD') {
@@ -407,6 +442,7 @@ function pcvBeginResolvedScope(bool $eligible, ?array $currentPresence = null, b
     $rows = null;
     $playerName = null;
     $eligibleMap = null;
+    $freeOrder = null;
     $failureReason = null;
 
     if ($needsEligibility) {
@@ -441,6 +477,7 @@ function pcvBeginResolvedScope(bool $eligible, ?array $currentPresence = null, b
                     if (is_string($playerName) && trim($playerName) !== '') {
                         $rows = pcvScopeLoadNpcCatalog();
                         $eligibleMap = pcvScopeEligibleMapFromPresence($actors, $rows, $playerName);
+                        $freeOrder = pcvScopeFreeCandidateOrder($actors, $eligibleMap);
                     }
                 } catch (Throwable $error) {
                     // Do not replace a missing current report with a cached report.
@@ -483,7 +520,7 @@ function pcvBeginResolvedScope(bool $eligible, ?array $currentPresence = null, b
     }
 
     // The state lock rechecks the observed state and rejects any concurrent enabled config without a map.
-    $result = pcv_begin_request($key, $eligible, null, $eligibleMap, $activeMap, $activeCheck);
+    $result = pcv_begin_request($key, $eligible, null, $eligibleMap, $activeMap, $activeCheck, $freeOrder);
     if (($result['status'] ?? null) === 'unavailable' && $failureReason !== null
         && !in_array($failureReason, ['presence_missing', 'presence_stale'], true)) {
         $result['reason'] = $failureReason;
@@ -638,7 +675,7 @@ function pcvResolveScopeNames(array $storedScope, array $knownNpcs, ?string $pla
 
     // Group scenes (0.1.11) list 2-4 members; legacy pairs are A and B; solo is A only.
     $ids = pcvScopeConfigActorIds($storedScope);
-    $maxMembers = defined('PCV_GROUP_MAX_MEMBERS') ? PCV_GROUP_MAX_MEMBERS : 4;
+    $maxMembers = pcvScopeMaxMembers($storedScope);
     if ($sceneMode === 'pair' && (count($ids) < 2 || count($ids) > $maxMembers)) {
         return null;
     }
@@ -686,7 +723,7 @@ function pcvResolveScopeNames(array $storedScope, array $knownNpcs, ?string $pla
             'bystander_mode' => $storedScope['bystander_mode'],
         ];
     }
-    return [
+    $resolved = [
         'enabled' => true,
         'scene_mode' => $sceneMode,
         'actor_a' => $members[0],
@@ -696,6 +733,10 @@ function pcvResolveScopeNames(array $storedScope, array $knownNpcs, ?string $pla
         'exclude_player' => $storedScope['exclude_player'],
         'bystander_mode' => $storedScope['bystander_mode'],
     ];
+    if (($storedScope['free'] ?? false) === true) {
+        $resolved['free'] = true;
+    }
+    return $resolved;
 }
 
 /**
@@ -883,7 +924,7 @@ function pcvBuildScopeContext(array $resolvedScope, string $speaker, string $lis
     $members = pcvScopeMembers($resolvedScope);
     if (count($members) > 2) {
         $list = implode(', ', array_slice($members, 0, -1)) . ' and ' . $members[count($members) - 1];
-        $words = [3 => 'three', 4 => 'four'][count($members)] ?? (string)count($members);
+        $words = [3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six'][count($members)] ?? (string)count($members);
         $context = "Private conversation among {$list}. {$speaker} is speaking now. Only these {$words} selected NPCs may take speaking turns;"
             . ' respond to whoever spoke last or to whoever is addressed.';
     } else {
