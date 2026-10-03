@@ -258,6 +258,8 @@ function pcv_state_validate_legacy_directory(string $directory): void
         'state.json' => 16384,
         'presence.json' => PCV_PRESENCE_DOCUMENT_MAX_BYTES,
         'background_presence.json' => PCV_PRESENCE_DOCUMENT_MAX_BYTES,
+        'background_wide_presence.json' => PCV_PRESENCE_DOCUMENT_MAX_BYTES,
+        'solo_inflight.json' => 512,
         'reflection.json' => 8192,
         'reflection_receipts.json' => 8192,
     ];
@@ -281,9 +283,9 @@ function pcv_state_validate_legacy_directory(string $directory): void
             }
             continue;
         }
-        if (preg_match('/\\A\\.(?:state|background-presence|presence|reflection|reflection-receipts)-[A-Za-z0-9]{6}\\z/D', $name) === 1) {
+        if (preg_match('/\\A\\.(?:state|background-presence|wide-presence|solo-inflight|presence|reflection|reflection-receipts)-[A-Za-z0-9]{6}\\z/D', $name) === 1) {
             $size = @filesize($path);
-            if (!is_int($size) || $size > 65536) {
+            if (!is_int($size) || $size > PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
                 throw new RuntimeException('Legacy state temporary file is unavailable.');
             }
             continue;
@@ -831,7 +833,7 @@ function pcv_invalidate_eligible_npcs(?string $stateDirectory = null): array
         if ($handle === null) {
             return ['status' => 'missing', 'reason' => 'presence_missing'];
         }
-        foreach (['presence.json', 'background_presence.json'] as $name) {
+        foreach (['presence.json', 'background_presence.json', 'background_wide_presence.json'] as $name) {
             $path = $directory . DIRECTORY_SEPARATOR . $name;
             if (is_link($path) || (file_exists($path) && (!is_file($path) || !@unlink($path)))) {
                 pcv_log_event('state.unavailable', 'error', 'unavailable', 'presence_unavailable', ['operation' => 'presence_invalidate']);
@@ -1087,6 +1089,147 @@ function pcv_capture_background_presence_report(
         }
         pcv_log_exception('state.unavailable', 'error', 'unavailable', 'presence_unavailable', $error, ['operation' => 'presence_capture']);
         return pcv_presence_observed_result('background_capture', pcv_presence_result('unavailable', reason: 'presence_unavailable'));
+    } finally {
+        pcv_unlock_state($handle);
+    }
+}
+
+/** Parse CHIM's wider `infonpc` report: "(beings in range:Name,Name,...,)". */
+function pcv_parse_wide_presence_report($raw, ?string $currentPlayerName): array
+{
+    if (!is_string($raw) || strlen($raw) > 32768 || preg_match('//u', $raw) !== 1
+        || !is_string($currentPlayerName) || trim($currentPlayerName) === ''
+        || preg_match('/\A\(?\s*beings in range:(.*?)\)?\s*\z/su', trim($raw), $match) !== 1) {
+        return pcv_presence_result('unavailable', reason: 'presence_invalid');
+    }
+    if (!function_exists('pcv_scope_name_key')) {
+        require_once __DIR__ . '/scope.php';
+    }
+    $playerKey = pcv_scope_name_key($currentPlayerName);
+    $actors = [];
+    foreach (explode(',', $match[1]) as $token) {
+        $name = trim($token);
+        if ($name === '' || preg_match('/\((?:dead|disabled|unconscious)\)\s*\z/iu', $name) === 1) {
+            continue;
+        }
+        $name = function_exists('chimDataStripActorStateSuffix')
+            ? trim((string)chimDataStripActorStateSuffix($name))
+            : trim((string)preg_replace('/\s*\([^()]*\)\s*\z/u', '', $name));
+        if ($name === '' || strlen($name) > 256 || preg_match('/[\x00-\x1f\x7f]/', $name) === 1) {
+            return pcv_presence_result('unavailable', reason: 'presence_invalid');
+        }
+        if (pcv_scope_name_key($name) === $playerKey) {
+            continue;
+        }
+        $actors[] = ['name' => $name];
+        if (count($actors) > PCV_PRESENCE_MAX_ACTORS) {
+            return pcv_presence_result('unavailable', reason: 'presence_invalid');
+        }
+    }
+    return pcv_presence_result($actors === [] ? 'empty' : 'ready', $actors);
+}
+
+/** Store the latest wide report under the state lock; an invalid report removes the previous one. */
+function pcv_capture_wide_presence_report(?string $key, $raw, ?string $playerName, ?string $stateDirectory = null): array
+{
+    $parsed = pcv_parse_wide_presence_report($raw, $playerName);
+    $handle = null;
+    try {
+        $directory = pcv_state_directory($stateDirectory);
+        $handle = pcv_lock_state($directory, true, LOCK_EX);
+        $path = $directory . DIRECTORY_SEPARATOR . 'background_wide_presence.json';
+        if (is_link($path)) {
+            throw new RuntimeException('Wide presence report is not safe.');
+        }
+        if (!is_string($key) || !pcv_valid_key($key) || !in_array($parsed['status'], ['ready', 'empty'], true)) {
+            if (file_exists($path) && (!is_file($path) || !@unlink($path))) {
+                throw new RuntimeException('Could not invalidate wide presence report.');
+            }
+            return ['status' => 'unavailable'];
+        }
+        $document = [
+            'version' => PCV_WIDE_PRESENCE_VERSION,
+            'source' => 'infonpc_v1',
+            'key' => $key,
+            'player_name' => trim((string)$playerName),
+            'observed_at' => time(),
+            'actors' => $parsed['actors'],
+        ];
+        $contents = json_encode($document, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
+        $temporary = tempnam($directory, '.wide-presence-');
+        if ($temporary === false) {
+            throw new RuntimeException('Could not stage wide presence report.');
+        }
+        try {
+            if (file_put_contents($temporary, $contents, LOCK_EX) !== strlen($contents)) {
+                throw new RuntimeException('Could not write wide presence report.');
+            }
+            @chmod($temporary, 0660);
+            if (!@rename($temporary, $path)) {
+                throw new RuntimeException('Could not commit wide presence report.');
+            }
+        } finally {
+            if (is_file($temporary)) {
+                @unlink($temporary);
+            }
+        }
+        return ['status' => $parsed['status']];
+    } catch (Throwable $error) {
+        pcv_log_exception('state.unavailable', 'error', 'unavailable', 'presence_unavailable', $error, ['operation' => 'presence_capture']);
+        return ['status' => 'unavailable'];
+    } finally {
+        pcv_unlock_state($handle);
+    }
+}
+
+/** Read the wide report as name-key counts. Used only inside an active scene, never for activation. */
+function pcv_read_wide_presence_names(?string $key, ?string $playerName, ?string $stateDirectory = null, ?int $now = null): array
+{
+    $unavailable = ['status' => 'unavailable', 'counts' => []];
+    if (!is_string($key) || !pcv_valid_key($key) || !is_string($playerName) || trim($playerName) === '') {
+        return $unavailable;
+    }
+    if (!function_exists('pcv_scope_name_key')) {
+        require_once __DIR__ . '/scope.php';
+    }
+    $handle = null;
+    try {
+        $directory = pcv_state_directory($stateDirectory);
+        $handle = pcv_lock_state($directory, false, LOCK_SH);
+        $path = $directory . DIRECTORY_SEPARATOR . 'background_wide_presence.json';
+        if ($handle === null || !is_file($path) || is_link($path)) {
+            return $unavailable;
+        }
+        $size = @filesize($path);
+        if (!is_int($size) || $size > PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
+            return $unavailable;
+        }
+        $document = json_decode((string)@file_get_contents($path), true, 16);
+        if (!is_array($document) || ($document['version'] ?? null) !== PCV_WIDE_PRESENCE_VERSION
+            || ($document['source'] ?? null) !== 'infonpc_v1'
+            || !is_string($document['key'] ?? null) || !hash_equals($key, $document['key'])
+            || !is_string($document['player_name'] ?? null)
+            || pcv_scope_name_key($document['player_name']) !== pcv_scope_name_key($playerName)
+            || !is_int($document['observed_at'] ?? null)
+            || !is_array($document['actors'] ?? null) || !array_is_list($document['actors'])
+            || count($document['actors']) > PCV_PRESENCE_MAX_ACTORS) {
+            return $unavailable;
+        }
+        $now ??= time();
+        if ($document['observed_at'] > $now || $now - $document['observed_at'] > PCV_PRESENCE_TTL) {
+            return ['status' => 'stale', 'counts' => []];
+        }
+        $counts = [];
+        foreach ($document['actors'] as $actor) {
+            if (!is_array($actor) || !is_string($actor['name'] ?? null)) {
+                return $unavailable;
+            }
+            $nameKey = pcv_scope_name_key($actor['name']);
+            $counts[$nameKey] = ($counts[$nameKey] ?? 0) + 1;
+        }
+        return ['status' => 'ready', 'counts' => $counts];
+    } catch (Throwable) {
+        return $unavailable;
     } finally {
         pcv_unlock_state($handle);
     }

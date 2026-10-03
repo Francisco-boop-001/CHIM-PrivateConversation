@@ -14,6 +14,17 @@ if (!is_array($gameRequest)) {
 }
 
 $requestType = (string)($gameRequest[0] ?? '');
+if ($requestType === 'infonpc') {
+    // The wider "beings in range" report keeps an active scene's partner who briefly left close range.
+    try {
+        if (function_exists('pcv_capture_wide_presence_report')) {
+            pcv_capture_wide_presence_report(pcv_current_playthrough_key(), $gameRequest[3] ?? null, pcv_current_player_name());
+        }
+    } catch (Throwable $error) {
+        pcv_log_exception('state.unavailable', 'error', 'unavailable', 'presence_unavailable', $error, ['operation' => 'presence_capture']);
+    }
+    return;
+}
 if ($requestType === 'infonpc_close') {
     try {
         if (!function_exists('pcv_capture_background_presence_report')) {
