@@ -12,8 +12,14 @@ const PCV_PRESENCE_TTL = 45;
 const PCV_PRESENCE_CLOCK_TOLERANCE = 1;
 // Busy places report many actors (live maximum seen: 79); generic duplicates are kept so names stay ambiguous.
 const PCV_PRESENCE_MAX_ACTORS = 128;
-const PCV_PRESENCE_DOCUMENT_MAX_BYTES = 65536;
+// Room for the actor list plus the bounded recent-name map (both at most 128 names).
+const PCV_PRESENCE_DOCUMENT_MAX_BYTES = 131072;
 const PCV_BACKGROUND_PRESENCE_VERSION = 1;
+// Inside an active scene a participant may be out of the close report this long (live: partners wander mid-scene).
+const PCV_PRESENCE_ACTIVE_GRACE = 60;
+const PCV_WIDE_PRESENCE_VERSION = 1;
+// An early-line ACK within this window of a solo request start is "reply in progress", not "registration missing".
+const PCV_SOLO_INFLIGHT_TTL = 180;
 
 function pcv_shared_server_identity($playerName): array
 {
@@ -921,6 +927,26 @@ function pcv_capture_presence_snapshot(
     return pcv_store_presence_snapshot($key, $parsed, $stateDirectory);
 }
 
+/** Merge names seen now into the bounded recent map, dropping entries older than the grace window. */
+function pcv_presence_recent_merge(array $previous, array $actors, int $now): array
+{
+    $recent = [];
+    foreach ($previous as $nameKey => $entry) {
+        if (is_string($nameKey) && is_array($entry) && is_string($entry['name'] ?? null) && is_int($entry['seen_at'] ?? null)
+            && $entry['seen_at'] <= $now && $now - $entry['seen_at'] <= PCV_PRESENCE_ACTIVE_GRACE) {
+            $recent[$nameKey] = ['name' => $entry['name'], 'seen_at' => $entry['seen_at']];
+        }
+    }
+    foreach ($actors as $actor) {
+        $recent[pcv_scope_name_key($actor['name'])] = ['name' => $actor['name'], 'seen_at' => $now];
+    }
+    if (count($recent) > PCV_PRESENCE_MAX_ACTORS) {
+        uasort($recent, static fn(array $a, array $b): int => $b['seen_at'] <=> $a['seen_at']);
+        $recent = array_slice($recent, 0, PCV_PRESENCE_MAX_ACTORS, true);
+    }
+    return $recent;
+}
+
 /** Capture a native close-range heartbeat without making a game or database call. */
 function pcv_capture_background_presence_report(
     ?string $key,
@@ -1038,6 +1064,8 @@ function pcv_capture_background_presence_report(
             'heartbeat_timestamp' => $timestamp,
             'baseline_timestamp' => $baseline,
             'actors' => $parsed['actors'],
+            'recent' => pcv_presence_recent_merge(
+                $sameIdentity && is_array($previous['recent'] ?? null) ? $previous['recent'] : [], $parsed['actors'], $now),
         ];
         pcv_write_background_presence($directory, $document);
         pcv_log_set_playthrough_ref($key);
