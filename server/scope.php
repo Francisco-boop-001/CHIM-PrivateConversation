@@ -384,8 +384,27 @@ function pcvBeginResolvedScope(bool $eligible, ?array $currentPresence = null, b
         }
     }
 
+    // An already active scene tolerates a participant briefly out of close range (grace, wide report,
+    // baseline report after a gap). Activation keeps the strict map.
+    $activeMap = null;
+    $activeCheck = null;
+    if ($active && !$pendingEnd && is_array($observed['scope'] ?? null)) {
+        try {
+            $playerName ??= pcv_current_player_name();
+            if (is_string($playerName) && trim($playerName) !== '') {
+                $rows ??= pcvScopeLoadNpcCatalog();
+                $sceneIds = array_values(array_filter(pcv_config_actor_ids($observed['scope']), 'is_string'));
+                $inScene = pcv_read_active_scene_npcs($key, $rows, $playerName, $sceneIds);
+                $activeMap = ($eligibleMap ?? []) + $inScene['known_npcs'];
+                $activeCheck = $inScene['missing'] === [] ? null : (string)reset($inScene['missing']);
+            }
+        } catch (Throwable $error) {
+            pcv_log_exception('state.unavailable', 'error', 'unavailable', 'catalog_unavailable', $error, ['operation' => 'begin']);
+        }
+    }
+
     // The state lock rechecks the observed state and rejects any concurrent enabled config without a map.
-    $result = pcv_begin_request($key, $eligible, null, $eligibleMap);
+    $result = pcv_begin_request($key, $eligible, null, $eligibleMap, $activeMap, $activeCheck);
     if (($result['status'] ?? null) === 'unavailable' && $failureReason !== null
         && !in_array($failureReason, ['presence_missing', 'presence_stale'], true)) {
         $result['reason'] = $failureReason;
@@ -393,7 +412,8 @@ function pcvBeginResolvedScope(bool $eligible, ?array $currentPresence = null, b
     if (($result['status'] ?? null) !== 'active') {
         return pcvResolveLiveScopeState($result);
     }
-    return pcvResolveLiveScopeState($result, $rows, $playerName, $eligibleMap);
+    // A scene activated by this request used the strict map; one kept active may rely on the in-scene map.
+    return pcvResolveLiveScopeState($result, $rows, $playerName, $activeMap ?? $eligibleMap);
 }
 
 /** Resolve the stored scene IDs against the current catalog and presence map. */

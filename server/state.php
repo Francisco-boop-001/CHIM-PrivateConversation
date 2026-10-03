@@ -1235,6 +1235,90 @@ function pcv_read_wide_presence_names(?string $key, ?string $playerName, ?string
     }
 }
 
+/**
+ * In-scene presence for an already active scene. A participant counts when named exactly once in a
+ * fresh close report (including a baseline report after a gap), when seen in a close report within
+ * the grace window, or when named exactly once in a fresh wide report. Activation never uses this.
+ * Returns ['known_npcs' => [id => name], 'missing' => [id => close|grace_expired|wide_absent|wide_unavailable]].
+ */
+function pcv_read_active_scene_npcs(?string $key, array $catalogRows, ?string $playerName, array $actorIds,
+    ?string $stateDirectory = null, ?int $now = null): array
+{
+    $now ??= time();
+    $result = ['known_npcs' => [], 'missing' => []];
+    if (!function_exists('pcv_scope_name_key')) {
+        require_once __DIR__ . '/scope.php';
+    }
+    $names = [];
+    foreach (pcvScopeKnownNpcs($catalogRows, $playerName) as $id => $name) {
+        $names[(string)$id] = $name;
+    }
+    $document = null;
+    if (is_string($key) && pcv_valid_key($key) && is_string($playerName) && trim($playerName) !== '') {
+        $handle = null;
+        try {
+            $directory = pcv_state_directory($stateDirectory);
+            $handle = pcv_lock_state($directory, false, LOCK_SH);
+            $path = $directory . DIRECTORY_SEPARATOR . 'background_presence.json';
+            $size = is_file($path) && !is_link($path) ? @filesize($path) : false;
+            if ($handle !== null && is_int($size) && $size <= PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
+                $decoded = json_decode((string)@file_get_contents($path), true, 16);
+                if (is_array($decoded) && ($decoded['version'] ?? null) === PCV_BACKGROUND_PRESENCE_VERSION
+                    && is_string($decoded['key'] ?? null) && hash_equals($key, $decoded['key'])
+                    && is_string($decoded['player_name'] ?? null)
+                    && pcv_scope_name_key($decoded['player_name']) === pcv_scope_name_key($playerName)) {
+                    $document = $decoded;
+                }
+            }
+        } catch (Throwable) {
+            $document = null;
+        } finally {
+            pcv_unlock_state($handle);
+        }
+    }
+    $current = [];
+    if (is_array($document) && is_int($document['observed_at'] ?? null)
+        && $document['observed_at'] <= $now && $now - $document['observed_at'] <= PCV_PRESENCE_TTL
+        && in_array($document['state'] ?? null, ['baseline', 'ready'], true) && is_array($document['actors'] ?? null)) {
+        foreach ($document['actors'] as $actor) {
+            if (is_array($actor) && is_string($actor['name'] ?? null)) {
+                $nameKey = pcv_scope_name_key($actor['name']);
+                $current[$nameKey] = ($current[$nameKey] ?? 0) + 1;
+            }
+        }
+    }
+    $recent = is_array($document) && is_array($document['recent'] ?? null) ? $document['recent'] : [];
+    $wide = null;
+    foreach ($actorIds as $id) {
+        $id = (string)$id;
+        $name = $names[$id] ?? null;
+        if (!is_string($name)) {
+            $result['missing'][$id] = 'close';
+            continue;
+        }
+        $nameKey = pcv_scope_name_key($name);
+        $currentCount = $current[$nameKey] ?? 0;
+        if ($currentCount === 1) {
+            $result['known_npcs'][$id] = $name;
+            continue;
+        }
+        $seenAt = $recent[$nameKey]['seen_at'] ?? null;
+        if ($currentCount === 0 && is_int($seenAt) && $seenAt <= $now && $now - $seenAt <= PCV_PRESENCE_ACTIVE_GRACE) {
+            $result['known_npcs'][$id] = $name;
+            continue;
+        }
+        $wide ??= pcv_read_wide_presence_names($key, $playerName, $stateDirectory, $now);
+        if (($wide['status'] ?? null) !== 'ready') {
+            $result['missing'][$id] = 'wide_unavailable';
+        } elseif (($wide['counts'][$nameKey] ?? 0) === 1) {
+            $result['known_npcs'][$id] = $name;
+        } else {
+            $result['missing'][$id] = 'wide_absent';
+        }
+    }
+    return $result;
+}
+
 /** Re-resolve snapshot names against the current catalog on every caller read. */
 function pcv_read_eligible_npcs(?string $key, array $catalogRows, ?string $playerName, ?string $stateDirectory = null): array
 {
@@ -1580,15 +1664,32 @@ function pcv_normalize_config(array $desired, array $knownNpcs): array
     return $config;
 }
 
+/** The participant catalog IDs of a stored scene configuration (solo: A only). */
+function pcv_config_actor_ids(array $config): array
+{
+    return ($config['scene_mode'] ?? 'pair') === 'solo'
+        ? [$config['actor_a'] ?? null]
+        : [$config['actor_a'] ?? null, $config['actor_b'] ?? null];
+}
+
+/** How many participants of $config are absent from $eligibleNpcMap (for refusal logs). */
+function pcv_config_missing_actor_count(array $config, array $eligibleNpcMap): int
+{
+    $missing = 0;
+    foreach (pcv_config_actor_ids($config) as $actorId) {
+        if (!is_string($actorId) || !array_key_exists($actorId, $eligibleNpcMap)) {
+            $missing++;
+        }
+    }
+    return $missing;
+}
+
 function pcv_config_actors_are_eligible(array $config, ?array $eligibleNpcMap): bool
 {
     if (!is_array($eligibleNpcMap)) {
         return false;
     }
-    $actorIds = ($config['scene_mode'] ?? 'pair') === 'solo'
-        ? [$config['actor_a'] ?? null]
-        : [$config['actor_a'] ?? null, $config['actor_b'] ?? null];
-    foreach ($actorIds as $actorId) {
+    foreach (pcv_config_actor_ids($config) as $actorId) {
         if (!is_string($actorId) || !array_key_exists($actorId, $eligibleNpcMap)) {
             return false;
         }
@@ -1690,7 +1791,13 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
     }
 }
 
-function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory = null, ?array $eligibleNpcMap = null): array
+/**
+ * $eligibleNpcMap is the strict map (close report + fresh activity) used for activation.
+ * $activeEligibleNpcMap, when given, is the in-scene map (pcv_read_active_scene_npcs) used only to
+ * keep an already active scene; $activePresenceCheck names the failed check for the refusal log.
+ */
+function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory = null, ?array $eligibleNpcMap = null,
+    ?array $activeEligibleNpcMap = null, ?string $activePresenceCheck = null): array
 {
     if (!pcv_valid_key($key)) {
         pcv_log_set_playthrough_ref(null);
@@ -1767,7 +1874,7 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
         if (!is_array($blockedPending) && is_array($state['active'])) {
             $activeConfig = $state['active']['config'] ?? null;
             if (is_array($activeConfig) && ($activeConfig['enabled'] ?? null) === true
-                && !pcv_config_actors_are_eligible($activeConfig, $eligibleNpcMap)) {
+                && !pcv_config_actors_are_eligible($activeConfig, $activeEligibleNpcMap ?? $eligibleNpcMap)) {
                 $blockedActive = $state['active'];
             }
         }
@@ -1817,9 +1924,14 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
             }
             pcv_log_set_config_id($activeConfigId);
             $sceneMode = $blockedActive['config']['scene_mode'] ?? 'pair';
-            pcv_log_event('state.scope_skipped', 'info', 'skipped', 'scene_not_eligible', [
-                'operation' => 'begin', 'scene_mode' => $sceneMode,
-            ]);
+            $skipContext = ['operation' => 'begin', 'scene_mode' => $sceneMode];
+            if (is_string($activePresenceCheck)) {
+                $skipContext['presence_check'] = $activePresenceCheck;
+            }
+            if (is_array($activeEligibleNpcMap)) {
+                $skipContext['missing_count'] = pcv_config_missing_actor_count($blockedActive['config'], $activeEligibleNpcMap);
+            }
+            pcv_log_event('state.scope_skipped', 'info', 'skipped', 'scene_not_eligible', $skipContext);
             return pcv_result('unavailable', null, is_array($pendingScope),
                 is_array($pendingScope) ? pcv_config_with_scene_mode($pendingScope) : null,
                 is_string($activeConfigId) ? $activeConfigId : null,

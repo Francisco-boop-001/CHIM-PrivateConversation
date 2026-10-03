@@ -151,7 +151,7 @@ function pcv_log_event_rules(): array
         'state.scope_staged' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode']],
         'state.scope_activated' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode']],
         'state.scope_ended' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode']],
-        'state.scope_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['operation', 'scene_mode']],
+        'state.scope_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['operation', 'scene_mode', 'presence_check', 'missing_count']],
         'state.scope_expired' => ['severity' => 'info', 'outcome' => 'expired', 'context' => ['target']],
         'state.scope_invalidated' => ['severity' => 'warning', 'outcome' => 'invalidated', 'context' => ['active_config_id', 'pending_config_id']],
         'state.unavailable' => ['severity' => 'error', 'outcome' => 'unavailable', 'context' => ['operation']],
@@ -407,6 +407,7 @@ function pcv_log_enum_values(string $key): array
         'model_outcome' => ['valid', 'invalid', 'failed', 'not_called'],
         'persistence_outcome' => ['committed', 'invalid', 'stale', 'failed'],
         'commit_state' => ['confirmed', 'unconfirmed', 'not_attempted'],
+        'presence_check' => ['close', 'grace_expired', 'wide_absent', 'wide_unavailable'],
         'decision' => ['non_candidate_request', 'director_excluded', 'scope_off', 'scope_pending', 'identity_unavailable', 'unsupported_mode', 'input_rewritten', 'player_speech_preserved', 'solo_reflection_routed', 'rechat_clamped', 'continuation_routed', 'responder_selected', 'context_prepared', 'action_constraints_refreshed', 'action_instructions_removed'],
     ];
     if ($key === 'source_reason') {
@@ -527,7 +528,7 @@ function pcv_log_clean_context(string $event, array $context): array
             if ((is_int($value) || is_float($value)) && is_finite((float)$value) && $value >= 0 && $value <= 86400000) {
                 $clean[$key] = is_int($value) ? $value : round($value, 2);
             }
-        } elseif (in_array($key, ['action', 'scene_mode', 'bystander_mode', 'target', 'operation', 'status', 'request_type', 'phase', 'route', 'state_status', 'mode', 'decision', 'source', 'model_outcome', 'persistence_outcome', 'commit_state', 'source_reason'], true)) {
+        } elseif (in_array($key, ['action', 'scene_mode', 'bystander_mode', 'target', 'operation', 'status', 'request_type', 'phase', 'route', 'state_status', 'mode', 'decision', 'source', 'model_outcome', 'persistence_outcome', 'commit_state', 'source_reason', 'presence_check'], true)) {
             if (is_string($value) && in_array($value, pcv_log_enum_values($key), true)) {
                 $clean[$key] = $value;
             }
