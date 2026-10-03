@@ -1874,6 +1874,16 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
         $directory = pcv_state_directory($stateDirectory);
         $handle = pcv_lock_state($directory, true, LOCK_EX);
         $loaded = pcv_load_store($directory);
+        if ($loaded['kind'] === 'unavailable' && !$config['enabled']
+            && in_array($loaded['reason'] ?? null, ['invalid_json', 'invalid_state', 'state_too_large'], true)) {
+            // 0.1.13: END recovers an unreadable store; the bad copy is kept for diagnosis. ARM still refuses.
+            $path = $directory . DIRECTORY_SEPARATOR . 'state.json';
+            $kept = $path . '.corrupt-' . time() . '-' . bin2hex(random_bytes(4));
+            if (@rename($path, $kept)) {
+                pcv_log_event('state.store_recovered', 'warning', 'recovered', $loaded['reason'], ['operation' => 'stage']);
+                $loaded = ['kind' => 'missing'];
+            }
+        }
         if ($loaded['kind'] === 'unavailable') {
             pcv_log_event('state.unavailable', 'error', 'unavailable', $loaded['reason'] ?? 'state_stage_failed', ['operation' => 'stage']);
             return pcv_result('unavailable', null, false);

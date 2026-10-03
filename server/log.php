@@ -163,6 +163,7 @@ function pcv_log_event_rules(): array
         'state.scope_expired' => ['severity' => 'info', 'outcome' => 'expired', 'context' => ['target']],
         'state.scope_invalidated' => ['severity' => 'warning', 'outcome' => 'invalidated', 'context' => ['active_config_id', 'pending_config_id']],
         'state.unavailable' => ['severity' => 'error', 'outcome' => 'unavailable', 'context' => ['operation']],
+        'state.store_recovered' => ['severity' => 'warning', 'outcome' => 'recovered', 'context' => ['operation']],
         'state.presence_refreshed' => ['severity' => 'debug', 'outcome' => 'accepted', 'context' => ['actor_count']],
         'state.presence_rejected' => ['severity' => 'warning', 'outcome' => 'rejected', 'context' => ['operation']],
         'ui.page_open' => ['severity' => 'info', 'outcome' => 'ok', 'context' => []],
@@ -325,7 +326,7 @@ function pcv_log_reason_allowed(string $event, ?string $reason, ?string $outcome
         return in_array($reason, $allowed, true);
     }
     if ($reason === null) {
-        return !in_array($event, ['state.scope_expired', 'state.unavailable', 'ui.unavailable', 'ui.scope_stage_rejected', 'ui.scope_stage_failed',
+        return !in_array($event, ['state.store_recovered', 'state.scope_expired', 'state.unavailable', 'ui.unavailable', 'ui.scope_stage_rejected', 'ui.scope_stage_failed',
             'ui.diagnostics_rejected', 'routing.request_skipped', 'routing.request_blocked', 'routing.request_error', 'state.scope_skipped'], true);
     }
 
@@ -370,6 +371,9 @@ function pcv_log_reason_allowed(string $event, ?string $reason, ?string $outcome
     }
     if ($event === 'state.unavailable') {
         return in_array($reason, ['invalid_state_key', 'identity_unavailable', 'state_unavailable', 'corrupt_state', 'symlinked_state', 'not_regular_file', 'state_stat_failed', 'state_too_large', 'state_read_failed', 'invalid_json', 'invalid_state', 'state_stage_failed', 'state_transition_failed', 'profile_lookup_failed', 'catalog_unavailable', 'presence_unavailable', 'presence_stale', 'presence_missing', 'presence_invalid', 'presence_key_mismatch', 'unsupported_special_mode'], true);
+    }
+    if ($event === 'state.store_recovered') {
+        return in_array($reason, ['invalid_json', 'invalid_state', 'state_too_large'], true);
     }
     if ($event === 'state.scope_invalidated') {
         return $reason === 'playthrough_changed';

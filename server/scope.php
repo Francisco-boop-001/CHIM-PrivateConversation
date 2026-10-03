@@ -660,8 +660,24 @@ function pcvScopePresenceFailureReason(array $presence): string
 function pcvScopeStoredStateExists(?string $stateDirectory = null): bool
 {
     try {
-        $path = pcv_state_directory($stateDirectory) . DIRECTORY_SEPARATOR . 'state.json';
-        return file_exists($path) || is_link($path);
+        $directory = pcv_state_directory($stateDirectory);
+        $path = $directory . DIRECTORY_SEPARATOR . 'state.json';
+        if (!file_exists($path) && !is_link($path)) {
+            return false;
+        }
+        // 0.1.13: a readable store with no active or pending scene cannot be leaked to; unreadable stores still count.
+        if (function_exists('pcv_load_store')) {
+            $handle = pcv_lock_state($directory, false, LOCK_SH);
+            try {
+                $loaded = pcv_load_store($directory);
+            } finally {
+                pcv_unlock_state($handle);
+            }
+            if ($loaded['kind'] === 'ready') {
+                return $loaded['state']['active'] !== null || $loaded['state']['pending'] !== null;
+            }
+        }
+        return true;
     } catch (Throwable) {
         return true;
     }
