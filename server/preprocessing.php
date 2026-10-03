@@ -199,8 +199,8 @@ if ($isContinuation) {
             throw $error;
         }
         if ($clamped === null) {
-            $reason = $failureReason === 'rechat_speaker_outside_pair' ? $failureReason : 'malformed_rechat';
-            pcvBlockRequest('Private Conversation rechat payload or speaker is outside the selected pair; request stopped for safety.', $reason, 'preprocessing', $state);
+            $reason = $failureReason === 'rechat_speaker_outside_scene' ? $failureReason : 'malformed_rechat';
+            pcvBlockRequest('Private Conversation rechat payload or speaker is outside the selected scene; request stopped for safety.', $reason, 'preprocessing', $state);
         }
         $gameRequest[3] = $clamped;
         $GLOBALS['gameRequest'] = $gameRequest;

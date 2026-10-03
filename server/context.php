@@ -21,7 +21,7 @@ if (($solo && !pcvSoloReflectionRequest($requestScope))
 }
 $speaker = trim((string)($GLOBALS['HERIKA_NAME'] ?? ''));
 if (!pcvScopeSpeakerAllowed($speaker, $requestScope['scope'])) {
-    pcvBlockRequest('Private Conversation selected an NPC outside the pair; request stopped for safety.', 'speaker_outside_pair', 'context', $requestScope);
+    pcvBlockRequest('Private Conversation selected an NPC outside the scene; request stopped for safety.', 'speaker_outside_scene', 'context', $requestScope);
 }
 
 $head = $GLOBALS['head'] ?? null;

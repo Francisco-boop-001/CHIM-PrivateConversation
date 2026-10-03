@@ -35,7 +35,7 @@ if ($solo) {
 
 $speaker = trim((string)($GLOBALS['HERIKA_NAME'] ?? ''));
 if (!pcvScopeSpeakerAllowed($speaker, $scope)) {
-    pcvBlockRequest('Private Conversation selected an NPC outside the pair; request stopped for safety.', 'speaker_outside_pair', 'context_pre', $requestScope);
+    pcvBlockRequest('Private Conversation selected an NPC outside the scene; request stopped for safety.', 'speaker_outside_scene', 'context_pre', $requestScope);
 }
 $GLOBALS['RECHAT_MODE'] = 'tight';
 try {
@@ -47,11 +47,16 @@ try {
 if (!is_string($playerName) || trim($playerName) === '') {
     pcvBlockRequest('Private Conversation player identity is unavailable; request stopped for safety.', 'player_identity_unavailable', 'context_pre', $requestScope, true);
 }
-$listener = $solo ? '' : (strcasecmp($speaker, (string)$scope['actor_a']) === 0
-    ? (string)$scope['actor_b'] : (string)$scope['actor_a']);
+$others = $solo ? [] : pcvGroupListeners($speaker, $scope);
+// Two members: the counterpart. Three or four: no single listener; the model addresses one of the others.
+$listener = count($others) === 1 ? $others[0] : '';
 if (!$solo && in_array($requestType, ['rechat', 'continue', 'continue_group'], true)) {
-    // Keep strict-rechat's previous-speaker override inside the selected pair.
-    $GLOBALS['RECHAT_PREVIOUS_SPEAKER'] = $listener;
+    // Keep strict-rechat's previous-speaker override inside the scene: the rechat's own speaker when it is a
+    // member (already clamped in preprocessing), else the first other member.
+    $rechatPayload = is_string($GLOBALS['gameRequest'][3] ?? null) ? json_decode($GLOBALS['gameRequest'][3], true) : null;
+    $previous = is_array($rechatPayload) && is_string($rechatPayload['speaker'] ?? null) ? trim($rechatPayload['speaker']) : '';
+    $GLOBALS['RECHAT_PREVIOUS_SPEAKER'] = $previous !== '' && in_array(pcv_scope_name_key($previous),
+        array_map('pcv_scope_name_key', $others), true) ? $previous : ($others[0] ?? '');
 }
 
 $beforeAudience = $GLOBALS['CACHE_PEOPLE'] ?? ($GLOBALS['requestRoutingSnapshot']['audience'] ?? null);

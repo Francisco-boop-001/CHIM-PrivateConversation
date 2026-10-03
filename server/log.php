@@ -190,7 +190,7 @@ function pcv_log_event_rules(): array
                 'postrequest_observed' => [],
                 'skipped' => ['scope_off', 'scope_pending', 'identity_unavailable', 'unsupported_mode', 'scene_not_eligible', 'scope_ineligible'],
                 'blocked' => ['unsupported_special_mode', 'invalid_input_prefix', 'invalid_input_encoding', 'empty_input', 'malformed_rechat',
-                    'rechat_speaker_outside_pair', 'speaker_outside_pair', 'solo_rechat_unsupported', 'solo_unrouted_request', 'pair_continuation_player_excluded', 'mode_changed', 'scene_not_eligible'],
+                    'rechat_speaker_outside_pair', 'speaker_outside_pair', 'rechat_speaker_outside_scene', 'speaker_outside_scene', 'solo_rechat_unsupported', 'solo_unrouted_request', 'pair_continuation_player_excluded', 'mode_changed', 'scene_not_eligible'],
                 'failed' => ['state_unavailable', 'actors_unavailable', 'player_identity_unavailable', 'profile_switch_failed', 'actions_unavailable', 'context_unavailable', 'hook_exception', 'fatal_error'],
                 'unobserved' => ['request_unobserved'],
             ],
@@ -363,7 +363,7 @@ function pcv_log_reason_allowed(string $event, ?string $reason, ?string $outcome
         return in_array($reason, ['scope_off', 'scope_pending', 'identity_unavailable', 'unsupported_mode', 'scene_not_eligible'], true);
     }
     if ($event === 'routing.request_blocked') {
-        return in_array($reason, ['unsupported_special_mode', 'invalid_input_prefix', 'invalid_input_encoding', 'empty_input', 'malformed_rechat', 'rechat_speaker_outside_pair', 'speaker_outside_pair', 'solo_rechat_unsupported', 'solo_unrouted_request', 'pair_continuation_player_excluded', 'mode_changed', 'scene_not_eligible'], true);
+        return in_array($reason, ['unsupported_special_mode', 'invalid_input_prefix', 'invalid_input_encoding', 'empty_input', 'malformed_rechat', 'rechat_speaker_outside_pair', 'speaker_outside_pair', 'rechat_speaker_outside_scene', 'speaker_outside_scene', 'solo_rechat_unsupported', 'solo_unrouted_request', 'pair_continuation_player_excluded', 'mode_changed', 'scene_not_eligible'], true);
     }
     if ($event === 'routing.request_error') {
         return in_array($reason, ['state_unavailable', 'actors_unavailable', 'player_identity_unavailable', 'profile_switch_failed', 'actions_unavailable', 'context_unavailable', 'hook_exception'], true);

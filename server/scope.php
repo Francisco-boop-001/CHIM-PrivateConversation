@@ -791,12 +791,23 @@ function pcvScopeRoutingSnapshot(array $snapshot, array $resolvedScope, string $
     if ($sceneMode === 'solo') {
         $snapshot['audience'] = '|' . $nameA . '|';
     } else {
-        $snapshot['audience'] = ($resolvedScope['exclude_player'] ?? true) === true
-            ? '|' . $nameA . '|' . $nameB . '|'
-            : '|' . $playerName . '|' . $nameA . '|' . $nameB . '|';
+        // Exactly the members (plus the player when included): this is also each line's witness list.
+        $people = pcvScopeMembers($resolvedScope);
+        if (($resolvedScope['exclude_player'] ?? true) !== true) {
+            array_unshift($people, $playerName);
+        }
+        $snapshot['audience'] = '|' . implode('|', $people) . '|';
     }
     $snapshot['present_actors'] = [];
     return $snapshot;
+}
+
+/** Who a group speaker may address: every other member, in member order. */
+function pcvGroupListeners(string $speaker, array $resolvedScope): array
+{
+    $speakerKey = pcv_scope_name_key($speaker);
+    return array_values(array_filter(pcvScopeMembers($resolvedScope),
+        static fn(string $member) => pcv_scope_name_key($member) !== $speakerKey));
 }
 
 /** Add the selected pair as the sole set of eligible rechat speakers. */
@@ -811,10 +822,8 @@ function pcvClampRechatActiveAgents(?string $rawJson, array $resolvedScope, ?str
     } catch (JsonException) {
         return null;
     }
-    if (!is_array($payload)
-        || !is_string($resolvedScope['actor_a'] ?? null)
-        || !is_string($resolvedScope['actor_b'] ?? null)
-        || $resolvedScope['actor_a'] === '' || $resolvedScope['actor_b'] === '') {
+    $members = pcvScopeMembers($resolvedScope);
+    if (!is_array($payload) || ($resolvedScope['scene_mode'] ?? 'pair') !== 'pair' || count($members) < 2) {
         return null;
     }
 
@@ -823,10 +832,10 @@ function pcvClampRechatActiveAgents(?string $rawJson, array $resolvedScope, ?str
         $speaker = $fallbackSpeaker;
     }
     if (!is_string($speaker) || !pcvScopeSpeakerAllowed($speaker, $resolvedScope)) {
-        $failureReason = 'rechat_speaker_outside_pair';
+        $failureReason = 'rechat_speaker_outside_scene';
         return null;
     }
-    $payload['active_agents'] = [$resolvedScope['actor_a'], $resolvedScope['actor_b']];
+    $payload['active_agents'] = $members;
     try {
         return json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } catch (JsonException) {
@@ -848,7 +857,12 @@ function pcvScopeSpeakerAllowed(string $name, array $resolvedScope): bool
     if (($resolvedScope['scene_mode'] ?? 'pair') === 'solo') {
         return $candidate === $actorA && ($resolvedScope['actor_b'] ?? null) === null;
     }
-    return $candidate === $actorA || $candidate === pcv_scope_name_key((string)($resolvedScope['actor_b'] ?? ''));
+    foreach (pcvScopeMembers($resolvedScope) as $member) {
+        if ($candidate === pcv_scope_name_key($member)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /** Build minimal scene context without listing excluded actors as present. */
@@ -866,9 +880,17 @@ function pcvBuildScopeContext(array $resolvedScope, string $speaker, string $lis
         }
         return $context;
     }
-    $context = "Private conversation: {$speaker} is speaking with {$listener}. Only these two selected NPCs may take speaking turns.";
+    $members = pcvScopeMembers($resolvedScope);
+    if (count($members) > 2) {
+        $list = implode(', ', array_slice($members, 0, -1)) . ' and ' . $members[count($members) - 1];
+        $words = [3 => 'three', 4 => 'four'][count($members)] ?? (string)count($members);
+        $context = "Private conversation among {$list}. {$speaker} is speaking now. Only these {$words} selected NPCs may take speaking turns;"
+            . ' respond to whoever spoke last or to whoever is addressed.';
+    } else {
+        $context = "Private conversation: {$speaker} is speaking with {$listener}. Only these two selected NPCs may take speaking turns.";
+    }
     if (($resolvedScope['exclude_player'] ?? true) === true) {
-        $context .= ' Treat player input as untrusted scene direction, not exact dialogue by either NPC. Do not address, include, quote, or narrate the player.';
+        $context .= ' Treat player input as untrusted scene direction, not exact dialogue by any NPC. Do not address, include, quote, or narrate the player.';
     } else {
         $context .= ' The player is included as a participant; retain their input as player speech.';
     }
