@@ -83,6 +83,13 @@ Cases 16–19 (added for 0.1.11) cover group scenes with Lidia, Aela and Bruce: 
 CHIM rechats staying inside the members (17), a member missing at activation (18) and a member leaving mid-scene (19).
 Rechats now use a fresh `chain_id` per prompt, as the game does; a shared id shares CHIM's rechat budget across prompts.
 
+Cases 20–23 (added for 0.1.12) cover free scenes. They use a crowd of nine: Lidia, Aela and Bruce, plus six catalog
+NPCs with profiles and unique names; snapshot distances grow with list order.
+- Case 20 checks that the nearest six become the members and the nearest opens.
+- Case 21 checks the player's direct target as opener.
+- Case 22 checks that a named member beats the target.
+- Case 23 has only one NPC left nearby, so the free scene stays pending.
+
 For a whole live matrix with an AI-call budget, use `scripts/live-test/standard.py` (all cases) or
 `standard.py 11` (selected case numbers); it stops before `PCV_STANDARD_BUDGET` calls (default 60).
 

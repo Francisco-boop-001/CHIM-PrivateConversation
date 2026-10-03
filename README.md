@@ -4,11 +4,22 @@
 
 ![Two travelers speaking quietly in an inn, with an emo llama portrait on the hanging banner behind them.](server/assets/private-conversation-scene.png)
 
-**Candidate: 0.1.11 — PRE-ALPHA.** This CHIM server extension directs ordinary Standard-mode scenes and can register exact solo-reflection output for compatible Mind Poisoning. Protected logging revision 2 shipped in 0.1.5; 0.1.6 added the versioned Mind Poisoning API check and early-ACK diagnostics; 0.1.7 added bounded early-ACK recovery and routing, expiry, state-protection and diagnostic fixes; 0.1.8 added an unclaimed-registration lease, private runtime-state migration and bounded logger-contention handling. 0.1.9 was the first release tested against a live CHIM server (a disposable clone with a real player database and a simulated game client); **0.1.10 fixes what the first in-game session found** that the simulated client could not. A handsome llama is not a QA department, but it now has a test server and a player.
+**Candidate: 0.1.12 — PRE-ALPHA.** This CHIM server extension directs ordinary Standard-mode scenes and can register exact solo-reflection output for compatible Mind Poisoning. Protected logging revision 2 shipped in 0.1.5; 0.1.6 added the versioned Mind Poisoning API check and early-ACK diagnostics; 0.1.7 added bounded early-ACK recovery and routing, expiry, state-protection and diagnostic fixes; 0.1.8 added an unclaimed-registration lease, private runtime-state migration and bounded logger-contention handling. 0.1.9 was the first release tested against a live CHIM server (a disposable clone with a real player database and a simulated game client); **0.1.10 fixes what the first in-game session found** that the simulated client could not. A handsome llama is not a QA department, but it now has a test server and a player.
 
 **0.1.7 baseline:** managed scene routing is narrower, END clears active and pending settings immediately, packaged Apache rules deny HTTP reads of runtime state, and negative unmatched-ACK checks avoid unnecessary fresh identity work. Early-ACK recovery preserves the original receipt time and rechecks active scope and interaction epoch under the ledger lock before reuse or mutation. See the [maintenance review](tasks/maintenance-2026-10-01/final-review.md), [early-ACK review](tasks/ack-handoff-fix-2026-10-01/final-review.md) and [expiry/stale-writer review](tasks/ack-bug-fix-2026-10-01/final-review.md). These reviews describe isolated source behavior, not a deployed CHIM or Skyrim guarantee.
 
 **0.1.8 additions:** a distinct output may supersede an unclaimed registration after 60 seconds from its original timestamp; duplicate registration does not renew that lease, while exact direct-ACK and claimed-effect protection remains up to 600 seconds. Runtime state now defaults to a validated private per-install temporary root and migrates a valid legacy state directory on first resolution by whole-directory atomic rename. Logging retries lock acquisition within one cumulative 100 ms request budget, then attempts each sanitized bounded event line in PHP's `error_log`; health stays degraded and fallback remains best effort, outside the Logs reader and without a total-I/O or no-loss guarantee.
+
+**0.1.12 changes: free scenes.** Also requested on the CHIM Discord: "just exclude the player".
+
+- **Tick Free scene, ARM, talk.** There are no pickers. On your next ordinary input, the **nearest six** close and AI-active NPCs become the scene, nearest first. Fewer than two nearby, and it waits.
+- **The player is always out.** That is the point of the mode. "Other NPCs" (exclude or silent) applies to everyone beyond the six.
+- **Who opens:**
+  - the member you name first ("Aela, tell them about the hunt");
+  - otherwise the NPC you are facing, if they made the cut;
+  - otherwise the nearest member.
+- **Fixed cast.** After it starts, a free scene is an ordinary group scene. The addressed member answers, members who wander off are dropped while two remain, and latecomers do not join.
+- The page shows "Current free scene: …", or "Next: free scene (nearest six)." while it waits.
 
 **0.1.11 changes: group scenes.** Requested on the CHIM Discord ([requests](tasks/feature-requests.md)).
 
@@ -20,7 +31,7 @@
 - **Gossip.** Each line's witness list is exactly the members (plus you, if included). Mind Poisoning judges the addressed listener today; overheard gossip arrives when Mind Poisoning supports judging every witness.
 - **Compatibility.** Pair scenes armed or active before the update keep working.
 
-Planned next: a "free" mode that only excludes the player.
+Free scenes followed in 0.1.12 (above).
 
 **0.1.10 changes** (from the first in-game session; [evidence](tasks/live-issues-2026-10-03.md)):
 
@@ -65,6 +76,7 @@ Choose **two distinct NPCs** for a conversation or **one NPC** for thinking alou
 | Setting | Actual behavior |
 | --- | --- |
 | Group (2–4) | The auto or picked opener generates the opening response; each line addresses another member, who answers through CHIM rechat. Turns stay inside the members. CHIM's rechat settings determine how many turns follow. |
+| Free scene | The nearest six close, AI-active NPCs at activation become a fixed group (at least two). The opener is the earliest-named member, else the NPC you face if a member, else the nearest. The player is always excluded. |
 | Solo reflection | A thinks aloud for one generated response. B is disabled, the player excluded and rechat/continuation blocked. A response may contain multiple sentences/audio chunks. |
 | Exclude the player | Input becomes an unattributed `instruction` event; guidance tells the model not to address, include, quote or narrate the player. |
 | Include the player | Pair mode retains input as player speech. A and B remain the selected generated speakers. |
@@ -77,20 +89,20 @@ This controls the inspected Standard pipeline. It is not an acoustic simulation,
 
 Requires a working CHIM/HerikaServer with the supported request, prompt and response hooks. Compatibility was inspected against server `cf5030f15781637498be86debe26fcf102f5690d` and native source `12e035d0a810b9b932fe2df1f688407a72cd27a1`; these references do not prove your installed DLL matches. Test with an isolated CHIM server/database. A disposable Skyrim save does not isolate server data.
 
-Use the version-specific [0.1.11 candidate release](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/tag/private_conversation-v0.1.11). Choose **one source**:
+Use the version-specific [0.1.12 candidate release](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/tag/private_conversation-v0.1.12). Choose **one source**:
 
 | Asset | Intended route |
 | --- | --- |
-| [MO2 ZIP](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.11/private_conversation-0.1.11-mo2.zip) | Plain import with `CHIM/server-plugins/private_conversation/0.1.11.dwpkg`. Keep `CHIM` directly under the data root. |
-| [DWPkg](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.11/private_conversation-0.1.11.dwpkg) | Rename to `0.1.11.dwpkg`; place at `Data/CHIM/server-plugins/private_conversation/0.1.11.dwpkg`. Do not unpack it into Data. |
-| [Repository tar](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.11/private_conversation.tar.gz) | CHIM repository/Plugin Manager ingestion; strip its one `private_conversation/` wrapper, exposing `manifest.json` and extension files. A different consumer from DWPkg sync. |
-| [SHA256SUMS.txt](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.11/SHA256SUMS.txt) | Verify the downloaded release assets against the published checksums. |
+| [MO2 ZIP](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.12/private_conversation-0.1.12-mo2.zip) | Plain import with `CHIM/server-plugins/private_conversation/0.1.12.dwpkg`. Keep `CHIM` directly under the data root. |
+| [DWPkg](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.12/private_conversation-0.1.12.dwpkg) | Rename to `0.1.12.dwpkg`; place at `Data/CHIM/server-plugins/private_conversation/0.1.12.dwpkg`. Do not unpack it into Data. |
+| [Repository tar](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.12/private_conversation.tar.gz) | CHIM repository/Plugin Manager ingestion; strip its one `private_conversation/` wrapper, exposing `manifest.json` and extension files. A different consumer from DWPkg sync. |
+| [SHA256SUMS.txt](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.12/SHA256SUMS.txt) | Verify the downloaded release assets against the published checksums. |
 
 MO2 may warn that CHIM-only data does not look like Skyrim content. Retain the intended layout with its manual installer's **OK → Ignore** override if necessary; that does not prove successful sync. Check the client `SERVER_PLUGIN_SYNC` log and **installed** version in CHIM Plugin Manager. Open **Plugin Page**, or the server's `ext/private_conversation/index.php` path with its actual origin/port/base path.
 
 **Replace the old enabled package; do not stack versions.** The published [0.1.4](https://github.com/Francisco-boop-001/CHIM-Plugins/releases/tag/private_conversation-v0.1.4) and [0.1.5](https://github.com/Francisco-boop-001/CHIM-Plugins/releases/tag/private_conversation-v0.1.5) manifests use literal old-hub asset URLs, so their update buttons cannot move themselves to this repository. Install 0.1.10 by file sync or through a candidate channel explicitly configured for `Francisco-boop-001/CHIM-PrivateConversation`, then verify installed version and `git_repo`. When switching to Plugin Manager, disable/remove the old sync source first. Use this plugin's version-specific release assets, not repository-wide `releases/latest`. Official CHIM catalog listing has not been submitted or approved.
 
-**0.1.11 requires no separate Papyrus companion, ESP or ESL and consumes no Skyrim plugin slot.** It reads CHIM's existing background reports. The older 0.1.3 companion was a historical experimental candidate, not a requirement, and 0.1.9 no longer accepts its `ext_pcv_presence` command.
+**0.1.12 requires no separate Papyrus companion, ESP or ESL and consumes no Skyrim plugin slot.** It reads CHIM's existing background reports. The older 0.1.3 companion was a historical experimental candidate, not a requirement, and 0.1.9 no longer accepts its `ext_pcv_presence` command.
 
 Optional opinion effects need [Mind Poisoning 0.1.16](https://github.com/Francisco-boop-001/CHIM-MindPoisoning/releases/tag/mind_poisoning-v0.1.16), enabled alongside it. PCV checks `\ChimMindPoisoning\MIND_POISONING_REFLECTION_API_VERSION === 1` before model or database work, and uses the whole-reply API only when `MIND_POISONING_REFLECTION_REPLY_API_VERSION === 2` and its evaluator exist. With Mind Poisoning 0.1.14–0.1.15, solo effects still work but only the final line is evaluated. The observer is optional; when supported, PCV imports accepted sanitized reflection records while Mind Poisoning continues its ordinary evaluation and sink delivery. Scene direction works without Mind Poisoning.
 
