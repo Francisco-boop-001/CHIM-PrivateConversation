@@ -140,13 +140,14 @@ def say(listener, text, kind="inputtext"):
     return parse_lines(res)
 
 
-def rechat(previous_speaker, target, last_line):
+def rechat(previous_speaker, target, last_line, agents=None, chain_id=None):
+    """One CHIM rechat turn. A fresh chain_id per scene prompt mirrors the game (a shared id shares CHIM's budget)."""
     global turns
     guard()
     turns += 1
     payload = json.dumps({"speaker": previous_speaker, "listener_hint": target, "rechat_target_hint": target,
-                          "origin_line": last_line, "rechat_depth": 1, "chain_id": "pcv-standard",
-                          "active_agents": [A, B]})
+                          "origin_line": last_line, "rechat_depth": 1, "chain_id": chain_id or f"pcv-{time.time_ns()}",
+                          "active_agents": agents or [A, B]})
     (res, _) = s.comm("rechat", payload, profile=target)
     return parse_lines(res)
 
@@ -190,6 +191,17 @@ def end_scene():
 
 def arm_pair(exclude_player=True, bystanders="exclude"):
     form = {"action": "arm", "actor_a": str(IDS[A]), "actor_b": str(IDS[B]), "bystander_mode": bystanders}
+    if exclude_player:
+        form["exclude_player"] = "1"
+    return arm(**form)
+
+
+def arm_group(ids, opener="auto", exclude_player=True):
+    """0.1.11 group form: NPC A and B plus optional C and D and the opener picker."""
+    keys = ["actor_a", "actor_b", "actor_c", "actor_d"]
+    form = {"action": "arm", "bystander_mode": "exclude", "opener": str(opener)}
+    for index, key in enumerate(keys):
+        form[key] = str(ids[index]) if index < len(ids) else ""
     if exclude_player:
         form["exclude_player"] = "1"
     return arm(**form)
@@ -425,6 +437,65 @@ def c_solo_subject_present():
     return f"{len(lines)} lines; lines with 'you': {len(addressed)} -> {addressed[:2]}"
 
 
+TRIO_IDS = [IDS[A], IDS[B], IDS[C]]
+TRIO = [A, B, C]
+
+
+def c_group_named_opener():
+    """0.1.11: the member named in the direction opens (Bruce is C, not A)."""
+    print("   arm:", arm_group(TRIO_IDS), flush=True)
+    lines = say(A, f"What does {C.split()[0]} think of the Bannered Mare's mead?")
+    ack_all(lines)
+    return f"{len(lines)} lines; first speaker={lines[0]['speaker'] if lines else '-'} (expect {C}); listeners={sorted({l['listener'] for l in lines})}"
+
+
+def c_group_rechats():
+    """0.1.11: rechats stay inside the three members; the addressed member answers."""
+    print("   arm:", arm_group(TRIO_IDS), flush=True)
+    opening = say(A, "Lidia, Aela and Bruce argue about who should lead the next hunt.")
+    ack_all(opening)
+    chain = f"pcv-group-{time.time_ns()}"
+    turns_seen = list(opening)
+    last = opening[-1] if opening else None
+    for _ in range(2):
+        if not last:
+            break
+        nxt = rechat(last["speaker"], last["listener"], last["subtitle"], agents=TRIO, chain_id=chain)
+        ack_all(nxt)
+        turns_seen += nxt
+        last = nxt[-1] if nxt else None
+    speakers = sorted({l["speaker"] for l in turns_seen})
+    listeners = sorted({l["listener"] for l in turns_seen})
+    return f"speakers={speakers} listeners={listeners} (expect members only)"
+
+
+def c_group_member_missing_at_start():
+    """0.1.11: one checked member absent at activation; the scene starts with the other two."""
+    HEARTBEAT_NAMES.remove(C)
+    try:
+        time.sleep(50)
+        print("   arm:", arm_group(TRIO_IDS), flush=True)
+        lines = say(A, "Lidia and Aela discuss the weather.")
+        ack_all(lines)
+    finally:
+        HEARTBEAT_NAMES.append(C)
+    return f"{len(lines)} lines; expect state.scope_activated member_count=2 dropped_count=1 (Bruce)"
+
+
+def c_group_member_leaves():
+    """0.1.11: a member gone beyond grace and wide is dropped; the scene continues with two."""
+    print("   arm:", arm_group(TRIO_IDS), flush=True)
+    opening = say(A, "Lidia asks Aela and Bruce about the Companions.")
+    ack_all(opening)
+    try:
+        HEARTBEAT_NAMES.remove(C)
+        time.sleep(70)
+        turn = rechat(opening[-1]["speaker"] if opening else A, B, opening[-1]["subtitle"] if opening else "", agents=TRIO)
+    finally:
+        HEARTBEAT_NAMES.append(C)
+    return f"rechat after Bruce left: {len(turn)} lines; expect state.scope_members_dropped left_scene and the scene continuing"
+
+
 CASES = [
     ("1 baseline chat + player gossip (no scene)", "normal reply to Hawke; PCV scope_off; MP may judge the claim", c_baseline),
     ("2 pair: opening + 2 rechats", "only Lidia/Aela speak, to each other; MP updates listener opinions of Bruce", c_pair),
@@ -450,6 +521,10 @@ CASES = [
     ("14 early ACK during reply", "reflection.ack_pending reply_in_progress, then normal evaluation", c_early_ack),
     ("15 solo with subject present", "lines refer to the subject in the third person (compliance is model-dependent)",
      c_solo_subject_present),
+    ("16 group named opener", "Bruce (named, member C) speaks first", c_group_named_opener),
+    ("17 group rechats", "only members speak; listeners are other members", c_group_rechats),
+    ("18 group member missing at start", "starts with two; Bruce dropped (not_eligible_at_start)", c_group_member_missing_at_start),
+    ("19 group member leaves", "Bruce dropped mid-scene (left_scene); scene continues", c_group_member_leaves),
 ]
 # Optional case-number prefixes select a subset, e.g. `standard.py 11`; `--budget=N` caps AI calls.
 _args = [a for a in sys.argv[1:] if not a.startswith("--budget=")]
