@@ -22,6 +22,7 @@ const PCV_WIDE_PRESENCE_VERSION = 1;
 const PCV_SOLO_INFLIGHT_TTL = 180;
 // Group scenes (0.1.11) hold 2 to 4 members.
 const PCV_GROUP_MAX_MEMBERS = 4;
+const PCV_FREE_MAX_MEMBERS = 6;
 
 function pcv_shared_server_identity($playerName): array
 {
@@ -459,9 +460,24 @@ function pcv_valid_config($config, bool $allowDisabled): bool
             && ($config['actor_b'] ?? null) === '';
     }
 
+    // Free scene (0.1.12): members are chosen at activation; the player is always excluded.
+    $free = array_key_exists('free', $config);
+    if ($free) {
+        if ($config['free'] !== true || $sceneMode !== 'pair' || $config['exclude_player'] !== true) {
+            return false;
+        }
+        if (!array_key_exists('actor_a', $config) && !array_key_exists('actor_b', $config)
+            && !array_key_exists('actor_ids', $config) && !array_key_exists('opener', $config)) {
+            return true;
+        }
+        if (!array_key_exists('actor_ids', $config)) {
+            return false;
+        }
+    }
+
     $actorA = $config['actor_a'] ?? null;
     $actorB = $config['actor_b'] ?? null;
-    $validActorA = is_string($actorA) && $actorA !== '' && strlen($actorA) <= 256
+    $validActorA =is_string($actorA) && $actorA !== '' && strlen($actorA) <= 256
         && preg_match('//u', $actorA) === 1 && preg_match('/[\x00-\x1f\x7f]/', $actorA) !== 1;
     if (!$validActorA) {
         return false;
@@ -483,7 +499,7 @@ function pcv_valid_config($config, bool $allowDisabled): bool
     }
     // Group (0.1.11): 2-4 ordered members; actor_a/actor_b mirror the first two.
     $ids = $config['actor_ids'];
-    if (!is_array($ids) || !array_is_list($ids) || count($ids) < 2 || count($ids) > PCV_GROUP_MAX_MEMBERS
+    if (!is_array($ids) || !array_is_list($ids) || count($ids) < 2 || count($ids) > ($free ? PCV_FREE_MAX_MEMBERS : PCV_GROUP_MAX_MEMBERS)
         || ($ids[0] ?? null) !== $actorA || ($ids[1] ?? null) !== $actorB) {
         return false;
     }
@@ -516,7 +532,7 @@ function pcv_valid_stored_state(array $state): bool
         }
         if (array_key_exists('dropped', $active)) {
             $dropped = $active['dropped'];
-            if (!is_array($dropped) || !array_is_list($dropped) || count($dropped) > PCV_GROUP_MAX_MEMBERS) {
+            if (!is_array($dropped) || !array_is_list($dropped) || count($dropped) > PCV_FREE_MAX_MEMBERS) {
                 return false;
             }
             foreach ($dropped as $entry) {
@@ -1601,6 +1617,9 @@ function pcv_state_log_context(array $config): array
         $context['scene_mode'] = $config['scene_mode'] ?? 'pair';
         $context['actor_a_id'] = $config['actor_a'] ?? null;
         $context['actor_b_id'] = $config['actor_b'] ?? null;
+        if (($config['free'] ?? false) === true) {
+            $context['free_scene'] = true;
+        }
     }
     return $context;
 }
@@ -1661,6 +1680,13 @@ function pcv_normalize_config(array $desired, array $knownNpcs): array
     }
 
     $sceneMode = array_key_exists('scene_mode', $desired) ? $desired['scene_mode'] : 'pair';
+    if ($sceneMode === 'pair' && ($desired['free'] ?? false) === true) {
+        if (!in_array($desired['bystander_mode'] ?? null, ['exclude', 'silent'], true)) {
+            throw new InvalidArgumentException('The private conversation settings are incomplete.');
+        }
+        return ['enabled' => true, 'scene_mode' => 'pair', 'free' => true, 'exclude_player' => true,
+            'bystander_mode' => $desired['bystander_mode']];
+    }
     $groupIds = null;
     $groupOpener = null;
     if ($sceneMode === 'pair' && array_key_exists('actor_ids', $desired)) {
@@ -1795,6 +1821,9 @@ function pcv_config_actor_ids(array $config): array
     }
     if (is_array($config['actor_ids'] ?? null)) {
         return array_values($config['actor_ids']);
+    }
+    if (($config['free'] ?? false) === true) {
+        return []; // pending free scene: members are chosen at activation
     }
     return [$config['actor_a'] ?? null, $config['actor_b'] ?? null];
 }

@@ -155,8 +155,8 @@ function pcv_log_valid_uuid(string $value): bool
 function pcv_log_event_rules(): array
 {
     static $rules = [
-        'state.scope_staged' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode']],
-        'state.scope_activated' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode', 'member_count', 'dropped_count']],
+        'state.scope_staged' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode', 'free_scene']],
+        'state.scope_activated' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode', 'member_count', 'dropped_count', 'free_scene']],
         'state.scope_members_dropped' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['drop_reason', 'dropped_count', 'member_count']],
         'state.scope_ended' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['action', 'scene_mode', 'actor_a_id', 'actor_b_id', 'exclude_player', 'bystander_mode']],
         'state.scope_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['operation', 'scene_mode', 'presence_check', 'missing_count']],
@@ -171,7 +171,7 @@ function pcv_log_event_rules(): array
         'ui.scope_stage_rejected' => ['severity' => 'warning', 'outcome' => 'rejected', 'context' => []],
         'ui.scope_stage_failed' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['action', 'operation']],
         'routing.request_started' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['request_type']],
-        'routing.request_prepared' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['phase', 'route', 'actor_a_id', 'actor_b_id', 'speaker_id', 'exclude_player', 'bystander_mode', 'member_count', 'opener_source']],
+        'routing.request_prepared' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['phase', 'route', 'actor_a_id', 'actor_b_id', 'speaker_id', 'exclude_player', 'bystander_mode', 'member_count', 'opener_source', 'free_scene']],
         'routing.request_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['phase', 'request_type', 'state_status', 'mode']],
         'routing.request_blocked' => ['severity' => 'warning', 'outcome' => 'blocked', 'context' => ['phase', 'request_type', 'actor_a_id', 'actor_b_id']],
         'routing.request_error' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['phase', 'request_type', 'actor_a_id', 'actor_b_id']],
@@ -425,7 +425,7 @@ function pcv_log_enum_values(string $key): array
         'commit_state' => ['confirmed', 'unconfirmed', 'not_attempted'],
         'presence_check' => ['close', 'grace_expired', 'wide_absent', 'wide_unavailable'],
         'drop_reason' => ['not_eligible_at_start', 'left_scene'],
-        'opener_source' => ['named', 'picker', 'first'],
+        'opener_source' => ['named', 'picker', 'first', 'target', 'nearest'],
         'decision' => ['non_candidate_request', 'director_excluded', 'scope_off', 'scope_pending', 'identity_unavailable', 'unsupported_mode', 'input_rewritten', 'player_speech_preserved', 'solo_reflection_routed', 'rechat_clamped', 'continuation_routed', 'responder_selected', 'context_prepared', 'action_constraints_refreshed', 'action_instructions_removed'],
     ];
     if ($key === 'source_reason') {
@@ -524,7 +524,7 @@ function pcv_log_clean_context(string $event, array $context): array
             if (pcv_log_valid_actor_id($value)) {
                 $clean[$key] = $value;
             }
-        } elseif (in_array($key, ['exclude_player', 'pending', 'committed', 'cleanup_failed'], true)) {
+        } elseif (in_array($key, ['exclude_player', 'pending', 'committed', 'cleanup_failed', 'free_scene'], true)) {
             if (is_bool($value)) {
                 $clean[$key] = $value;
             }
