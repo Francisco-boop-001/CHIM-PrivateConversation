@@ -583,11 +583,16 @@ function pcv_reflection_attach_mp_observer(object $requestLog): bool
     }
 }
 
-function pcv_reflection_fresh_scope(?callable $reader): ?array
+/** $failure (0.1.13): 'identity_changed' when no matching scope exists, 'scope_unavailable' when reading it failed. */
+function pcv_reflection_fresh_scope(?callable $reader, ?string &$failure = null): ?array
 {
+    $failure = 'identity_changed';
     try {
         if ($reader !== null) {
             $scope = $reader();
+            if (is_array($scope)) {
+                $failure = null;
+            }
             return is_array($scope) ? $scope : null;
         }
         $identity = pcv_current_identity(true);
@@ -600,8 +605,11 @@ function pcv_reflection_fresh_scope(?callable $reader): ?array
             return null;
         }
         $scope['pcv_key'] = $key;
+        $failure = null;
         return $scope;
-    } catch (Throwable) {
+    } catch (Throwable $error) {
+        $failure = 'scope_unavailable';
+        pcv_log_exception('state.unavailable', 'error', 'unavailable', 'catalog_unavailable', $error, ['operation' => 'read']);
         return null;
     }
 }
@@ -723,10 +731,10 @@ function pcv_reflection_register_with_store(
         return 'scope_ineligible';
     }
 
-    $freshScope = pcv_reflection_fresh_scope($freshScopeReader);
+    $freshScope = pcv_reflection_fresh_scope($freshScopeReader, $scopeFailure);
     if (!is_array($freshScope)) {
-        pcv_reflection_log('reflection.registration_skipped', 'registration', 'identity_changed', $requestScope);
-        return 'identity_changed';
+        pcv_reflection_log('reflection.registration_skipped', 'registration', $scopeFailure ?? 'identity_changed', $requestScope);
+        return $scopeFailure ?? 'identity_changed';
     }
     $actorId = filter_var($requestScope['actor_a_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     if ($actorId === false) {
@@ -1192,10 +1200,10 @@ function pcv_reflection_evaluate_with_store(
         pcv_reflection_log('reflection.ack_skipped', 'ack', 'ack_mismatch', $record);
         return 'ack_mismatch';
     }
-    $freshScope = pcv_reflection_fresh_scope($freshScopeReader);
+    $freshScope = pcv_reflection_fresh_scope($freshScopeReader, $scopeFailure);
     if (!is_array($freshScope)) {
-        pcv_reflection_log('reflection.ack_skipped', 'ack', 'identity_changed', $record);
-        return 'identity_changed';
+        pcv_reflection_log('reflection.ack_skipped', 'ack', $scopeFailure ?? 'identity_changed', $record);
+        return $scopeFailure ?? 'identity_changed';
     }
     if (!pcv_reflection_scope_matches($record, $freshScope)) {
         pcv_reflection_log('reflection.ack_skipped', 'ack', 'scope_changed', $record);
@@ -1323,7 +1331,7 @@ function pcv_reflection_evaluate_with_store(
         } elseif ($status === 'failed') {
             pcv_reflection_log('reflection.ack_error', 'ack', 'evaluation_failed', $record);
         } else {
-            $reason = in_array($revalidationReason, ['identity_changed', 'scope_changed', 'interaction_stale'], true)
+            $reason = in_array($revalidationReason, ['identity_changed', 'scope_changed', 'interaction_stale', 'scope_unavailable'], true)
                 ? $revalidationReason : 'evaluation_rejected';
             pcv_reflection_log('reflection.ack_skipped', 'ack', $reason, $record);
         }
@@ -1407,9 +1415,9 @@ function pcv_reflection_revalidate(
         $reason = 'interaction_stale';
         return false;
     }
-    $scope = pcv_reflection_fresh_scope($freshScopeReader);
+    $scope = pcv_reflection_fresh_scope($freshScopeReader, $scopeFailure);
     if (!is_array($scope)) {
-        $reason = 'identity_changed';
+        $reason = $scopeFailure ?? 'identity_changed';
         return false;
     }
     if (!pcv_reflection_scope_matches($record, $scope)) {

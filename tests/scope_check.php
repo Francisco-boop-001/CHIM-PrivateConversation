@@ -572,7 +572,7 @@ try {
     scopeCheckBeginSimulatedRequest();
     $cacheReadsBefore = $GLOBALS['pcv_fixture_cache_read_calls'];
     $scopeSkipBefore = scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible');
-    $requestSkipBefore = scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible');
+    $requestSkipBefore = scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible');
     $GLOBALS['pcv_fixture_current_presence'] = ['status' => 'empty', 'actors' => [], 'reason' => null];
     $GLOBALS['gameRequest'] = $normalRequest;
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
@@ -580,8 +580,8 @@ try {
         && end($GLOBALS['pcv_fixture_begin_maps']) === []
         && $GLOBALS['pcv_fixture_cache_read_calls'] === $cacheReadsBefore
         && scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible') === $scopeSkipBefore + 1
-        && scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible') === $requestSkipBefore + 1
-        && scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible') === 0,
+        && scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible') === $requestSkipBefore + 1
+        && scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible') === 0,
         'A cached good pair overrode the current ordinary report that had no eligible actors.');
 
     scopeCheckBeginSimulatedRequest();
@@ -592,13 +592,13 @@ try {
     $GLOBALS['pcv_fixture_current_presence'] = ['status' => 'empty', 'actors' => [], 'reason' => null];
     $GLOBALS['gameRequest'] = $normalRequest;
     $scopeSkipBefore = scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible');
-    $requestSkipBefore = scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible');
+    $requestSkipBefore = scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible');
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
     scopeCheck(scopeCheckHookStops($hookDir . '/preprocessing.php')
         && ($GLOBALS['pcv_fixture_state']['status'] ?? null) === 'pending'
         && end($GLOBALS['pcv_fixture_begin_maps']) === []
         && scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible') === $scopeSkipBefore + 1
-        && scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible') === $requestSkipBefore + 1,
+        && scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible') === $requestSkipBefore + 1,
         'An ordinary report with no managed in-range actors promoted the pending pair.');
 
     scopeCheckBeginSimulatedRequest();
@@ -664,18 +664,18 @@ try {
 
     scopeCheckBeginSimulatedRequest();
     $staleScopeSkipBefore = scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible');
-    $staleRequestSkipBefore = scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible');
+    $staleRequestSkipBefore = scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible');
     $GLOBALS['pcv_fixture_cached_presence'] = ['status' => 'stale', 'known_npcs' => [], 'reason' => 'presence_stale'];
     $GLOBALS['gameRequest'] = ['rechat', 't', 'g', $rechatPayload, 'raw'];
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
     scopeCheck(scopeCheckHookStops($hookDir . '/preprocessing.php'),
         'An active rechat continued after its presence report aged past the cache window.');
     $staleRequestEntries = array_values(array_filter(scopeCheckLogEntries(), static fn(array $entry): bool =>
-        ($entry['event'] ?? null) === 'routing.request_skipped' && ($entry['reason'] ?? null) === 'scene_not_eligible'));
+        ($entry['event'] ?? null) === 'routing.request_blocked' && ($entry['reason'] ?? null) === 'scene_not_eligible'));
     scopeCheck(scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible') === $staleScopeSkipBefore + 1
-        && scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible') === $staleRequestSkipBefore + 1
-        && ($staleRequestEntries[count($staleRequestEntries) - 1]['severity'] ?? null) === 'info',
-        'A stale rechat was not stopped with bounded informational ineligibility diagnostics.');
+        && scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible') === $staleRequestSkipBefore + 1
+        && ($staleRequestEntries[count($staleRequestEntries) - 1]['severity'] ?? null) === 'warning',
+        'A stale rechat was not stopped with a warning-level refusal diagnostic.');
     $GLOBALS['pcv_fixture_cached_presence'] = [
         'status' => 'ready', 'known_npcs' => ['101' => 'Aela', '202' => 'Bryn'], 'reason' => null,
     ];
@@ -885,12 +885,12 @@ try {
     $GLOBALS['HERIKA_NAME'] = 'Aela';
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
     $scopeSkipBefore = scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible');
-    $requestSkipBefore = scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible');
+    $requestSkipBefore = scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible');
     $requestErrorBefore = scopeCheckEventCount('routing.request_error');
     $cacheReadsBefore = $GLOBALS['pcv_fixture_cache_read_calls'] ?? 0;
     scopeCheck(scopeCheckHookStops($hookDir . '/context_pre.php') === false
         && scopeCheckEventCount('state.scope_skipped', 'scene_not_eligible') === $scopeSkipBefore
-        && scopeCheckEventCount('routing.request_skipped', 'scene_not_eligible') === $requestSkipBefore
+        && scopeCheckEventCount('routing.request_blocked', 'scene_not_eligible') === $requestSkipBefore
         && scopeCheckEventCount('routing.request_error') === $requestErrorBefore
         && ($GLOBALS['pcv_fixture_cache_read_calls'] ?? 0) === $cacheReadsBefore,
         'An unrelated Standard event was blocked or consulted stale private-scene presence.');

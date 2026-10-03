@@ -388,7 +388,7 @@ function pcv_log_reason_allowed(string $event, ?string $reason, ?string $outcome
         return in_array($reason, [
             'scope_ineligible', 'baseline_stale', 'output_unavailable', 'output_malformed', 'sentinel_mismatch',
             'event_unmatched', 'registry_unavailable', 'registry_corrupt', 'registration_missing', 'registration_stale',
-            'claim_taken', 'ack_mismatch', 'source_aborted', 'scope_changed', 'identity_changed',
+            'claim_taken', 'ack_mismatch', 'source_aborted', 'scope_changed', 'identity_changed', 'scope_unavailable',
             'mind_poisoning_unavailable', 'reflection_api_incompatible', 'evaluation_rejected', 'registration_busy',
             'receipt_busy', 'ack_conflict', 'interaction_stale', 'native_ack_ambiguous',
         ], true);

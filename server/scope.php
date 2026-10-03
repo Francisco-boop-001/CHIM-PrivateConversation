@@ -1002,28 +1002,20 @@ function pcvBuildScopeContext(array $resolvedScope, string $speaker, string $lis
 /** Stop generation with a non-success response when private routing cannot be guaranteed. */
 function pcvBlockRequest(string $message, string $reason, string $phase, ?array $scopeState = null, bool $error = false): void
 {
-    $outcome = $reason === 'scene_not_eligible' ? 'skipped' : ($error ? 'failed' : 'blocked');
+    // 0.1.13: a refused scene request (the direction is lost) is a blocked warning, not an informational skip.
+    $outcome = $error ? 'failed' : 'blocked';
     pcv_log_set_terminal($outcome, $reason, ['phase' => $phase] + pcvRoutingLogActorContext($scopeState));
     if (empty($GLOBALS['PCV_ROUTING_LOG_TERMINAL'])) {
         $GLOBALS['PCV_ROUTING_LOG_TERMINAL'] = true;
-        if ($reason === 'scene_not_eligible') {
-            pcv_log_event('routing.request_skipped', 'info', 'skipped', 'scene_not_eligible', [
-                'phase' => $phase,
-                'request_type' => pcvRoutingLogCurrentType(),
-                'state_status' => 'unavailable',
-                'mode' => pcvRoutingLogMode(pcvEffectiveExecutionMode()),
-            ]);
-        } else {
-            $context = ['phase' => $phase, 'request_type' => pcvRoutingLogCurrentType()]
-                + pcvRoutingLogActorContext($scopeState);
-            pcv_log_event(
-                $error ? 'routing.request_error' : 'routing.request_blocked',
-                $error ? 'error' : 'warning',
-                $error ? 'failed' : 'blocked',
-                $reason,
-                $context
-            );
-        }
+        $context = ['phase' => $phase, 'request_type' => pcvRoutingLogCurrentType()]
+            + pcvRoutingLogActorContext($scopeState);
+        pcv_log_event(
+            $error ? 'routing.request_error' : 'routing.request_blocked',
+            $error ? 'error' : 'warning',
+            $error ? 'failed' : 'blocked',
+            $reason,
+            $context
+        );
     }
     http_response_code(409);
     header('Content-Type: text/plain; charset=UTF-8');
