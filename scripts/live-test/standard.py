@@ -598,6 +598,84 @@ def c_free_too_few():
     return f"{len(lines)} lines; expect state.scope_skipped scene_not_eligible (free scene stays pending)"
 
 
+def arm_group_with(ids, **extra):
+    """0.1.14: group form plus roleplay fields (card, pace)."""
+    keys = ["actor_a", "actor_b", "actor_c", "actor_d"]
+    form = {"action": "arm", "bystander_mode": "exclude", "opener": "auto", "exclude_player": "1"}
+    for index, key in enumerate(keys):
+        form[key] = str(ids[index]) if index < len(ids) else ""
+    form.update(extra)
+    return arm(**form)
+
+
+def sentences(lines):
+    text = " ".join(l["subtitle"] for l in lines if l["speaker"] != "HTTP")
+    return len([s for s in re.split(r"[.!?]+", text) if s.strip()])
+
+
+def c_group_spread():
+    """0.1.14 G3: in a trio, follow-up turns go to members who have not spoken yet."""
+    end_scene()
+    print("   arm:", arm_group_with(TRIO_IDS), flush=True)
+    opening = say(A, "Lidia, Aela and Bruce decide who keeps watch tonight.")
+    ack_all(opening)
+    chain = f"pcv-spread-{time.time_ns()}"
+    order = [opening[0]["speaker"]] if opening else []
+    last = opening[-1] if opening else None
+    for _ in range(2):
+        if not last or last["listener"] not in TRIO:
+            break
+        nxt = rechat(last["speaker"], last["listener"], last["subtitle"], agents=TRIO, chain_id=chain)
+        ack_all(nxt)
+        if not nxt:
+            break
+        order.append(nxt[0]["speaker"])
+        last = nxt[-1]
+    return f"speaker order={order}; distinct={len(set(order))} (expect all three when CHIM grants two rechats)"
+
+
+def c_card_and_pace():
+    """0.1.14 G4/G5: a scene card on every turn; Short then Long turn length."""
+    end_scene()
+    card = "Late night at the Bannered Mare. Tense. The treaty is on the table."
+    print("   arm:", arm_pair_with(card=card, pace="short"), flush=True)
+    short = say(B, "Lidia and Aela argue about the treaty.")
+    ack_all(short)
+    print("   arm:", arm_pair_with(card=card, pace="long"), flush=True)
+    long = say(B, "Lidia and Aela argue about the treaty.")
+    ack_all(long)
+    mentions = sum(1 for l in short + long if re.search(r"treaty|mare|tavern|inn", l["subtitle"], re.I))
+    return f"short: {len(short)} lines/{sentences(short)} sentences; long: {len(long)} lines/{sentences(long)} sentences; card-related lines: {mentions}"
+
+
+def arm_pair_with(**extra):
+    form = {"action": "arm", "actor_a": str(IDS[A]), "actor_b": str(IDS[B]), "bystander_mode": "exclude",
+            "exclude_player": "1", "opener": "auto", "actor_c": "", "actor_d": ""}
+    form.update(extra)
+    return arm(**form)
+
+
+def c_wrap_up():
+    """0.1.14 G6: 'wrap up: ...' gives one parting reply with no rechat, then the scene ends."""
+    end_scene()
+    print("   arm:", arm_group_with(TRIO_IDS), flush=True)
+    opening = say(A, "Lidia, Aela and Bruce talk about the road ahead.")
+    ack_all(opening)
+    closing = say(A, "wrap up: they part ways at the city gate.")
+    ack_all(closing)
+    after = s.page_summary(s.page()[2])["badge"]
+    return f"closing {len(closing)} lines, listeners={sorted({l['listener'] for l in closing})} (expect explicit_disable_rechat); page badge after: {after}"
+
+
+def c_end_in_game():
+    """0.1.14 G1: 'end scene' typed in game ends the scene and reaches no NPC."""
+    end_scene()
+    print("   arm:", arm_pair(), flush=True)
+    lines = say(B, "end scene")
+    after = s.page_summary(s.page()[2])["badge"]
+    return f"{len(lines)} lines (expect only the HTTP 409 marker); page badge after: {after} (expect Off)"
+
+
 CASES = [
     ("1 baseline chat + player gossip (no scene)", "normal reply to Hawke; PCV scope_off; MP may judge the claim", c_baseline),
     ("2 pair: opening + 2 rechats", "only Lidia/Aela speak, to each other; MP updates listener opinions of Bruce", c_pair),
@@ -631,6 +709,10 @@ CASES = [
     ("21 free target opener", "Bruce (the player's target) opens; opener_source target", c_free_target_opener),
     ("22 free named opener", "Aela (named) opens even though Bruce is targeted", c_free_named_opener),
     ("23 free too few nearby", "scene_not_eligible; the free scene stays pending", c_free_too_few),
+    ("24 group turn spreading", "follow-up turns go to members who have not spoken (all three speak)", c_group_spread),
+    ("25 scene card and turn length", "card shapes replies; Short is brief, Long is longer (compliance varies)", c_card_and_pace),
+    ("26 wrap-up", "one parting reply, no rechat, scene ended (wrapped_up)", c_wrap_up),
+    ("27 end scene in game", "input consumed (ended_in_game), scene off, no AI call", c_end_in_game),
 ]
 # Optional case-number prefixes select a subset, e.g. `standard.py 11`; `--budget=N` caps AI calls.
 _args = [a for a in sys.argv[1:] if not a.startswith("--budget=")]
