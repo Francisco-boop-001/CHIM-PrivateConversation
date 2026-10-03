@@ -451,9 +451,13 @@ CASES = [
     ("15 solo with subject present", "lines refer to the subject in the third person (compliance is model-dependent)",
      c_solo_subject_present),
 ]
-# Optional case-number prefixes select a subset, e.g. `standard.py 11`.
-if len(sys.argv) > 1:
-    CASES = [case for case in CASES if case[0].split()[0] in sys.argv[1:]]
+# Optional case-number prefixes select a subset, e.g. `standard.py 11`; `--budget=N` caps AI calls.
+_args = [a for a in sys.argv[1:] if not a.startswith("--budget=")]
+for _a in sys.argv[1:]:
+    if _a.startswith("--budget="):
+        BUDGET = int(_a.split("=", 1)[1])
+if _args:
+    CASES = [case for case in CASES if case[0].split()[0] in _args]
 
 if __name__ == "__main__":
     threading.Thread(target=heartbeat_loop, daemon=True).start()

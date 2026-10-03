@@ -140,3 +140,24 @@ error log). Nothing was written. Live dialogue connector: ID 68, `openaijson/glm
   checked which system made these changes.
 
 Status: open. Priority: 4, then 1 (needs a fresh occurrence), 3, 2, 5, 6.
+
+## 0.1.10 clone verification (2026-10-03 ~11:00Z, test package sha256 40663df5…)
+
+Simulator cases 12–15 on `DwemerAI4Skyrim3-test` with the gaming distro stopped; 15 AI calls
+(8 dialogue, 3 MP, 4 relationship worker).
+
+- **Issue 4 fixed (12, 13).** A partner absent from close reports was kept by grace (rechat 5 lines)
+  and then by the wide report (4 lines). Absent from all, the rechat was refused with
+  `state.scope_skipped` `{"presence_check":"wide_unavailable","missing_count":1}` (`wide_unavailable`
+  because the simulator stopped sending wide reports). After a 70 s heartbeat gap, the first
+  (baseline) report kept the pair and the rechat ran (5 lines).
+- **Issue 3 fixed (14).** An ACK for an early line during generation produced no
+  `registration_missing`. The reply then registered and Mind Poisoning committed −1 (Lidia → Bruce).
+  `reflection.ack_pending` itself is debug-level and was not visible with debug logging off.
+- **Issue 5 (15).** 2 solo lines with Bruce present; none addressed him ("you"). One sample.
+- **Issue 2 fixed.** The Logs page opened through the clone's WSL address `http://172.17.226.57:8081/...`
+  from Windows (HTTP 200, log form shown), the address refused in 0.1.9.
+- Observed: CHIM's relationship worker daemon runs on the clone (`relationship_system/worker.php --daemon`);
+  its calls are counted in the budget.
+
+Still open: issue 1 (09:27Z silent `inputtext`, unexplained) and issue 6 (A always opens; group mode will address it).
