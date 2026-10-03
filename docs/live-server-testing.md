@@ -79,6 +79,10 @@ the close range mid-scene while the wider `infonpc` report still lists them (12)
 only a baseline (13), an ACK for an early line while the reply is still generating (14), and a solo reflection with its
 subject standing nearby (15).
 
+Cases 16–19 (added for 0.1.11) cover group scenes with Lidia, Aela and Bruce: a named opener who is not NPC A (16),
+CHIM rechats staying inside the members (17), a member missing at activation (18) and a member leaving mid-scene (19).
+Rechats now use a fresh `chain_id` per prompt, as the game does; a shared id shares CHIM's rechat budget across prompts.
+
 For a whole live matrix with an AI-call budget, use `scripts/live-test/standard.py` (all cases) or
 `standard.py 11` (selected case numbers); it stops before `PCV_STANDARD_BUDGET` calls (default 60).
 
