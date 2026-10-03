@@ -770,6 +770,14 @@ function pcvResolveScopeNames(array $storedScope, array $knownNpcs, ?string $pla
         }
     }
 
+    // 0.1.14 roleplay settings travel with the resolved scope (only when set, so older shapes are unchanged).
+    $extras = [];
+    if (is_string($storedScope['card'] ?? null) && (!function_exists('pcv_valid_scene_card') || pcv_valid_scene_card($storedScope['card']))) {
+        $extras['card'] = $storedScope['card'];
+    }
+    if ($sceneMode === 'pair' && in_array($storedScope['pace'] ?? null, ['short', 'long'], true)) {
+        $extras['pace'] = $storedScope['pace'];
+    }
     if ($sceneMode === 'solo') {
         // Solo keeps its pre-0.1.11 shape; reflection code relies on it.
         return [
@@ -779,7 +787,7 @@ function pcvResolveScopeNames(array $storedScope, array $knownNpcs, ?string $pla
             'actor_b' => null,
             'exclude_player' => $storedScope['exclude_player'],
             'bystander_mode' => $storedScope['bystander_mode'],
-        ];
+        ] + $extras;
     }
     $resolved = [
         'enabled' => true,
@@ -794,7 +802,7 @@ function pcvResolveScopeNames(array $storedScope, array $knownNpcs, ?string $pla
     if (($storedScope['free'] ?? false) === true) {
         $resolved['free'] = true;
     }
-    return $resolved;
+    return $resolved + $extras;
 }
 
 /**
@@ -977,7 +985,7 @@ function pcvBuildScopeContext(array $resolvedScope, string $speaker, string $lis
         if (($resolvedScope['bystander_mode'] ?? 'exclude') === 'silent') {
             $context .= ' Other people may remain only as silent scenery; they cannot speak, act, or be quoted.';
         }
-        return $context;
+        return $context . pcvScopeRoleplayGuidance($resolvedScope);
     }
     $members = pcvScopeMembers($resolvedScope);
     if (count($members) > 2) {
@@ -996,7 +1004,37 @@ function pcvBuildScopeContext(array $resolvedScope, string $speaker, string $lis
     if (($resolvedScope['bystander_mode'] ?? 'exclude') === 'silent') {
         $context .= ' Other people may remain only as silent scenery; they cannot speak, act, or be quoted.';
     }
-    return $context;
+    return $context . pcvScopeRoleplayGuidance($resolvedScope);
+}
+
+/**
+ * 0.1.14 roleplay guidance (scene card, turn length, turn spreading, wrap-up). Empty when none applies, so scenes
+ * without these settings keep their exact context. Always ends with the ground rule: PCV adds scene context and
+ * never overrides an NPC's own condition or way of speaking (SHARMAT drunk stages and similar per-NPC prompts).
+ */
+function pcvScopeRoleplayGuidance(array $resolvedScope, array $turn = []): string
+{
+    $parts = [];
+    if (is_string($resolvedScope['card'] ?? null) && $resolvedScope['card'] !== '') {
+        $parts[] = 'Scene: ' . $resolvedScope['card'];
+    }
+    $pace = $resolvedScope['pace'] ?? null;
+    if ($pace === 'short') {
+        $parts[] = 'Keep each reply to one or two sentences.';
+    } elseif ($pace === 'long') {
+        $parts[] = 'You may speak at length, up to six sentences.';
+    }
+    $turn += $GLOBALS['PCV_TURN_GUIDANCE'] ?? [];
+    if (($turn['spread'] ?? false) === true) {
+        $parts[] = 'Prefer addressing someone who has not spoken yet.';
+    }
+    if (($turn['wrap_up'] ?? false) === true) {
+        $parts[] = 'This is the closing moment of the conversation: give parting words that bring it to an end.';
+    }
+    if ($parts === []) {
+        return '';
+    }
+    return ' ' . implode(' ', $parts) . ' This adds to, and never replaces, your own condition and way of speaking.';
 }
 
 /** Stop generation with a non-success response when private routing cannot be guaranteed. */

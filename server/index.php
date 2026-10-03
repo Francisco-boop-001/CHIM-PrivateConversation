@@ -29,6 +29,37 @@ final class PcvUiFormRejection extends InvalidArgumentException
 /** @return array<string, mixed> */
 function pcv_form_desired_state(array $post, string $csrfToken, array $knownNpcs): array
 {
+    $desired = pcv_form_desired_state_core($post, $csrfToken, $knownNpcs);
+    if (($desired['enabled'] ?? false) !== true) {
+        return $desired;
+    }
+    // 0.1.14 roleplay settings; the state layer validates lengths and values.
+    $card = $post['card'] ?? null;
+    if ($card !== null && !is_string($card)) {
+        throw new PcvUiFormRejection('invalid_configuration', 'The scene card is invalid.');
+    }
+    if (is_string($card) && trim($card) !== '') {
+        $desired['card'] = $card;
+    }
+    $pace = $post['pace'] ?? null;
+    if ($pace !== null && (!is_string($pace) || !in_array($pace, ['short', 'normal', 'long'], true))) {
+        throw new PcvUiFormRejection('invalid_configuration', 'The turn length is invalid.');
+    }
+    if (is_string($pace) && ($desired['scene_mode'] ?? 'pair') !== 'solo') {
+        $desired['pace'] = $pace;
+    }
+    $cap = $post['free_cap'] ?? null;
+    if (($desired['free'] ?? false) === true && $cap !== null) {
+        if (!is_string($cap) || preg_match('/\A[2-6]\z/', $cap) !== 1) {
+            throw new PcvUiFormRejection('invalid_configuration', 'Choose two to six NPCs for a free scene.');
+        }
+        $desired['free_cap'] = $cap;
+    }
+    return $desired;
+}
+
+function pcv_form_desired_state_core(array $post, string $csrfToken, array $knownNpcs): array
+{
     $submittedToken = $post['csrf'] ?? null;
     if (!is_string($submittedToken) || $csrfToken === '' || !hash_equals($csrfToken, $submittedToken)) {
         throw new PcvUiFormRejection('csrf_failed', 'The form token is invalid.');
@@ -287,6 +318,9 @@ function pcv_render_page(
         $scopeSummary .= '<p>' . ($scopeSceneMode === 'solo' ? 'Current reflection: '
             : ($isFree($scope) ? 'Current free scene: ' : ($isGroup($scope) ? 'Current group: ' : 'Current pair: ')))
             . $scene . '.</p>';
+        if (is_string($scope['card'] ?? null) && $scope['card'] !== '') {
+            $scopeSummary .= '<p class="small-note">Scene card: ' . pcv_html($scope['card']) . '</p>';
+        }
     }
     if ($status === 'active' && is_array($state['dropped'] ?? null)) {
         foreach ($state['dropped'] as $droppedEntry) {
@@ -372,7 +406,21 @@ function pcv_render_page(
             . pcv_html($name . ' (ID ' . $id . ')') . "</option>\n";
     }
     $extraDisabledAttr = ($pairDisabled || $sceneMode === 'solo' || $freeMode) ? ' disabled' : '';
-    $noticeHtml = $notice === '' ? '' : '<p role="status">' . pcv_html($notice) . '</p>';
+    // 0.1.14 roleplay settings.
+    $formCard = is_string($formScope['card'] ?? null) ? $formScope['card'] : '';
+    $formPace = in_array($formScope['pace'] ?? null, ['short', 'long'], true) ? $formScope['pace'] : 'normal';
+    $paceOptions = '';
+    foreach (['short' => 'Short (one or two sentences)', 'normal' => 'Normal', 'long' => 'Long (up to six sentences)'] as $value => $label) {
+        $paceOptions .= '<option value="' . $value . '"' . ($formPace === $value ? ' selected' : '') . '>' . $label . "</option>\n";
+    }
+    $formCap = is_int($formScope['free_cap'] ?? null) ? $formScope['free_cap'] : 6;
+    $capOptions = '';
+    for ($cap = 2; $cap <= 6; $cap++) {
+        $capOptions .= '<option value="' . $cap . '"' . ($formCap === $cap ? ' selected' : '') . '>' . ($cap === 6 ? '6 (nearest six)' : (string)$cap) . "</option>\n";
+    }
+    $paceDisabledAttr = $sceneMode === 'solo' ? ' disabled' : '';
+    $capDisabledAttr = $freeMode ? '' : ' disabled';
+    $noticeHtml =$notice === '' ? '' : '<p role="status">' . pcv_html($notice) . '</p>';
     $csrf = pcv_html($csrfToken);
 
     return '<!doctype html>
@@ -437,6 +485,12 @@ function pcv_render_page(
 <option value="exclude"' . ($mode === 'exclude' ? ' selected' : '') . '>Exclude from this conversation</option>
 <option value="silent"' . ($mode === 'silent' ? ' selected' : '') . '>Present but silent</option>
 </select></p>
+<p class="field"><label for="free-cap">How many (free scene)</label><select id="free-cap" name="free_cap"' . $capDisabledAttr . '>
+' . $capOptions . '</select></p>
+<p class="field"><label for="pace">Turn length</label><select id="pace" name="pace"' . $paceDisabledAttr . '>
+' . $paceOptions . '</select></p>
+<p class="field"><label for="scene-card">Scene card (optional)</label><textarea id="scene-card" name="card" maxlength="300" rows="2" placeholder="Late night at the Bannered Mare. Tense. The treaty is on the table.">' . pcv_html($formCard) . '</textarea></p>
+<p class="small-note">The card and turn length shape every scene turn. They add to each NPC\'s own state (for example a SHARMAT drunk stage) and never replace it.</p>
 <p class="checkbox-field"><label><input type="checkbox" name="exclude_player" value="1"' . ($sceneMode === 'solo' || $freeMode || $excludePlayer ? ' checked' : '') . $excludePlayerDisabledAttr . '> <span>Exclude the player</span></label></p>
 <button id="arm-button" class="primary-button" type="submit" data-roster-ready="' . ($rosterReady ? '1' : '0') . '"' . $armDisabledAttr . '>Arm or update on next input</button>
 </form>

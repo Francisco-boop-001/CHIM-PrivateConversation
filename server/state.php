@@ -24,6 +24,7 @@ const PCV_SOLO_INFLIGHT_TTL = 180;
 const PCV_GROUP_MAX_MEMBERS = 4;
 const PCV_FREE_MAX_MEMBERS = 6;
 const PCV_ACTIVE_REFUSAL_END = 300;
+const PCV_SCENE_CARD_MAX_CHARS = 300;
 
 function pcv_shared_server_identity($playerName): array
 {
@@ -442,6 +443,32 @@ function pcv_empty_store(string $key): array
     return ['version' => PCV_STATE_VERSION, 'key' => $key, 'active' => null, 'pending' => null];
 }
 
+/** A scene card (0.1.14): 1-300 characters of single-line UTF-8 text. */
+function pcv_valid_scene_card($card): bool
+{
+    return is_string($card) && $card !== '' && $card === trim($card) && preg_match('//u', $card) === 1
+        && preg_match('/[\x00-\x1f\x7f]/', $card) !== 1
+        && (function_exists('mb_strlen') ? mb_strlen($card, 'UTF-8') : strlen($card)) <= PCV_SCENE_CARD_MAX_CHARS;
+}
+
+/** Optional 0.1.14 roleplay settings: card (any scene), pace (non-solo; normal = absent), free_cap (free only). */
+function pcv_valid_scene_extras(array $config, ?string $sceneMode): bool
+{
+    if (array_key_exists('card', $config) && !pcv_valid_scene_card($config['card'])) {
+        return false;
+    }
+    if (array_key_exists('pace', $config) && ($sceneMode !== 'pair' || !in_array($config['pace'], ['short', 'long'], true))) {
+        return false;
+    }
+    if (array_key_exists('free_cap', $config)) {
+        $cap = $config['free_cap'];
+        if (($config['free'] ?? false) !== true || !is_int($cap) || $cap < 2 || $cap > PCV_FREE_MAX_MEMBERS) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function pcv_valid_config($config, bool $allowDisabled): bool
 {
     $sceneMode = is_array($config) && array_key_exists('scene_mode', $config)
@@ -459,6 +486,10 @@ function pcv_valid_config($config, bool $allowDisabled): bool
             && $sceneMode === 'pair'
             && ($config['actor_a'] ?? null) === ''
             && ($config['actor_b'] ?? null) === '';
+    }
+
+    if (!pcv_valid_scene_extras($config, $sceneMode)) {
+        return false;
     }
 
     // Free scene (0.1.12): members are chosen at activation; the player is always excluded.
@@ -1713,6 +1744,43 @@ function pcv_read(string $key, ?string $stateDirectory = null): array
 
 function pcv_normalize_config(array $desired, array $knownNpcs): array
 {
+    $config = pcv_normalize_config_core($desired, $knownNpcs);
+    if ($config['enabled'] !== true) {
+        return $config;
+    }
+    // 0.1.14 roleplay settings. A blank card and a normal pace are simply absent.
+    $card = $desired['card'] ?? null;
+    if (is_string($card) && trim($card) !== '') {
+        $card = trim($card);
+        if (!pcv_valid_scene_card($card)) {
+            throw new InvalidArgumentException('The scene card must be one line of at most 300 characters.');
+        }
+        $config['card'] = $card;
+    } elseif ($card !== null && !is_string($card)) {
+        throw new InvalidArgumentException('The scene card is invalid.');
+    }
+    $pace = $desired['pace'] ?? 'normal';
+    if (!in_array($pace, ['short', 'normal', 'long'], true)) {
+        throw new InvalidArgumentException('Choose a valid turn length.');
+    }
+    if ($pace !== 'normal' && ($config['scene_mode'] ?? 'pair') === 'pair') {
+        $config['pace'] = $pace;
+    }
+    if (($config['free'] ?? false) === true && array_key_exists('free_cap', $desired)) {
+        $cap = filter_var($desired['free_cap'], FILTER_VALIDATE_INT);
+        if ($cap === false || $cap < 2 || $cap > PCV_FREE_MAX_MEMBERS) {
+            throw new InvalidArgumentException('Choose two to six NPCs for a free scene.');
+        }
+        $config['free_cap'] = $cap;
+    }
+    if (!pcv_valid_config($config, false)) {
+        throw new InvalidArgumentException('The private conversation settings are incomplete.');
+    }
+    return $config;
+}
+
+function pcv_normalize_config_core(array $desired, array $knownNpcs): array
+{
     if (!is_bool($desired['enabled'] ?? null)) {
         throw new InvalidArgumentException('Choose whether the private scope is enabled.');
     }
@@ -2114,7 +2182,8 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
             if (($config['free'] ?? false) === true && !isset($config['actor_ids'])) {
                 // Free scenes (0.1.12) take the nearest eligible NPCs, fixed for the scene.
                 $members = is_array($eligibleNpcMap)
-                    ? pcv_free_select_members($freeCandidateOrder ?? array_keys($eligibleNpcMap), $eligibleNpcMap) : [];
+                    ? pcv_free_select_members($freeCandidateOrder ?? array_keys($eligibleNpcMap), $eligibleNpcMap,
+                        is_int($config['free_cap'] ?? null) ? $config['free_cap'] : PCV_FREE_MAX_MEMBERS) : [];
                 $narrowed = count($members) >= 2 ? ['config' => array_replace($config, [
                     'actor_a' => $members[0], 'actor_b' => $members[1], 'actor_ids' => $members, 'opener' => 'auto',
                 ]), 'dropped' => []] : null;

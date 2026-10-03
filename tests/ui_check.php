@@ -201,7 +201,9 @@ check(str_contains($html, '<title>CHIM Private Conversation — Part of the Worl
     'The page title, visible hero credit, and scene description must carry the Drama-llama brand cue.');
 check(str_contains($html, 'not a privacy barrier') && str_contains($html, 'vanilla greetings'), 'Privacy and vanilla-greeting limitations are not shown.');
 check(str_contains($html, 'existing history, memories') && str_contains($html, 'generic scenery'), 'Retained context and silent-mode limitations are not shown.');
-check(!str_contains($html, '<textarea'), 'UI must not expose a speech text field.');
+// 0.1.14: the only free-text field is the scene card (staging: setting, mood, stakes), never an NPC dialogue field.
+check(substr_count($html, '<textarea') === 1 && str_contains($html, '<textarea id="scene-card" name="card"')
+    && str_contains($html, 'Scene card (optional)'), 'UI must not expose a speech text field; only the scene card is free text.');
 check(!str_contains($html, 'api_key'), 'UI must not expose secrets.');
 check(str_contains($html, 'assets/style.css') && str_contains($html, 'assets/private-conversation-scene.png'), 'Hero assets are not referenced locally.');
 check(str_contains($html, 'assets/ui-refresh.js') && str_contains($html, 'data-refresh-url="?refresh=1"'),

@@ -109,7 +109,7 @@ function createHarness(fetchQueue, { reportQueue = [], group = false, free = fal
             ['#actor-d', makeSelect(['', '101', '202', '303'], '')],
             ['#opener', makeSelect(['auto', '101', '202', '303'], 'auto')],
         ] : []),
-        ...(free ? [['#free-mode', makeCheckbox(false)]] : []),
+        ...(free ? [['#free-mode', makeCheckbox(false)], ['#free-cap', makeSelect(['2', '3', '4', '5', '6'], '6')], ['#pace', makeSelect(['short', 'normal', 'long'], 'normal')]] : []),
     ]);
     const documentRef = {
         body: { dataset: { playthroughRef: 'same-playthrough', refreshUrl: '?refresh=1', logsUrl: '?view=logs' } },
@@ -543,4 +543,25 @@ test('free scene disables every picker, forces the player out, and arms with two
     assert.equal(player.checked, false, 'Leaving free restores the player draft.');
     assert.equal(player.disabled, false);
     assert.equal(harness.nodes.get('#actor-a').disabled, false);
+});
+
+test('0.1.14: free size follows the Free scene box and turn length is off for solo', async () => {
+    const harness = createHarness([
+        { snapshot: makeSnapshot({ a: ['101', '202', '303'], b: ['101', '202', '303'], group: ['101', '202', '303'] }) },
+    ], { group: true, free: true });
+    await flushPromises();
+    const freeMode = harness.nodes.get('#free-mode');
+    const soloMode = harness.nodes.get('#solo-mode');
+    const cap = harness.nodes.get('#free-cap');
+    const pace = harness.nodes.get('#pace');
+    assert.equal(cap.disabled, true, 'Free size is off until Free scene is ticked.');
+    assert.equal(pace.disabled, false, 'Turn length applies to pairs and groups.');
+    freeMode.checked = true;
+    freeMode.dispatchChange();
+    assert.equal(cap.disabled, false, 'Free size is on for a free scene.');
+    assert.equal(pace.disabled, false, 'Turn length applies to free scenes.');
+    soloMode.checked = true;
+    soloMode.dispatchChange();
+    assert.equal(cap.disabled, true, 'Free size is off again when solo replaces free.');
+    assert.equal(pace.disabled, true, 'Turn length is off for solo.');
 });

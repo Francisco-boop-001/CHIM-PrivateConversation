@@ -130,6 +130,15 @@
         if (freeMode) {
             freeMode.disabled = !rosterReady;
         }
+        // 0.1.14: free size only for free scenes; turn length for everything except solo.
+        const freeCap = documentRef.querySelector('#free-cap');
+        if (freeCap) {
+            freeCap.disabled = !free;
+        }
+        const pace = documentRef.querySelector('#pace');
+        if (pace) {
+            pace.disabled = solo;
+        }
         if (bystanderMode) {
             bystanderMode.disabled = false;
         }
