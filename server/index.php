@@ -386,16 +386,52 @@ function pcv_send_text(int $statusCode, string $body, array $extraHeaders = []):
     echo $body;
 }
 
-function pcv_ui_logs_access_allowed(array $server): bool
+/**
+ * The Windows host as seen from a WSL2 NAT guest: the single private IPv4 default gateway in
+ * /proc/net/route. Missing, ambiguous or public data trusts nothing.
+ */
+function pcv_ui_wsl_host_address(string $routeTable): ?string
+{
+    $gateways = [];
+    foreach (preg_split('/\r?\n/', $routeTable) ?: [] as $line) {
+        $fields = preg_split('/\s+/', trim($line));
+        if (!is_array($fields) || count($fields) < 3 || $fields[1] !== '00000000'
+            || preg_match('/\A[0-9A-Fa-f]{8}\z/', $fields[2]) !== 1) {
+            continue;
+        }
+        $octets = array_reverse(array_map('hexdec', str_split($fields[2], 2)));
+        $gateways[implode('.', $octets)] = true;
+    }
+    if (count($gateways) !== 1) {
+        return null;
+    }
+    $address = (string)array_key_first($gateways);
+    $isIpv4 = filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+    $isPrivate = $isIpv4
+        && filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE) === false
+        && filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_RES_RANGE) !== false;
+    return $isPrivate ? $address : null;
+}
+
+/**
+ * Diagnostics are local-only: direct loopback, the WSL host (the player's own Windows browser), or a
+ * server-authenticated REMOTE_USER. Any forwarding header disqualifies the address checks.
+ */
+function pcv_ui_logs_access_allowed(array $server, ?string $hostAddress = null, bool $resolveHost = false): bool
 {
     $forwarded = array_key_exists('HTTP_FORWARDED', $server)
         || array_key_exists('HTTP_X_FORWARDED_FOR', $server)
         || array_key_exists('HTTP_X_REAL_IP', $server);
     $remoteAddress = $server['REMOTE_ADDR'] ?? null;
-    $loopback = !$forwarded && is_string($remoteAddress) && in_array($remoteAddress, ['127.0.0.1', '::1'], true);
+    if ($resolveHost && $hostAddress === null && !$forwarded) {
+        $routes = @file_get_contents('/proc/net/route');
+        $hostAddress = is_string($routes) ? pcv_ui_wsl_host_address($routes) : null;
+    }
+    $local = !$forwarded && is_string($remoteAddress)
+        && (in_array($remoteAddress, ['127.0.0.1', '::1'], true) || ($hostAddress !== null && $remoteAddress === $hostAddress));
     $remoteUser = $server['REMOTE_USER'] ?? null;
     $authenticatedUser = is_string($remoteUser) && trim($remoteUser) !== '';
-    return $loopback || $authenticatedUser;
+    return $local || $authenticatedUser;
 }
 
 function pcv_ui_diagnostics_rejected(string $reason, string $operation): void
@@ -466,14 +502,19 @@ function pcv_ui_logs_send_html(int $statusCode, string $html): void
     echo $html;
 }
 
-function pcv_render_logs_locked_page(): string
+function pcv_render_logs_locked_page(array $server = []): string
 {
+    $port = preg_match('/\A[0-9]{1,5}\z/', (string)($server['SERVER_PORT'] ?? '')) === 1 ? (string)$server['SERVER_PORT'] : '8081';
+    $script = preg_match('~\A/[A-Za-z0-9_./-]{1,200}\z~', (string)($server['SCRIPT_NAME'] ?? '')) === 1
+        ? (string)$server['SCRIPT_NAME'] : '/HerikaServer/ext/private_conversation/index.php';
+    $localUrl = "http://127.0.0.1:{$port}{$script}?view=logs";
     return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         . '<title>CHIM Private Conversation — Operational Logs</title><link rel="stylesheet" href="assets/style.css"></head>'
         . '<body class="page"><main class="page-frame logs-page"><header class="topbar"><p class="wordmark">CHIM / SCENE NOTES</p>'
         . '<a href="?">Return to Private Conversation</a></header><section class="logs-panel"><h1>Operational logs</h1>'
         . '<p role="status">Logs access is locked. Open this page directly on the CHIM host or use a web server that sets a trusted REMOTE_USER.</p>'
-        . '<p>Diagnostic access accepts direct loopback requests without forwarding headers, or a nonempty server-authenticated REMOTE_USER.</p>'
+        . '<p>Diagnostic access accepts direct loopback requests without forwarding headers, the Windows PC hosting this WSL server, or a nonempty server-authenticated REMOTE_USER.</p>'
+        . '<p>On the PC running this server, open: <a href="' . pcv_html($localUrl) . '">' . pcv_html($localUrl) . '</a></p>'
         . '</section></main></body></html>';
 }
 
@@ -571,11 +612,11 @@ function pcv_render_logs_page(string $csrfToken, array $filters, ?array $result 
 
 function pcv_run_logs_route(string $method): void
 {
-    if (!pcv_ui_logs_access_allowed($_SERVER)) {
+    if (!pcv_ui_logs_access_allowed($_SERVER, null, true)) {
         pcv_ui_diagnostics_rejected('access_denied', pcv_ui_logs_operation($_POST['action'] ?? null));
         http_response_code(403);
         header('Content-Type: text/html; charset=UTF-8');
-        echo pcv_render_logs_locked_page();
+        echo pcv_render_logs_locked_page($_SERVER);
         return;
     }
     require_once __DIR__ . '/log_reader.php';
