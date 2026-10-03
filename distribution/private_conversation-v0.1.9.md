@@ -1,6 +1,6 @@
 # Private Conversation 0.1.9 — PRE-ALPHA candidate
 
-This candidate follows 0.1.8. It is the first PCV release tested against a live CHIM server: a disposable clone of a real CHIM server (`cf5030f`) and player database, driven by a simulated game client, plus the maintainer's in-game check. Scene direction does not require Mind Poisoning. Optional solo opinion effects need Mind Poisoning 0.1.14 or later; whole-reply evaluation needs Mind Poisoning 0.1.16 (reply API v2). The candidate remains PRE-ALPHA.
+This candidate follows 0.1.8. It is the first PCV release tested against a live CHIM server: a disposable clone of a real CHIM server (`cf5030f`) and player database, driven by a simulated game client. Scene direction does not require Mind Poisoning. Optional solo opinion effects need Mind Poisoning 0.1.14 or later; whole-reply evaluation needs Mind Poisoning 0.1.16 (reply API v2). The candidate remains PRE-ALPHA.
 
 ## Fixes
 

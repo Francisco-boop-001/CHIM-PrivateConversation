@@ -22,7 +22,7 @@ Added:
 - **Whole-reply reflections.** CHIM splits a reply into lines of about 125 characters; earlier versions showed Mind Poisoning only the last one, so "Bruce Wayne… he… him…" evaluated as a reflection about nobody. With Mind Poisoning 0.1.16 (reply API v2) PCV registers every line of the reply (up to 24), proven from the request's own database rows; when grouping cannot be proven it falls back to the final line.
 - **Shorter solo replies.** The solo direction asks for at most five sentences naming the person reflected on. Models treat this as a suggestion; live replies still ran 1–15 lines.
 
-Removed: the legacy `ext_pcv_presence` companion command. Routine presence is now logged only when it changes. The [operator checklist](docs/operator-acceptance.md) was run on the cloned server with a simulated client, and the maintainer's in-game check precedes this release.
+Removed: the legacy `ext_pcv_presence` companion command. Routine presence is now logged only when it changes. The [operator checklist](docs/operator-acceptance.md) was run on the cloned server with a simulated client; the real game client, audio and gameplay feel are not covered by that run.
 
 ## Start here
 
