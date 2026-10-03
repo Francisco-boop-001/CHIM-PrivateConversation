@@ -29,7 +29,15 @@ This candidate follows 0.1.10 and adds group scenes, requested on the CHIM Disco
 
 ## Verification
 
-Offline fixtures: all pass, including six new group test files and a new browser-refresh case. A clone run of the group simulator cases 16–19 is recorded below before publishing.
+- **Offline fixtures:** all 35 pass, including six new group test files, plus 10 of 10 browser-refresh cases.
+- **Clone run:** a disposable clone of a real CHIM server with a simulated client, Lidia, Aela and Bruce, 16 AI calls.
+  - A named non-A member opened.
+  - Rechats stayed inside the members.
+  - A member who walked off between ARM and the direction was left out (`member_count: 2, dropped_count: 1`).
+  - A member gone mid-scene was dropped while the scene continued.
+  - Every scene line's witness list was exactly the three members.
+  - Details: `tasks/group-mode-verification-2026-10-03.md`.
+- **Not yet covered:** an in-game check with the real client.
 
 ## Limits
 

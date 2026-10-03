@@ -136,7 +136,7 @@ def say(listener, text, kind="inputtext"):
     global turns
     guard()
     turns += 1
-    (res, _) = s.comm(kind, f"{s.PLAYER}: {text}", s.snapshot(NAMES, listener=listener), profile=listener)
+    (res, _) = s.comm(kind, f"{s.PLAYER}: {text}", s.snapshot(list(HEARTBEAT_NAMES), listener=listener), profile=listener)
     return parse_lines(res)
 
 
@@ -443,6 +443,7 @@ TRIO = [A, B, C]
 
 def c_group_named_opener():
     """0.1.11: the member named in the direction opens (Bruce is C, not A)."""
+    end_scene()
     print("   arm:", arm_group(TRIO_IDS), flush=True)
     lines = say(A, f"What does {C.split()[0]} think of the Bannered Mare's mead?")
     ack_all(lines)
@@ -470,11 +471,13 @@ def c_group_rechats():
 
 
 def c_group_member_missing_at_start():
-    """0.1.11: one checked member absent at activation; the scene starts with the other two."""
+    """0.1.11: armed with all three nearby; Bruce walks off before the direction, so activation starts with two.
+    (The page only offers NPCs nearby at ARM time, so absence between ARM and activation is the real case.)"""
+    end_scene()
+    print("   arm:", arm_group(TRIO_IDS), flush=True)
     HEARTBEAT_NAMES.remove(C)
     try:
-        time.sleep(50)
-        print("   arm:", arm_group(TRIO_IDS), flush=True)
+        time.sleep(12)                       # at least one close report without Bruce before the direction
         lines = say(A, "Lidia and Aela discuss the weather.")
         ack_all(lines)
     finally:
@@ -536,7 +539,7 @@ if _args:
 
 if __name__ == "__main__":
     threading.Thread(target=heartbeat_loop, daemon=True).start()
-    time.sleep(12)
+    time.sleep(22)  # after a long gap the first heartbeat is only a baseline; arm after the second
     try:
         for name, expectation, body in CASES:
             run_case(name, expectation, body)
