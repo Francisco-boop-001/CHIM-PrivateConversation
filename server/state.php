@@ -514,6 +514,19 @@ function pcv_valid_stored_state(array $state): bool
             || $active['expires_at'] > $active['activated_at'] + PCV_ACTIVE_TTL) {
             return false;
         }
+        if (array_key_exists('dropped', $active)) {
+            $dropped = $active['dropped'];
+            if (!is_array($dropped) || !array_is_list($dropped) || count($dropped) > PCV_GROUP_MAX_MEMBERS) {
+                return false;
+            }
+            foreach ($dropped as $entry) {
+                if (!is_array($entry) || count($entry) !== 2
+                    || !is_string($entry['id'] ?? null) || preg_match('/\A[1-9][0-9]{0,18}\z/D', $entry['id']) !== 1
+                    || !in_array($entry['reason'] ?? null, ['not_eligible_at_start', 'left_scene'], true)) {
+                    return false;
+                }
+            }
+        }
     }
 
     if ($state['pending'] !== null) {
@@ -1901,6 +1914,33 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
 }
 
 /**
+ * Narrow a group config to the members present in $eligible (catalog ID => name). Legacy pairs and solo are
+ * all-or-nothing. Returns ['config' => narrowed, 'dropped' => [ids]] or null when the scene cannot run.
+ */
+function pcv_group_narrow_config(array $config, ?array $eligible): ?array
+{
+    if (!is_array($eligible)) {
+        return null;
+    }
+    $ids = pcv_config_actor_ids($config);
+    $present = array_values(array_filter($ids, static fn($id) => is_string($id) && array_key_exists($id, $eligible)));
+    if (!is_array($config['actor_ids'] ?? null)) {
+        return count($present) === count($ids) ? ['config' => $config, 'dropped' => []] : null;
+    }
+    if (count($present) < 2) {
+        return null;
+    }
+    $narrowed = $config;
+    $narrowed['actor_ids'] = $present;
+    $narrowed['actor_a'] = $present[0];
+    $narrowed['actor_b'] = $present[1];
+    if (($narrowed['opener'] ?? 'auto') !== 'auto' && !in_array($narrowed['opener'], $present, true)) {
+        $narrowed['opener'] = 'auto';
+    }
+    return ['config' => $narrowed, 'dropped' => array_values(array_diff($ids, $present))];
+}
+
+/**
  * $eligibleNpcMap is the strict map (close report + fresh activity) used for activation.
  * $activeEligibleNpcMap, when given, is the in-scene map (pcv_read_active_scene_npcs) used only to
  * keep an already active scene; $activePresenceCheck names the failed check for the refusal log.
@@ -1959,8 +1999,9 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
             $pending = $state['pending'];
             $config = $pending['config'];
             $configId = $pending['config_id'] ?? null;
-            $actorsEligible = !$config['enabled'] || pcv_config_actors_are_eligible($config, $eligibleNpcMap);
-            if (!$actorsEligible) {
+            // Groups start with the checked members who are present (at least 2); pairs and solo need everyone.
+            $narrowed = $config['enabled'] ? pcv_group_narrow_config($config, $eligibleNpcMap) : ['config' => $config, 'dropped' => []];
+            if (!is_array($narrowed)) {
                 $blockedPending = $pending;
             } else {
                 if (array_key_exists('config_id', $pending) && !pcv_valid_config_id($configId)) {
@@ -1968,23 +2009,41 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
                 } elseif (!array_key_exists('config_id', $pending)) {
                     $configId = pcv_log_new_uuid();
                 }
-                $state['active'] = $config['enabled'] ? [
-                    'config' => $config,
+                $activeEntry = [
+                    'config' => $narrowed['config'],
                     'config_id' => $configId,
                     'activated_at' => $now,
                     'expires_at' => $now + PCV_ACTIVE_TTL,
-                ] : null;
+                ];
+                if ($narrowed['dropped'] !== []) {
+                    $activeEntry['dropped'] = array_map(static fn($id) => ['id' => $id, 'reason' => 'not_eligible_at_start'], $narrowed['dropped']);
+                }
+                $state['active'] = $config['enabled'] ? $activeEntry : null;
                 $state['pending'] = null;
-                $activated = ['config' => $config, 'config_id' => $configId];
+                $activated = ['config' => $narrowed['config'], 'config_id' => $configId, 'dropped_count' => count($narrowed['dropped'])];
                 $changed = true;
             }
         }
 
+        $leftScene = null;
         if (!is_array($blockedPending) && is_array($state['active'])) {
             $activeConfig = $state['active']['config'] ?? null;
-            if (is_array($activeConfig) && ($activeConfig['enabled'] ?? null) === true
-                && !pcv_config_actors_are_eligible($activeConfig, $activeEligibleNpcMap ?? $eligibleNpcMap)) {
-                $blockedActive = $state['active'];
+            if (is_array($activeConfig) && ($activeConfig['enabled'] ?? null) === true) {
+                // A member who left beyond grace/wide is dropped while 2 remain; otherwise the scene is refused.
+                $kept = pcv_group_narrow_config($activeConfig, $activeEligibleNpcMap ?? $eligibleNpcMap);
+                if (!is_array($kept)) {
+                    $blockedActive = $state['active'];
+                } elseif ($kept['dropped'] !== []) {
+                    $state['active']['config'] = $kept['config'];
+                    $state['active']['dropped'] = array_merge($state['active']['dropped'] ?? [],
+                        array_map(static fn($id) => ['id' => $id, 'reason' => 'left_scene'], $kept['dropped']));
+                    $changed = true;
+                    $leftScene = [
+                        'config_id' => $state['active']['config_id'] ?? null,
+                        'dropped_count' => count($kept['dropped']),
+                        'member_count' => count(pcv_config_actor_ids($kept['config'])),
+                    ];
+                }
             }
         }
 
@@ -2006,7 +2065,18 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
         }
         if (is_array($activated)) {
             pcv_log_set_config_id($activated['config_id']);
-            pcv_log_event('state.scope_activated', 'info', 'ok', null, pcv_state_log_context($activated['config']));
+            $activationContext = pcv_state_log_context($activated['config']);
+            if (($activated['config']['enabled'] ?? false) === true) {
+                $activationContext['member_count'] = count(pcv_config_actor_ids($activated['config']));
+                $activationContext['dropped_count'] = $activated['dropped_count'] ?? 0;
+            }
+            pcv_log_event('state.scope_activated', 'info', 'ok', null, $activationContext);
+        }
+        if (is_array($leftScene)) {
+            pcv_log_set_config_id(is_string($leftScene['config_id']) && pcv_log_valid_uuid($leftScene['config_id']) ? $leftScene['config_id'] : null);
+            pcv_log_event('state.scope_members_dropped', 'info', 'ok', 'left_scene', [
+                'drop_reason' => 'left_scene', 'dropped_count' => $leftScene['dropped_count'], 'member_count' => $leftScene['member_count'],
+            ]);
         }
         if (is_array($blockedPending)) {
             $pendingConfigId = $blockedPending['config_id'] ?? null;
