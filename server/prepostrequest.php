@@ -58,4 +58,12 @@ try {
     pcvReflectionRegisterLastOutput($requestScope);
 } catch (Throwable $error) {
     pcv_log_exception('reflection.registration_error', 'error', 'failed', 'internal_error', $error, $eventContext);
+} finally {
+    // The reply is complete; later ACKs are judged against the registration (early returns expire the marker).
+    try {
+        if (function_exists('pcv_solo_inflight_clear')) {
+            pcv_solo_inflight_clear();
+        }
+    } catch (Throwable) {
+    }
 }

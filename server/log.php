@@ -177,6 +177,7 @@ function pcv_log_event_rules(): array
         'routing.request_detail' => ['severity' => 'debug', 'outcome' => 'ok', 'context' => ['phase', 'decision', 'request_type', 'actor_a_id', 'actor_b_id', 'speaker_id', 'audience_before_count', 'audience_after_count', 'present_before_count', 'present_after_count']],
         'reflection.registration_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['phase', 'route', 'actor_a_id']],
         'reflection.ack_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['phase', 'route', 'actor_a_id']],
+        'reflection.ack_pending' => ['severity' => 'debug', 'outcome' => 'skipped', 'context' => ['phase', 'route', 'actor_a_id']],
         'reflection.registration_error' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['phase', 'route', 'actor_a_id']],
         'reflection.ack_error' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['phase', 'route', 'actor_a_id']],
         'reflection.output_registered' => ['severity' => 'info', 'outcome' => 'accepted', 'context' => ['phase', 'route', 'actor_a_id']],
@@ -252,7 +253,7 @@ function pcv_log_event_rules(): array
 function pcv_log_reason_codes(): array
 {
     return [
-        'active_ttl', 'pending_ttl', 'invalid_state_key', 'identity_unavailable', 'state_unavailable',
+        'active_ttl', 'pending_ttl', 'invalid_state_key', 'identity_unavailable', 'state_unavailable', 'reply_in_progress',
         'corrupt_state', 'symlinked_state', 'not_regular_file', 'state_stat_failed', 'state_too_large',
         'state_read_failed', 'invalid_json', 'invalid_state', 'state_stage_failed', 'state_transition_failed', 'profile_lookup_failed',
         'session_unavailable', 'catalog_unavailable', 'readback_mismatch',
@@ -334,6 +335,9 @@ function pcv_log_reason_allowed(string $event, ?string $reason, ?string $outcome
     }
     if ($event === 'state.scope_skipped') {
         return $reason === 'scene_not_eligible';
+    }
+    if ($event === 'reflection.ack_pending') {
+        return $reason === 'reply_in_progress';
     }
     if ($event === 'state.presence_rejected') {
         return $reason === 'presence_stale';

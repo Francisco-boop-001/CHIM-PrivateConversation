@@ -1664,6 +1664,56 @@ function pcv_normalize_config(array $desired, array $knownNpcs): array
     return $config;
 }
 
+/**
+ * Mark a solo request as in flight so early-line ACKs that arrive before registration can be told
+ * apart from a genuinely missing registration. Classification aid only; nothing depends on it.
+ */
+function pcv_solo_inflight_mark(string $configId, string $actorId, ?string $stateDirectory = null, ?int $now = null): void
+{
+    $directory = pcv_state_directory($stateDirectory);
+    $path = $directory . DIRECTORY_SEPARATOR . 'solo_inflight.json';
+    if (is_link($path)) {
+        return;
+    }
+    $contents = json_encode(['config_id' => $configId, 'actor_id' => $actorId, 'started_at' => $now ?? time()], JSON_THROW_ON_ERROR);
+    $temporary = tempnam($directory, '.solo-inflight-');
+    if ($temporary === false) {
+        return;
+    }
+    if (file_put_contents($temporary, $contents) === strlen($contents)) {
+        @chmod($temporary, 0660);
+        @rename($temporary, $path);
+    }
+    if (is_file($temporary)) {
+        @unlink($temporary);
+    }
+}
+
+function pcv_solo_inflight_matches(string $configId, string $actorId, ?string $stateDirectory = null, ?int $now = null): bool
+{
+    try {
+        $path = pcv_state_directory($stateDirectory) . DIRECTORY_SEPARATOR . 'solo_inflight.json';
+        if (!is_file($path) || is_link($path) || (int)@filesize($path) > 512) {
+            return false;
+        }
+        $marker = json_decode((string)@file_get_contents($path), true, 4);
+        $now ??= time();
+        return is_array($marker) && ($marker['config_id'] ?? null) === $configId && ($marker['actor_id'] ?? null) === $actorId
+            && is_int($marker['started_at'] ?? null) && $marker['started_at'] <= $now
+            && $now - $marker['started_at'] <= PCV_SOLO_INFLIGHT_TTL;
+    } catch (Throwable) {
+        return false;
+    }
+}
+
+function pcv_solo_inflight_clear(?string $stateDirectory = null): void
+{
+    $path = pcv_state_directory($stateDirectory) . DIRECTORY_SEPARATOR . 'solo_inflight.json';
+    if (is_file($path) && !is_link($path)) {
+        @unlink($path);
+    }
+}
+
 /** The participant catalog IDs of a stored scene configuration (solo: A only). */
 function pcv_config_actor_ids(array $config): array
 {

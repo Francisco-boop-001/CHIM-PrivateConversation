@@ -254,6 +254,13 @@ $GLOBALS['PCV_REQUEST_SCOPE'] = array_replace($state, [
     'baseline_utterance_id' => is_string($GLOBALS['SCRIPTLINE_UTTERANCE_ID'] ?? null) ? $GLOBALS['SCRIPTLINE_UTTERANCE_ID'] : null,
     'baseline_output_log' => $baselineOutputLog,
 ]);
+if ($route === 'solo_reflection' && is_string($state['config_id'] ?? null) && is_string($state['actor_a_id'] ?? null)) {
+    try {
+        pcv_solo_inflight_mark($state['config_id'], $state['actor_a_id']);
+    } catch (Throwable) {
+        // Classification aid only; registration and evaluation never depend on it.
+    }
+}
 pcvRoutingLogDetail(
     'preprocessing',
     $route === 'solo_reflection' ? 'solo_reflection_routed'
