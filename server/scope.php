@@ -170,7 +170,8 @@ function pcvSoloReflectionRequest(array $requestScope): bool
  * among the members; whole words, case-insensitive), else the picked opener, else the first member.
  * Returns ['name' => member name, 'source' => named|picker|first].
  */
-function pcvGroupPickOpener(string $direction, array $members, ?string $pickerName): array
+function pcvGroupPickOpener(string $direction, array $members, ?string $pickerName, ?string $targetName = null,
+    bool $free = false): array
 {
     $members = array_values(array_filter($members, static fn($name) => is_string($name) && trim($name) !== ''));
     $firstWord = static function (string $name): string {
@@ -204,10 +205,27 @@ function pcvGroupPickOpener(string $direction, array $members, ?string $pickerNa
     if ($best !== null) {
         return ['name' => $best['name'], 'source' => 'named'];
     }
+    if ($free) {
+        // Free scenes (0.1.12): the NPC the player is facing, if a member, else the nearest (first) member.
+        foreach ($members as $name) {
+            if (is_string($targetName) && pcv_scope_name_key($targetName) === pcv_scope_name_key($name)) {
+                return ['name' => $name, 'source' => 'target'];
+            }
+        }
+        return ['name' => $members[0] ?? '', 'source' => 'nearest'];
+    }
     if (is_string($pickerName) && in_array($pickerName, $members, true)) {
         return ['name' => $pickerName, 'source' => 'picker'];
     }
     return ['name' => $members[0] ?? '', 'source' => 'first'];
+}
+
+/** The NPC the player targets directly, from CHIM's decoded routing snapshot (listener with target_mode direct). */
+function pcvSnapshotDirectTarget(array $snapshot): ?string
+{
+    $listener = $snapshot['listener'] ?? null;
+    return ($snapshot['target_mode'] ?? null) === 'direct' && is_string($listener) && trim($listener) !== ''
+        ? trim($listener) : null;
 }
 
 /** Catalog IDs of a stored config; mirrors pcv_config_actor_ids for callers that load scope.php without state.php. */

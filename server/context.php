@@ -64,6 +64,9 @@ if ($speakerId !== null) {
 }
 if (!$solo) {
     $preparedContext['member_count'] = count(pcvScopeMembers($requestScope['scope']));
+    if (($requestScope['scope']['free'] ?? false) === true) {
+        $preparedContext['free_scene'] = true;
+    }
 }
 if (is_string($requestScope['opener_source'] ?? null) && ($requestScope['route'] ?? null) !== 'rechat_clamped') {
     $preparedContext['opener_source'] = $requestScope['opener_source'];

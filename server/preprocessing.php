@@ -247,12 +247,14 @@ $route = ($resolvedScope['scene_mode'] ?? 'pair') === 'solo'
 $baselineOutputLog = is_array($GLOBALS['DEBUG_DATA'] ?? null) && is_string($GLOBALS['DEBUG_DATA']['OUTPUT_LOG'] ?? null)
     ? $GLOBALS['DEBUG_DATA']['OUTPUT_LOG'] : '';
 // Group scenes: the member named earliest in the direction opens, else the picked opener, else the first member.
+// Free scenes: named, else the player's direct target if a member, else the nearest member.
 $openerName = (string)($resolvedScope['actor_a'] ?? '');
 $openerSource = 'first';
 $openerProfile = $profileA;
 if ($route !== 'solo_reflection') {
     $direction = is_string($gameRequest[3] ?? null) ? $gameRequest[3] : '';
-    $pick = pcvGroupPickOpener($direction, pcvScopeMembers($resolvedScope), $resolvedScope['opener'] ?? null);
+    $pick = pcvGroupPickOpener($direction, pcvScopeMembers($resolvedScope), $resolvedScope['opener'] ?? null,
+        pcvSnapshotDirectTarget($snapshot), ($resolvedScope['free'] ?? false) === true);
     $pickedProfile = $state['profiles'][$pick['name']] ?? null;
     if ($pick['name'] !== '' && is_int($pickedProfile) && $pickedProfile > 0) {
         $openerName = $pick['name'];
