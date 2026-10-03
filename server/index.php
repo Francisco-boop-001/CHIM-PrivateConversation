@@ -44,8 +44,17 @@ function pcv_form_desired_state(array $post, string $csrfToken, array $knownNpcs
     }
 
     $sceneMode = array_key_exists('scene_mode', $post) ? $post['scene_mode'] : 'pair';
-    if (!is_string($sceneMode) || !in_array($sceneMode, ['pair', 'solo'], true)) {
+    if (!is_string($sceneMode) || !in_array($sceneMode, ['pair', 'solo', 'free'], true)) {
         throw new PcvUiFormRejection('invalid_configuration', 'The selected scene mode is invalid.');
+    }
+
+    if ($sceneMode === 'free') {
+        // Free scene (0.1.12): the nearest six eligible NPCs are chosen at activation; pickers are ignored.
+        $bystanderMode = $post['bystander_mode'] ?? null;
+        if (!is_string($bystanderMode) || !in_array($bystanderMode, ['exclude', 'silent'], true)) {
+            throw new PcvUiFormRejection('invalid_configuration', 'The other NPCs option is invalid.');
+        }
+        return ['enabled' => true, 'scene_mode' => 'pair', 'free' => true, 'exclude_player' => true, 'bystander_mode' => $bystanderMode];
     }
 
     if ($sceneMode === 'solo') {
@@ -222,6 +231,7 @@ function pcv_render_page(
     $formScope = $pending && $pendingScope !== null && ($pendingScope['enabled'] ?? null) === true
         ? $pendingScope : $scope;
     $sceneMode = ($formScope['scene_mode'] ?? null) === 'solo' ? 'solo' : 'pair';
+    $freeMode = $sceneMode === 'pair' && ($formScope['free'] ?? false) === true;
     $scopeSceneMode = ($scope['scene_mode'] ?? null) === 'solo' ? 'solo' : 'pair';
     $pendingSceneMode = ($pendingScope['scene_mode'] ?? null) === 'solo' ? 'solo' : 'pair';
     $excludePlayer = is_bool($formScope['exclude_player'] ?? null) ? $formScope['exclude_player'] : true;
@@ -272,8 +282,10 @@ function pcv_render_page(
         return pcv_html($nameA) . ' and ' . pcv_html($nameB);
     };
     $isGroup = static fn(?array $config): bool => is_array($config) && is_array($config['actor_ids'] ?? null) && count($config['actor_ids']) > 2;
+    $isFree = static fn(?array $config): bool => is_array($config) && ($config['free'] ?? false) === true;
     if ($status === 'active' && ($scene = $sceneText($scope)) !== '') {
-        $scopeSummary .= '<p>' . ($scopeSceneMode === 'solo' ? 'Current reflection: ' : ($isGroup($scope) ? 'Current group: ' : 'Current pair: '))
+        $scopeSummary .= '<p>' . ($scopeSceneMode === 'solo' ? 'Current reflection: '
+            : ($isFree($scope) ? 'Current free scene: ' : ($isGroup($scope) ? 'Current group: ' : 'Current pair: ')))
             . $scene . '.</p>';
     }
     if ($status === 'active' && is_array($state['dropped'] ?? null)) {
@@ -295,6 +307,8 @@ function pcv_render_page(
     if ($pending) {
         if ($pendingEnd) {
             $scopeSummary .= '<p class="pending-summary">End is queued for the next eligible ordinary input.</p>';
+        } elseif ($isFree($pendingScope) && !is_array($pendingScope['actor_ids'] ?? null)) {
+            $scopeSummary .= '<p class="pending-summary">Next: free scene (nearest six).</p>';
         } elseif ($pendingScope !== null && ($scene = $sceneText($pendingScope)) !== '') {
             $scopeSummary .= '<p class="pending-summary">Next ' . ($pendingSceneMode === 'solo' ? 'reflection: ' : ($isGroup($pendingScope) ? 'group: ' : 'pair: '))
                 . $scene . '.</p>';
@@ -330,13 +344,15 @@ function pcv_render_page(
     $rosterReady = $catalogAvailable && $eligibilityStatus === 'ready' && $eligibleCount >= 1;
     $actorDisabled = !$rosterReady ? ' disabled' : '';
     $pairDisabled = !$rosterReady || $eligibleCount < 2;
-    $actorBDisabled = $pairDisabled || $sceneMode === 'solo';
+    $actorBDisabled = $pairDisabled || $sceneMode === 'solo' || $freeMode;
     $soloChecked = $sceneMode === 'solo' ? ' checked' : '';
     $soloDisabled = !$rosterReady ? ' disabled' : '';
-    $actorADisabledAttr = $actorDisabled;
+    $freeChecked = $freeMode ? ' checked' : '';
+    $freeDisabled = !$rosterReady ? ' disabled' : '';
+    $actorADisabledAttr = $freeMode ? ' disabled' : $actorDisabled;
     $actorBDisabledAttr = $actorBDisabled ? ' disabled' : '';
     $armDisabledAttr = ($sceneMode === 'solo' ? !$rosterReady : $pairDisabled) ? ' disabled' : '';
-    $excludePlayerDisabledAttr = $sceneMode === 'solo' ? ' disabled' : '';
+    $excludePlayerDisabledAttr = $sceneMode === 'solo' || $freeMode ? ' disabled' : '';
     $optionsA = $optionsFor($actorA);
     $optionsB = str_replace('Choose an NPC', 'Choose a different NPC', $optionsFor($actorB));
     // Optional group members (0.1.11) and the opener picker.
@@ -352,7 +368,7 @@ function pcv_render_page(
         $openerOptions .= '<option value="' . pcv_html($id) . '"' . ($formOpener === $id ? ' selected' : '') . '>'
             . pcv_html($name . ' (ID ' . $id . ')') . "</option>\n";
     }
-    $extraDisabledAttr = ($pairDisabled || $sceneMode === 'solo') ? ' disabled' : '';
+    $extraDisabledAttr = ($pairDisabled || $sceneMode === 'solo' || $freeMode) ? ' disabled' : '';
     $noticeHtml = $notice === '' ? '' : '<p role="status">' . pcv_html($notice) . '</p>';
     $csrf = pcv_html($csrfToken);
 
@@ -402,6 +418,7 @@ function pcv_render_page(
 <input type="hidden" name="csrf" value="' . $csrf . '">
 <input type="hidden" name="action" value="arm">
 <p class="checkbox-field"><label><input type="checkbox" id="solo-mode" name="scene_mode" value="solo"' . $soloChecked . $soloDisabled . '> <span>Solo reflection</span></label></p>
+<p class="checkbox-field"><label><input type="checkbox" id="free-mode" name="scene_mode" value="free"' . $freeChecked . $freeDisabled . '> <span>Free scene (the nearest six NPCs, player excluded)</span></label></p>
 <p id="mode-guidance" class="small-note"' . ($sceneMode === 'solo' ? '' : ' hidden') . '>Solo reflection asks the NPC to think aloud. Opinion changes require compatible Mind Poisoning support.</p>
 <p class="field"><label id="actor-a-label" for="actor-a">' . ($sceneMode === 'solo' ? 'Reflecting NPC' : 'NPC A') . '</label><select id="actor-a" name="actor_a" required' . $actorADisabledAttr . '>
 ' . $optionsA . '</select></p>
@@ -417,7 +434,7 @@ function pcv_render_page(
 <option value="exclude"' . ($mode === 'exclude' ? ' selected' : '') . '>Exclude from this conversation</option>
 <option value="silent"' . ($mode === 'silent' ? ' selected' : '') . '>Present but silent</option>
 </select></p>
-<p class="checkbox-field"><label><input type="checkbox" name="exclude_player" value="1"' . ($sceneMode === 'solo' || $excludePlayer ? ' checked' : '') . $excludePlayerDisabledAttr . '> <span>Exclude the player</span></label></p>
+<p class="checkbox-field"><label><input type="checkbox" name="exclude_player" value="1"' . ($sceneMode === 'solo' || $freeMode || $excludePlayer ? ' checked' : '') . $excludePlayerDisabledAttr . '> <span>Exclude the player</span></label></p>
 <button id="arm-button" class="primary-button" type="submit" data-roster-ready="' . ($rosterReady ? '1' : '0') . '"' . $armDisabledAttr . '>Arm or update on next input</button>
 </form>
 </section>
