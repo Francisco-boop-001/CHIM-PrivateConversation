@@ -23,7 +23,11 @@ This is a reliability release. It has no new features. Each fix comes from a cod
 
 ## Verification
 
-See `tasks/reliability-verification-2026-10-03.md`.
+- **Offline fixtures:** all 47 pass, including seven new test files, plus 11 of 11 browser-refresh cases.
+- **Clone smoke run** (about 13 AI calls): pair, solo with Mind Poisoning evaluation, group and free scenes still behave as before. A refused direction is now logged as `routing.request_blocked` (warning).
+- **Offline only:** the time- and fault-based fixes (one-hour renewal, corrupt-file recovery, identity hiccup, read errors, five-minute auto-end, reflection drift).
+- **Not yet covered:** an in-game check with the real client.
+- Details: `tasks/reliability-verification-2026-10-03.md`.
 
 ## Not changed
 
