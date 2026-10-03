@@ -172,7 +172,7 @@ function pcv_log_event_rules(): array
         'ui.scope_stage_rejected' => ['severity' => 'warning', 'outcome' => 'rejected', 'context' => []],
         'ui.scope_stage_failed' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['action', 'operation']],
         'routing.request_started' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['request_type']],
-        'routing.request_prepared' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['phase', 'route', 'actor_a_id', 'actor_b_id', 'speaker_id', 'exclude_player', 'bystander_mode', 'member_count', 'opener_source', 'free_scene']],
+        'routing.request_prepared' => ['severity' => 'info', 'outcome' => 'ok', 'context' => ['phase', 'route', 'actor_a_id', 'actor_b_id', 'speaker_id', 'exclude_player', 'bystander_mode', 'member_count', 'opener_source', 'free_scene', 'scene_card', 'pace', 'wrap_up', 'sharmat_listener']],
         'routing.request_skipped' => ['severity' => 'info', 'outcome' => 'skipped', 'context' => ['phase', 'request_type', 'state_status', 'mode']],
         'routing.request_blocked' => ['severity' => 'warning', 'outcome' => 'blocked', 'context' => ['phase', 'request_type', 'actor_a_id', 'actor_b_id']],
         'routing.request_error' => ['severity' => 'error', 'outcome' => 'failed', 'context' => ['phase', 'request_type', 'actor_a_id', 'actor_b_id']],
@@ -433,6 +433,7 @@ function pcv_log_enum_values(string $key): array
         'presence_check' => ['close', 'grace_expired', 'wide_absent', 'wide_unavailable', 'presence_error'],
         'drop_reason' => ['not_eligible_at_start', 'left_scene'],
         'opener_source' => ['named', 'picker', 'first', 'target', 'nearest'],
+        'pace' => ['short', 'normal', 'long'],
         'decision' => ['non_candidate_request', 'director_excluded', 'scope_off', 'scope_pending', 'identity_unavailable', 'unsupported_mode', 'input_rewritten', 'player_speech_preserved', 'solo_reflection_routed', 'rechat_clamped', 'continuation_routed', 'responder_selected', 'context_prepared', 'action_constraints_refreshed', 'action_instructions_removed'],
     ];
     if ($key === 'source_reason') {
@@ -531,7 +532,7 @@ function pcv_log_clean_context(string $event, array $context): array
             if (pcv_log_valid_actor_id($value)) {
                 $clean[$key] = $value;
             }
-        } elseif (in_array($key, ['exclude_player', 'pending', 'committed', 'cleanup_failed', 'free_scene'], true)) {
+        } elseif (in_array($key, ['exclude_player', 'pending', 'committed', 'cleanup_failed', 'free_scene', 'scene_card', 'wrap_up', 'sharmat_listener'], true)) {
             if (is_bool($value)) {
                 $clean[$key] = $value;
             }
@@ -553,7 +554,7 @@ function pcv_log_clean_context(string $event, array $context): array
             if ((is_int($value) || is_float($value)) && is_finite((float)$value) && $value >= 0 && $value <= 86400000) {
                 $clean[$key] = is_int($value) ? $value : round($value, 2);
             }
-        } elseif (in_array($key, ['action', 'scene_mode', 'bystander_mode', 'target', 'operation', 'status', 'request_type', 'phase', 'route', 'state_status', 'mode', 'decision', 'source', 'model_outcome', 'persistence_outcome', 'commit_state', 'source_reason', 'presence_check', 'drop_reason', 'opener_source'], true)) {
+        } elseif (in_array($key, ['action', 'scene_mode', 'bystander_mode', 'target', 'operation', 'status', 'request_type', 'phase', 'route', 'state_status', 'mode', 'decision', 'source', 'model_outcome', 'persistence_outcome', 'commit_state', 'source_reason', 'presence_check', 'drop_reason', 'opener_source', 'pace'], true)) {
             if (is_string($value) && in_array($value, pcv_log_enum_values($key), true)) {
                 $clean[$key] = $value;
             }

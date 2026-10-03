@@ -4,6 +4,23 @@ declare(strict_types=1);
 require_once __DIR__ . '/scope.php';
 
 $requestScope = $GLOBALS['PCV_REQUEST_SCOPE'] ?? null;
+// 0.1.14: a wrap-up turn also closes with the native sentinel; keep CHIM's relationship queue from treating it as
+// an NPC for this request (same guard as solo, without reflection registration).
+if (is_array($requestScope) && ($requestScope['wrap_up'] ?? false) === true && ($requestScope['status'] ?? null) === 'active'
+    && empty($GLOBALS['PCV_SOLO_RELATIONSHIP_GUARD_SET'])) {
+    $GLOBALS['PCV_SOLO_RELATIONSHIP_GUARD_SET'] = true;
+    $wrapHadSetting = array_key_exists('RELATIONSHIP_SYSTEM_ENABLED', $GLOBALS);
+    $wrapPrevious = $GLOBALS['RELATIONSHIP_SYSTEM_ENABLED'] ?? null;
+    $GLOBALS['RELATIONSHIP_SYSTEM_ENABLED'] = false;
+    register_shutdown_function(static function () use ($wrapHadSetting, $wrapPrevious): void {
+        if ($wrapHadSetting) {
+            $GLOBALS['RELATIONSHIP_SYSTEM_ENABLED'] = $wrapPrevious;
+        } else {
+            unset($GLOBALS['RELATIONSHIP_SYSTEM_ENABLED']);
+        }
+    });
+    return;
+}
 if (!is_array($requestScope) || !pcvSoloReflectionRequest($requestScope)) {
     return;
 }

@@ -59,6 +59,22 @@ if (!$solo && in_array($requestType, ['rechat', 'continue', 'continue_group'], t
         array_map('pcv_scope_name_key', $others), true) ? $previous : ($others[0] ?? '');
 }
 
+// 0.1.14 turn plan (SHARMAT pin, wrap-up, turn spreading) for pair, group and free scenes.
+$GLOBALS['PCV_TURN_PLAN'] = null;
+$GLOBALS['PCV_TURN_GUIDANCE'] = [];
+if (!$solo) {
+    $members = pcvScopeMembers($scope);
+    $spokenKeys = [];
+    if (count($members) >= 3 && is_string($requestScope['config_id'] ?? null)) {
+        $spokenKeys = pcv_scene_turns_record($requestScope['config_id'], $speaker, $members);
+    }
+    $plan = pcvSceneTurnPlan($scope, $speaker, $requestScope, pcvSharmatListenerPin(), $spokenKeys);
+    $GLOBALS['PCV_TURN_PLAN'] = $plan;
+    $GLOBALS['PCV_TURN_GUIDANCE'] = ['spread' => $plan['spread'], 'wrap_up' => $plan['wrap_up']];
+    // The end of this hook rewrites PCV_REQUEST_SCOPE from $requestScope, so record the flag there.
+    $requestScope['sharmat_listener'] = $plan['sharmat'];
+}
+
 $beforeAudience = $GLOBALS['CACHE_PEOPLE'] ?? ($GLOBALS['requestRoutingSnapshot']['audience'] ?? null);
 $beforePresence = $GLOBALS['requestRoutingSnapshot']['present_actors'] ?? null;
 try {

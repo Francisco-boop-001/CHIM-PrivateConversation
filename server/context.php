@@ -67,6 +67,17 @@ if (!$solo) {
     if (($requestScope['scope']['free'] ?? false) === true) {
         $preparedContext['free_scene'] = true;
     }
+    // 0.1.14 roleplay settings and this turn's plan.
+    $preparedContext['pace'] = in_array($requestScope['scope']['pace'] ?? null, ['short', 'long'], true) ? $requestScope['scope']['pace'] : 'normal';
+    if (($GLOBALS['PCV_TURN_PLAN']['wrap_up'] ?? false) === true) {
+        $preparedContext['wrap_up'] = true;
+    }
+    if (($requestScope['sharmat_listener'] ?? false) === true) {
+        $preparedContext['sharmat_listener'] = true;
+    }
+}
+if (is_string($requestScope['scope']['card'] ?? null) && $requestScope['scope']['card'] !== '') {
+    $preparedContext['scene_card'] = true;
 }
 if (is_string($requestScope['opener_source'] ?? null) && ($requestScope['route'] ?? null) !== 'rechat_clamped') {
     $preparedContext['opener_source'] = $requestScope['opener_source'];

@@ -50,6 +50,11 @@ if (!is_string($speaker) || $speaker === '' || !is_int($profileId) || $profileId
 if (!function_exists('chimSwitchActiveNpcProfile')) {
     pcvBlockRequest('Private Conversation could not select the starting NPC; request stopped for safety.', 'profile_switch_failed', 'prerequest', $requestScope, true);
 }
+// 0.1.14 SHARMAT compatibility: SHARMAT's prerequest ran before this one (alphabetical extension order) and computed
+// its per-speaker state for the NPC CHIM chose. Remember whether PCV changes the speaker, so its listener pin is
+// only honored when it belongs to the NPC who actually speaks.
+$GLOBALS['PCV_REQUEST_SCOPE']['speaker_switched'] =
+    pcv_scope_name_key(trim((string)($GLOBALS['HERIKA_NAME'] ?? ''))) !== pcv_scope_name_key($speaker);
 try {
     $switched = chimSwitchActiveNpcProfile($speaker);
 } catch (Throwable $error) {

@@ -1007,6 +1007,45 @@ function pcvBuildScopeContext(array $resolvedScope, string $speaker, string $lis
     return $context . pcvScopeRoleplayGuidance($resolvedScope);
 }
 
+/** SHARMAT's NPC-to-NPC intimate-scene listener pin for this request, if any (set in SHARMAT's prerequest). */
+function pcvSharmatListenerPin(): ?string
+{
+    $pin = $GLOBALS['AIAGENTNSFW_FORCE_SCENE_LISTENER'] ?? null;
+    return is_string($pin) && trim($pin) !== '' ? trim($pin) : null;
+}
+
+/**
+ * 0.1.14 listener plan for one pair, group or free-scene turn.
+ * - G0: SHARMAT's pin is honored when it names another member and was computed for this speaker (PCV did not
+ *   switch the speaker after SHARMAT's prerequest ran). An outsider never widens the scene.
+ * - G6: a wrap-up turn closes with the native no-rechat sentinel (SHARMAT's pin, when honored, takes precedence).
+ * - G3: in groups of 3+, prefer members who have not spoken this round ($spokenKeys, from pcv_scene_turns_record).
+ * @return array{listeners: list<string>, spread: bool, wrap_up: bool, sharmat: bool}
+ */
+function pcvSceneTurnPlan(array $scope, string $speaker, array $requestScope, ?string $sharmatPin, array $spokenKeys): array
+{
+    $others = pcvGroupListeners($speaker, $scope);
+    $wrapUp = ($requestScope['wrap_up'] ?? false) === true;
+    $plan = ['listeners' => $others, 'spread' => false, 'wrap_up' => $wrapUp, 'sharmat' => false];
+    if (is_string($sharmatPin) && ($requestScope['speaker_switched'] ?? false) !== true) {
+        foreach ($others as $other) {
+            if (pcv_scope_name_key($other) === pcv_scope_name_key($sharmatPin)) {
+                return array_replace($plan, ['listeners' => [$other], 'sharmat' => true]);
+            }
+        }
+    }
+    if ($wrapUp) {
+        return array_replace($plan, ['listeners' => ['explicit_disable_rechat']]);
+    }
+    if (count(pcvScopeMembers($scope)) >= 3) {
+        $unspoken = array_values(array_filter($others, static fn($name) => !in_array(pcv_scope_name_key($name), $spokenKeys, true)));
+        if ($unspoken !== []) {
+            return array_replace($plan, ['listeners' => $unspoken, 'spread' => true]);
+        }
+    }
+    return $plan;
+}
+
 /**
  * 0.1.14 roleplay guidance (scene card, turn length, turn spreading, wrap-up). Empty when none applies, so scenes
  * without these settings keep their exact context. Always ends with the ground rule: PCV adds scene context and

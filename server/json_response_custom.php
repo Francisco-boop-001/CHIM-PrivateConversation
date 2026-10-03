@@ -33,6 +33,15 @@ function pcvCustomizeJsonResponseTemplate(): void
         }
         // CHIM runs PCV scenes in tight rechat mode: whoever this line addresses answers next.
         $listeners = pcvGroupListeners($speaker, $scope);
+        // 0.1.14: this turn's plan (SHARMAT pin, wrap-up sentinel, turn spreading) may narrow the choices, but only
+        // to other members or the closing sentinel; anything else keeps the scene's own listeners.
+        $planned = $GLOBALS['PCV_TURN_PLAN']['listeners'] ?? null;
+        if (is_array($planned) && $planned !== []) {
+            $allowed = array_merge($listeners, ['explicit_disable_rechat']);
+            if (array_diff($planned, $allowed) === []) {
+                $listeners = array_values($planned);
+            }
+        }
         if ($listeners === []) {
             pcvBlockRequest('Private Conversation listener constraints are unavailable; request stopped for safety.', 'actions_unavailable', 'context_pre', $requestScope, true);
         }
@@ -49,6 +58,9 @@ function pcvCustomizeJsonResponseTemplate(): void
     $schema['type'] = 'string';
     $schema['enum'] = $listeners;
     $schema['description'] = $solo
+        ? 'Use the fixed self-reflection listener value.'
+        : ($listeners === ['explicit_disable_rechat'] ? 'Use the fixed closing listener value; nobody answers this parting line.' : null);
+    $schema['description'] ??= $solo
         ? 'Use the fixed self-reflection listener value.'
         : (count($listeners) === 1
             ? 'Use the selected conversation counterpart as listener.'

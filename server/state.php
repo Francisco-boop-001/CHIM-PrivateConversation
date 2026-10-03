@@ -265,6 +265,7 @@ function pcv_state_validate_legacy_directory(string $directory): void
         'background_presence.json' => PCV_PRESENCE_DOCUMENT_MAX_BYTES,
         'background_wide_presence.json' => PCV_PRESENCE_DOCUMENT_MAX_BYTES,
         'solo_inflight.json' => 512,
+        'scene_turns.json' => 4096,
         'reflection.json' => 8192,
         'reflection_receipts.json' => 8192,
     ];
@@ -1917,6 +1918,56 @@ function pcv_solo_inflight_matches(string $configId, string $actorId, ?string $s
             && $now - $marker['started_at'] <= PCV_SOLO_INFLIGHT_TTL;
     } catch (Throwable) {
         return false;
+    }
+}
+
+/**
+ * 0.1.14 turn spreading: record that $speaker took a turn in scene $configId and return the name keys of members
+ * who have spoken in the current round. When every member has spoken, a new round starts with this speaker.
+ */
+function pcv_scene_turns_record(string $configId, string $speaker, array $memberNames, ?string $stateDirectory = null): array
+{
+    if (!function_exists('pcv_scope_name_key')) {
+        require_once __DIR__ . '/scope.php';
+    }
+    $memberKeys = array_values(array_unique(array_map(static fn($name) => pcv_scope_name_key((string)$name), $memberNames)));
+    $speakerKey = pcv_scope_name_key($speaker);
+    $handle = null;
+    try {
+        $directory = pcv_state_directory($stateDirectory);
+        $handle = pcv_lock_state($directory, true, LOCK_EX);
+        $path = $directory . DIRECTORY_SEPARATOR . 'scene_turns.json';
+        $spoken = [];
+        if (is_file($path) && !is_link($path) && (int)@filesize($path) <= 4096) {
+            $document = json_decode((string)@file_get_contents($path), true, 4);
+            if (is_array($document) && ($document['config_id'] ?? null) === $configId && is_array($document['spoken'] ?? null)) {
+                $spoken = array_values(array_filter($document['spoken'], static fn($key) => is_string($key) && in_array($key, $memberKeys, true)));
+            }
+        }
+        if (!in_array($speakerKey, $spoken, true)) {
+            $spoken[] = $speakerKey;
+        }
+        if (array_diff($memberKeys, $spoken) === []) {
+            $spoken = [$speakerKey];
+        }
+        $contents = json_encode(['config_id' => $configId, 'spoken' => $spoken], JSON_THROW_ON_ERROR);
+        $temporary = tempnam($directory, '.turns-');
+        if ($temporary !== false) {
+            if (file_put_contents($temporary, $contents) === strlen($contents)) {
+                @chmod($temporary, 0660);
+                @rename($temporary, $path);
+            }
+            if (is_file($temporary)) {
+                @unlink($temporary);
+            }
+        }
+        return $spoken;
+    } catch (Throwable $error) {
+        // Turn spreading is a preference; a failure here never blocks the scene.
+        pcv_log_exception('state.unavailable', 'error', 'unavailable', 'state_transition_failed', $error, ['operation' => 'begin']);
+        return [$speakerKey];
+    } finally {
+        pcv_unlock_state($handle);
     }
 }
 
