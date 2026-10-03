@@ -21,7 +21,14 @@ This candidate follows 0.1.9 and fixes what the first in-game session found that
 
 ## Verification
 
-Offline fixtures pass, including six new ones for the fixes above. A clone run with the extended simulator, cases 12–15 (partner leaves, heartbeat gap, early ACK, subject present), precedes the maintainer's in-game check. The release notes are updated with the results before publishing.
+- **Offline fixtures:** all 29 pass, including six new ones for the fixes above. The package and page-refresh checks also pass.
+- **Clone run:** a disposable clone of a real CHIM server with a simulated game client, cases 12–15, 15 AI calls.
+  - A partner absent from close reports was kept by grace, then by the wide report, and refused once absent from both (logged with `presence_check` and `missing_count`).
+  - The first report after a 70 s heartbeat gap kept the scene.
+  - An early-line ACK during generation no longer logged `registration_missing`, and the reply still registered and was evaluated.
+  - A solo reflection with its subject present did not address him (one sample).
+  - The Logs page opened through the WSL address that 0.1.9 refused.
+- **Not yet covered:** an in-game check with the real client. That follows this release.
 
 ## Limits
 
