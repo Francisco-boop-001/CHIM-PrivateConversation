@@ -256,7 +256,7 @@ function pcv_log_reason_codes(): array
 {
     return [
         'active_ttl', 'pending_ttl', 'invalid_state_key', 'identity_unavailable', 'state_unavailable', 'reply_in_progress',
-        'left_scene', 'not_eligible_at_start', 'speaker_outside_scene', 'rechat_speaker_outside_scene',
+        'left_scene', 'not_eligible_at_start', 'speaker_outside_scene', 'rechat_speaker_outside_scene', 'members_gone', 'scope_unavailable',
         'corrupt_state', 'symlinked_state', 'not_regular_file', 'state_stat_failed', 'state_too_large',
         'state_read_failed', 'invalid_json', 'invalid_state', 'state_stage_failed', 'state_transition_failed', 'profile_lookup_failed',
         'session_unavailable', 'catalog_unavailable', 'readback_mismatch',
@@ -372,6 +372,9 @@ function pcv_log_reason_allowed(string $event, ?string $reason, ?string $outcome
     if ($event === 'state.unavailable') {
         return in_array($reason, ['invalid_state_key', 'identity_unavailable', 'state_unavailable', 'corrupt_state', 'symlinked_state', 'not_regular_file', 'state_stat_failed', 'state_too_large', 'state_read_failed', 'invalid_json', 'invalid_state', 'state_stage_failed', 'state_transition_failed', 'profile_lookup_failed', 'catalog_unavailable', 'presence_unavailable', 'presence_stale', 'presence_missing', 'presence_invalid', 'presence_key_mismatch', 'unsupported_special_mode'], true);
     }
+    if ($event === 'state.scope_ended') {
+        return $reason === 'members_gone';
+    }
     if ($event === 'state.store_recovered') {
         return in_array($reason, ['invalid_json', 'invalid_state', 'state_too_large'], true);
     }
@@ -427,7 +430,7 @@ function pcv_log_enum_values(string $key): array
         'model_outcome' => ['valid', 'invalid', 'failed', 'not_called'],
         'persistence_outcome' => ['committed', 'invalid', 'stale', 'failed'],
         'commit_state' => ['confirmed', 'unconfirmed', 'not_attempted'],
-        'presence_check' => ['close', 'grace_expired', 'wide_absent', 'wide_unavailable'],
+        'presence_check' => ['close', 'grace_expired', 'wide_absent', 'wide_unavailable', 'presence_error'],
         'drop_reason' => ['not_eligible_at_start', 'left_scene'],
         'opener_source' => ['named', 'picker', 'first', 'target', 'nearest'],
         'decision' => ['non_candidate_request', 'director_excluded', 'scope_off', 'scope_pending', 'identity_unavailable', 'unsupported_mode', 'input_rewritten', 'player_speech_preserved', 'solo_reflection_routed', 'rechat_clamped', 'continuation_routed', 'responder_selected', 'context_prepared', 'action_constraints_refreshed', 'action_instructions_removed'],

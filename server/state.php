@@ -23,6 +23,7 @@ const PCV_SOLO_INFLIGHT_TTL = 180;
 // Group scenes (0.1.11) hold 2 to 4 members.
 const PCV_GROUP_MAX_MEMBERS = 4;
 const PCV_FREE_MAX_MEMBERS = 6;
+const PCV_ACTIVE_REFUSAL_END = 300;
 
 function pcv_shared_server_identity($playerName): array
 {
@@ -533,6 +534,10 @@ function pcv_valid_stored_state(array $state): bool
             || $active['expires_at'] > (is_int($renewedAt) ? $renewedAt : $active['activated_at']) + PCV_ACTIVE_TTL) {
             return false;
         }
+        if (array_key_exists('refused_since', $active)
+            && (!is_int($active['refused_since']) || $active['refused_since'] < $active['activated_at'])) {
+            return false;
+        }
         if (array_key_exists('dropped', $active)) {
             $dropped = $active['dropped'];
             if (!is_array($dropped) || !array_is_list($dropped) || count($dropped) > PCV_FREE_MAX_MEMBERS) {
@@ -545,6 +550,14 @@ function pcv_valid_stored_state(array $state): bool
                     return false;
                 }
             }
+        }
+    }
+
+    if (array_key_exists('last_end', $state)) {
+        $lastEnd = $state['last_end'];
+        if (!is_array($lastEnd) || count($lastEnd) !== 2 || ($lastEnd['reason'] ?? null) !== 'members_gone'
+            || !is_int($lastEnd['at'] ?? null) || $lastEnd['at'] < 1) {
+            return false;
         }
     }
 
@@ -1263,7 +1276,11 @@ function pcv_read_wide_presence_names(?string $key, ?string $playerName, ?string
             return $unavailable;
         }
         $document = json_decode((string)@file_get_contents($path), true, 16);
-        if (!is_array($document) || ($document['version'] ?? null) !== PCV_WIDE_PRESENCE_VERSION
+        if (!is_array($document)) {
+            pcv_log_event('state.unavailable', 'error', 'unavailable', 'presence_unavailable', ['operation' => 'presence_read']);
+            return ['status' => 'error', 'counts' => []];
+        }
+        if (($document['version'] ?? null) !== PCV_WIDE_PRESENCE_VERSION
             || ($document['source'] ?? null) !== 'infonpc_v1'
             || !is_string($document['key'] ?? null) || !hash_equals($key, $document['key'])
             || !is_string($document['player_name'] ?? null)
@@ -1286,8 +1303,9 @@ function pcv_read_wide_presence_names(?string $key, ?string $playerName, ?string
             $counts[$nameKey] = ($counts[$nameKey] ?? 0) + 1;
         }
         return ['status' => 'ready', 'counts' => $counts];
-    } catch (Throwable) {
-        return $unavailable;
+    } catch (Throwable $error) {
+        pcv_log_exception('state.unavailable', 'error', 'unavailable', 'presence_unavailable', $error, ['operation' => 'presence_read']);
+        return ['status' => 'error', 'counts' => []];
     } finally {
         pcv_unlock_state($handle);
     }
@@ -1303,7 +1321,8 @@ function pcv_read_active_scene_npcs(?string $key, array $catalogRows, ?string $p
     ?string $stateDirectory = null, ?int $now = null): array
 {
     $now ??= time();
-    $result = ['known_npcs' => [], 'missing' => []];
+    // 'error' (0.1.13): the evidence could not be read, which is not the same as an absent member.
+    $result = ['known_npcs' => [], 'missing' => [], 'error' => false];
     if (!function_exists('pcv_scope_name_key')) {
         require_once __DIR__ . '/scope.php';
     }
@@ -1319,8 +1338,17 @@ function pcv_read_active_scene_npcs(?string $key, array $catalogRows, ?string $p
             $handle = pcv_lock_state($directory, false, LOCK_SH);
             $path = $directory . DIRECTORY_SEPARATOR . 'background_presence.json';
             $size = is_file($path) && !is_link($path) ? @filesize($path) : false;
+            if ($handle !== null && (file_exists($path) || is_link($path))
+                && (!is_int($size) || $size > PCV_PRESENCE_DOCUMENT_MAX_BYTES)) {
+                $result['error'] = true;
+                pcv_log_event('state.unavailable', 'error', 'unavailable', 'presence_unavailable', ['operation' => 'presence_read']);
+            }
             if ($handle !== null && is_int($size) && $size <= PCV_PRESENCE_DOCUMENT_MAX_BYTES) {
                 $decoded = json_decode((string)@file_get_contents($path), true, 16);
+                if (!is_array($decoded)) {
+                    $result['error'] = true;
+                    pcv_log_event('state.unavailable', 'error', 'unavailable', 'presence_unavailable', ['operation' => 'presence_read']);
+                }
                 if (is_array($decoded) && ($decoded['version'] ?? null) === PCV_BACKGROUND_PRESENCE_VERSION
                     && is_string($decoded['key'] ?? null) && hash_equals($key, $decoded['key'])
                     && is_string($decoded['player_name'] ?? null)
@@ -1328,8 +1356,10 @@ function pcv_read_active_scene_npcs(?string $key, array $catalogRows, ?string $p
                     $document = $decoded;
                 }
             }
-        } catch (Throwable) {
+        } catch (Throwable $error) {
             $document = null;
+            $result['error'] = true;
+            pcv_log_exception('state.unavailable', 'error', 'unavailable', 'presence_unavailable', $error, ['operation' => 'presence_read']);
         } finally {
             pcv_unlock_state($handle);
         }
@@ -1366,6 +1396,9 @@ function pcv_read_active_scene_npcs(?string $key, array $catalogRows, ?string $p
             continue;
         }
         $wide ??= pcv_read_wide_presence_names($key, $playerName, $stateDirectory, $now);
+        if (($wide['status'] ?? null) === 'error') {
+            $result['error'] = true;
+        }
         if (($wide['status'] ?? null) !== 'ready') {
             $result['missing'][$id] = 'wide_unavailable';
         } elseif (($wide['counts'][$nameKey] ?? 0) === 1) {
@@ -1584,6 +1617,16 @@ function pcv_visible_state(array $state, int $now): array
     $pendingConfigId = $pendingScope !== null && pcv_valid_config_id($storedPendingConfigId)
         ? $storedPendingConfigId : null;
     $pending = $pendingScope !== null;
+    // 0.1.13: a scene that ended itself (members gone) is shown on the page for 30 minutes.
+    $lastEnd = $scope === null && is_array($state['last_end'] ?? null) && $now - $state['last_end']['at'] <= 1800
+        ? $state['last_end'] : null;
+    if ($lastEnd !== null) {
+        $result = $pending
+            ? pcv_result('pending', null, true, $pendingScope, null, $pendingConfigId)
+            : pcv_result('off', null, false);
+        $result['last_end'] = $lastEnd;
+        return $result;
+    }
     if ($scope !== null) {
         $result = pcv_result('active', $scope, $pending, $pendingScope, $configId, $pendingConfigId);
         // Group members left out at the start or who left mid-scene (only present when someone was dropped).
@@ -1911,6 +1954,7 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
             $state['pending'] = null;
         }
         $endConfigId = null;
+        unset($state['last_end']);
         if ($config['enabled']) {
             $state['pending'] = [
                 'config' => $config,
@@ -2010,7 +2054,8 @@ function pcv_free_select_members(array $candidateOrder, array $eligible, int $ca
  * keep an already active scene; $activePresenceCheck names the failed check for the refusal log.
  */
 function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory = null, ?array $eligibleNpcMap = null,
-    ?array $activeEligibleNpcMap = null, ?string $activePresenceCheck = null, ?array $freeCandidateOrder = null): array
+    ?array $activeEligibleNpcMap = null, ?string $activePresenceCheck = null, ?array $freeCandidateOrder = null,
+    bool $allowActiveDrops = true): array
 {
     if (!pcv_valid_key($key)) {
         pcv_log_set_playthrough_ref(null);
@@ -2025,6 +2070,7 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
     $invalidated = null;
     $blockedPending = null;
     $blockedActive = null;
+    $autoEnded = null;
     try {
         $directory = pcv_state_directory($stateDirectory);
         $handle = pcv_lock_state($directory, true, LOCK_EX);
@@ -2093,6 +2139,7 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
                 }
                 $state['active'] = $config['enabled'] ? $activeEntry : null;
                 $state['pending'] = null;
+                unset($state['last_end']);
                 $activated = ['config' => $narrowed['config'], 'config_id' => $configId, 'dropped_count' => count($narrowed['dropped'])];
                 $changed = true;
             }
@@ -2104,8 +2151,22 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
             if (is_array($activeConfig) && ($activeConfig['enabled'] ?? null) === true) {
                 // A member who left beyond grace/wide is dropped while 2 remain; otherwise the scene is refused.
                 $kept = pcv_group_narrow_config($activeConfig, $activeEligibleNpcMap ?? $eligibleNpcMap);
+                if (is_array($kept) && $kept['dropped'] !== [] && !$allowActiveDrops) {
+                    // 0.1.13: unreadable evidence refuses the turn; it never removes a member for good.
+                    $kept = null;
+                }
                 if (!is_array($kept)) {
                     $blockedActive = $state['active'];
+                    // 0.1.13: a scene refused for PCV_ACTIVE_REFUSAL_END seconds ends itself (this input stays refused).
+                    $refusedSince = $state['active']['refused_since'] ?? null;
+                    if (is_int($refusedSince) && $now - $refusedSince >= PCV_ACTIVE_REFUSAL_END) {
+                        $autoEnded = $state['active'];
+                        $state['active'] = null;
+                        $state['last_end'] = ['reason' => 'members_gone', 'at' => $now];
+                    } elseif (!is_int($refusedSince)) {
+                        $state['active']['refused_since'] = $now;
+                    }
+                    $changed = true;
                 } elseif ($kept['dropped'] !== []) {
                     $state['active']['config'] = $kept['config'];
                     $state['active']['dropped'] = array_merge($state['active']['dropped'] ?? [],
@@ -2123,6 +2184,10 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
         // 0.1.13: a turn that keeps the scene active renews its lifetime (at most once a minute), so a scene ends
         // after an hour without use instead of one hour after it started.
         if (!is_array($blockedPending) && !is_array($blockedActive) && is_array($state['active'])) {
+            if (array_key_exists('refused_since', $state['active'])) {
+                unset($state['active']['refused_since']);
+                $changed = true;
+            }
             $lastRenewal = $state['active']['renewed_at'] ?? $state['active']['activated_at'];
             if (is_int($lastRenewal) && $now - $lastRenewal >= 60) {
                 $state['active']['renewed_at'] = $now;
@@ -2155,6 +2220,11 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
                 $activationContext['dropped_count'] = $activated['dropped_count'] ?? 0;
             }
             pcv_log_event('state.scope_activated', 'info', 'ok', null, $activationContext);
+        }
+        if (is_array($autoEnded)) {
+            $endedId = $autoEnded['config_id'] ?? null;
+            pcv_log_set_config_id(is_string($endedId) && pcv_log_valid_uuid($endedId) ? $endedId : null);
+            pcv_log_event('state.scope_ended', 'info', 'ok', 'members_gone', pcv_state_log_context(['enabled' => false] + $autoEnded['config']));
         }
         if (is_array($leftScene)) {
             pcv_log_set_config_id(is_string($leftScene['config_id']) && pcv_log_valid_uuid($leftScene['config_id']) ? $leftScene['config_id'] : null);

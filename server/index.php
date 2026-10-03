@@ -296,7 +296,10 @@ function pcv_render_page(
                 : '<p class="small-note">Started without ' . $droppedName . ' (not nearby).</p>';
         }
     }
-    $lastTurn = $status === 'active' && is_string($state['config_id'] ?? null) && function_exists('pcv_log_read_last_turn')
+    if ($status !== 'active' && ($state['last_end']['reason'] ?? null) === 'members_gone') {
+        $scopeSummary .= '<p class="small-note">The scene ended: its NPCs were gone for five minutes.</p>';
+    }
+    $lastTurn =$status === 'active' && is_string($state['config_id'] ?? null) && function_exists('pcv_log_read_last_turn')
         ? pcv_log_read_last_turn($state['config_id']) : null;
     if (is_array($lastTurn)) {
         $spoke = $lastTurn['outcome'] === 'postrequest_observed';

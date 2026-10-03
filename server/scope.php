@@ -522,6 +522,7 @@ function pcvBeginResolvedScope(bool $eligible, ?array $currentPresence = null, b
     // baseline report after a gap). Activation keeps the strict map.
     $activeMap = null;
     $activeCheck = null;
+    $allowDrops = true;
     if ($active && !$pendingEnd && is_array($observed['scope'] ?? null)) {
         try {
             $playerName ??= pcv_current_player_name();
@@ -531,14 +532,20 @@ function pcvBeginResolvedScope(bool $eligible, ?array $currentPresence = null, b
                 $inScene = pcv_read_active_scene_npcs($key, $rows, $playerName, $sceneIds);
                 $activeMap = ($eligibleMap ?? []) + $inScene['known_npcs'];
                 $activeCheck = $inScene['missing'] === [] ? null : (string)reset($inScene['missing']);
+                if (($inScene['error'] ?? false) === true) {
+                    // 0.1.13: unreadable evidence refuses this turn; it never drops members for good.
+                    $allowDrops = false;
+                    $activeCheck = 'presence_error';
+                }
             }
         } catch (Throwable $error) {
+            $allowDrops = false;
             pcv_log_exception('state.unavailable', 'error', 'unavailable', 'catalog_unavailable', $error, ['operation' => 'begin']);
         }
     }
 
     // The state lock rechecks the observed state and rejects any concurrent enabled config without a map.
-    $result = pcv_begin_request($key, $eligible, null, $eligibleMap, $activeMap, $activeCheck, $freeOrder);
+    $result = pcv_begin_request($key, $eligible, null, $eligibleMap, $activeMap, $activeCheck, $freeOrder, $allowDrops);
     if (($result['status'] ?? null) === 'unavailable' && $failureReason !== null
         && !in_array($failureReason, ['presence_missing', 'presence_stale'], true)) {
         $result['reason'] = $failureReason;
