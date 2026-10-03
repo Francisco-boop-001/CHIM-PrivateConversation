@@ -499,6 +499,105 @@ def c_group_member_leaves():
     return f"rechat after Bruce left: {len(turn)} lines; expect state.scope_members_dropped left_scene and the scene continuing"
 
 
+def arm_free():
+    """0.1.12 free scene: no pickers; the nearest six eligible NPCs are chosen at activation."""
+    return arm(action="arm", scene_mode="free", bystander_mode="exclude")
+
+
+def say_target(target, text):
+    """Ordinary input with an optional direct target (target_mode direct) or none (automatic)."""
+    global turns
+    guard()
+    turns += 1
+    (res, _) = s.comm("inputtext", f"{s.PLAYER}: {text}", s.snapshot(list(HEARTBEAT_NAMES), listener=target or ""),
+                      profile=target or A)
+    return parse_lines(res)
+
+
+def crowd(n):
+    """n extra catalog NPCs with a profile and a unique name (the crowd for free scenes)."""
+    rows = subprocess.run(PG + [
+        "select npc_name from public.core_npc_master where profile_id is not null "
+        "and npc_name ~ '^[A-Za-z][A-Za-z '' -]{2,40}$' group by npc_name having count(*) = 1 order by min(id) limit 60"],
+        capture_output=True, text=True, env=PG_ENV).stdout.split("\n")
+    taken = {x.lower() for x in NAMES + [s.PLAYER]}
+    return [r.strip() for r in rows if r.strip() and r.strip().lower() not in taken][:n]
+
+
+def witness_sets(since_event_id):
+    """Distinct eventlog.people values of the chat lines written since since_event_id."""
+    out = subprocess.run(PG + [f"select distinct people from public.eventlog where rowid > {since_event_id} "
+                               "and type = 'chat' and people is not null"], capture_output=True, text=True, env=PG_ENV).stdout
+    return [line for line in out.splitlines() if line.strip()]
+
+
+EXTRAS = []
+
+
+def with_crowd(body):
+    """Run body with A, B, C plus six extras nearby (nine in all; snapshot distances grow with list order)."""
+    if not EXTRAS:
+        EXTRAS.extend(crowd(6))
+    HEARTBEAT_NAMES[:] = NAMES + EXTRAS
+    try:
+        time.sleep(12)                       # one close report with the crowd before ARM
+        return body()
+    finally:
+        HEARTBEAT_NAMES[:] = list(NAMES)
+
+
+def c_free_crowd():
+    def body():
+        end_scene()
+        print("   crowd:", EXTRAS, "\n   arm:", arm_free(), flush=True)
+        start = max_event_id()
+        opening = say_target("", "Everyone around the fire trades rumours about the road to Solitude.")
+        ack_all(opening)
+        members = NAMES + EXTRAS[:3]
+        nxt = []
+        if opening:
+            last = opening[-1]
+            nxt = rechat(last["speaker"], last["listener"], last["subtitle"], agents=members)
+            ack_all(nxt)
+        speakers = sorted({l["speaker"] for l in opening + nxt})
+        outsiders = sorted({l["speaker"] for l in opening + nxt} - set(members) - {"HTTP"})
+        return (f"opening {len(opening)} / rechat {len(nxt)}; first={opening[0]['speaker'] if opening else '-'} (expect {A}, nearest); "
+                f"speakers={speakers}; outsiders={outsiders} (expect none); witness={witness_sets(start)[:2]}")
+    return with_crowd(body)
+
+
+def c_free_target_opener():
+    def body():
+        end_scene()
+        print("   arm:", arm_free(), flush=True)
+        lines = say_target(C, "Someone by the fire should say what they think of the Jarl.")
+        ack_all(lines)
+        return f"{len(lines)} lines; first={lines[0]['speaker'] if lines else '-'} (expect {C}, opener_source target)"
+    return with_crowd(body)
+
+
+def c_free_named_opener():
+    def body():
+        end_scene()
+        print("   arm:", arm_free(), flush=True)
+        lines = say_target(C, f"{B.split()[0]} tells the others about her last hunt.")
+        ack_all(lines)
+        return f"{len(lines)} lines; first={lines[0]['speaker'] if lines else '-'} (expect {B}, opener_source named over target)"
+    return with_crowd(body)
+
+
+def c_free_too_few():
+    end_scene()
+    print("   arm:", arm_free(), flush=True)          # armed with three nearby
+    HEARTBEAT_NAMES[:] = [A]
+    try:
+        time.sleep(12)                       # only Lidia remains close before the direction
+        lines = say_target("", "Lidia muses about the weather.")
+    finally:
+        HEARTBEAT_NAMES[:] = list(NAMES)
+    return f"{len(lines)} lines; expect state.scope_skipped scene_not_eligible (free scene stays pending)"
+
+
 CASES = [
     ("1 baseline chat + player gossip (no scene)", "normal reply to Hawke; PCV scope_off; MP may judge the claim", c_baseline),
     ("2 pair: opening + 2 rechats", "only Lidia/Aela speak, to each other; MP updates listener opinions of Bruce", c_pair),
@@ -528,6 +627,10 @@ CASES = [
     ("17 group rechats", "only members speak; listeners are other members", c_group_rechats),
     ("18 group member missing at start", "starts with two; Bruce dropped (not_eligible_at_start)", c_group_member_missing_at_start),
     ("19 group member leaves", "Bruce dropped mid-scene (left_scene); scene continues", c_group_member_leaves),
+    ("20 free scene in a crowd", "member_count=6 (nearest six), Lidia opens (nearest); only members speak", c_free_crowd),
+    ("21 free target opener", "Bruce (the player's target) opens; opener_source target", c_free_target_opener),
+    ("22 free named opener", "Aela (named) opens even though Bruce is targeted", c_free_named_opener),
+    ("23 free too few nearby", "scene_not_eligible; the free scene stays pending", c_free_too_few),
 ]
 # Optional case-number prefixes select a subset, e.g. `standard.py 11`; `--budget=N` caps AI calls.
 _args = [a for a in sys.argv[1:] if not a.startswith("--budget=")]
