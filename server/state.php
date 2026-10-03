@@ -20,6 +20,8 @@ const PCV_PRESENCE_ACTIVE_GRACE = 60;
 const PCV_WIDE_PRESENCE_VERSION = 1;
 // An early-line ACK within this window of a solo request start is "reply in progress", not "registration missing".
 const PCV_SOLO_INFLIGHT_TTL = 180;
+// Group scenes (0.1.11) hold 2 to 4 members.
+const PCV_GROUP_MAX_MEMBERS = 4;
 
 function pcv_shared_server_identity($playerName): array
 {
@@ -465,12 +467,36 @@ function pcv_valid_config($config, bool $allowDisabled): bool
         return false;
     }
     if ($sceneMode === 'solo') {
-        return array_key_exists('actor_b', $config) && $actorB === null && $config['exclude_player'] === true;
+        return array_key_exists('actor_b', $config) && $actorB === null && $config['exclude_player'] === true
+            && !array_key_exists('actor_ids', $config) && !array_key_exists('opener', $config);
     }
-    return is_string($actorB) && $actorB !== '' && strlen($actorB) <= 256
+    $validB = is_string($actorB) && $actorB !== '' && strlen($actorB) <= 256
         && $actorA !== $actorB
         && preg_match('//u', $actorB) === 1
         && preg_match('/[\x00-\x1f\x7f]/', $actorB) !== 1;
+    if (!$validB) {
+        return false;
+    }
+    // Legacy two-member pair: no member list and no opener.
+    if (!array_key_exists('actor_ids', $config)) {
+        return !array_key_exists('opener', $config);
+    }
+    // Group (0.1.11): 2-4 ordered members; actor_a/actor_b mirror the first two.
+    $ids = $config['actor_ids'];
+    if (!is_array($ids) || !array_is_list($ids) || count($ids) < 2 || count($ids) > PCV_GROUP_MAX_MEMBERS
+        || ($ids[0] ?? null) !== $actorA || ($ids[1] ?? null) !== $actorB) {
+        return false;
+    }
+    foreach ($ids as $id) {
+        if (!is_string($id) || preg_match('/\A[1-9][0-9]{0,18}\z/D', $id) !== 1) {
+            return false;
+        }
+    }
+    if (count(array_unique($ids)) !== count($ids)) {
+        return false;
+    }
+    $opener = $config['opener'] ?? null;
+    return $opener === 'auto' || (is_string($opener) && in_array($opener, $ids, true));
 }
 
 function pcv_valid_stored_state(array $state): bool
@@ -1617,6 +1643,31 @@ function pcv_normalize_config(array $desired, array $knownNpcs): array
     }
 
     $sceneMode = array_key_exists('scene_mode', $desired) ? $desired['scene_mode'] : 'pair';
+    $groupIds = null;
+    $groupOpener = null;
+    if ($sceneMode === 'pair' && array_key_exists('actor_ids', $desired)) {
+        $rawIds = $desired['actor_ids'];
+        if (!is_array($rawIds) || !array_is_list($rawIds) || count($rawIds) < 2 || count($rawIds) > PCV_GROUP_MAX_MEMBERS) {
+            throw new InvalidArgumentException('Choose two to four different NPCs.');
+        }
+        $groupIds = [];
+        foreach ($rawIds as $rawId) {
+            if (!is_string($rawId) && !is_int($rawId)) {
+                throw new InvalidArgumentException('Choose two to four different NPCs.');
+            }
+            $groupIds[] = (string)$rawId;
+        }
+        if (count(array_unique($groupIds)) !== count($groupIds)) {
+            throw new InvalidArgumentException('Choose two to four different NPCs.');
+        }
+        $groupOpener = $desired['opener'] ?? 'auto';
+        $groupOpener = is_int($groupOpener) ? (string)$groupOpener : $groupOpener;
+        if ($groupOpener !== 'auto' && (!is_string($groupOpener) || !in_array($groupOpener, $groupIds, true))) {
+            throw new InvalidArgumentException('The opener must be one of the selected NPCs.');
+        }
+        $desired['actor_a'] = $groupIds[0];
+        $desired['actor_b'] = $groupIds[1];
+    }
     if (!in_array($sceneMode, ['pair', 'solo'], true)
         || !is_string($desired['actor_a'] ?? null)
         || !is_bool($desired['exclude_player'] ?? null)
@@ -1635,12 +1686,16 @@ function pcv_normalize_config(array $desired, array $knownNpcs): array
         'exclude_player' => $excludePlayer,
         'bystander_mode' => $desired['bystander_mode'],
     ];
+    if (is_array($groupIds)) {
+        $config['actor_ids'] = $groupIds;
+        $config['opener'] = $groupOpener;
+    }
     if (!pcv_valid_config($config, false)) {
         throw new InvalidArgumentException($sceneMode === 'solo'
             ? 'Choose one valid NPC for solo reflection.'
-            : 'Choose two different valid NPCs.');
+            : 'Choose two to four different valid NPCs.');
     }
-    $actorIds = $sceneMode === 'solo' ? [$actorA] : [$actorA, $actorB];
+    $actorIds = pcv_config_actor_ids($config);
     foreach ($actorIds as $actorId) {
         if (!is_string($actorId) || !array_key_exists($actorId, $knownNpcs)
             || !is_string($knownNpcs[$actorId]) || trim($knownNpcs[$actorId]) === '') {
@@ -1714,12 +1769,16 @@ function pcv_solo_inflight_clear(?string $stateDirectory = null): void
     }
 }
 
-/** The participant catalog IDs of a stored scene configuration (solo: A only). */
+/** The participant catalog IDs of a stored scene configuration (solo: A only; group: actor_ids; legacy pair: A, B). */
 function pcv_config_actor_ids(array $config): array
 {
-    return ($config['scene_mode'] ?? 'pair') === 'solo'
-        ? [$config['actor_a'] ?? null]
-        : [$config['actor_a'] ?? null, $config['actor_b'] ?? null];
+    if (($config['scene_mode'] ?? 'pair') === 'solo') {
+        return [$config['actor_a'] ?? null];
+    }
+    if (is_array($config['actor_ids'] ?? null)) {
+        return array_values($config['actor_ids']);
+    }
+    return [$config['actor_a'] ?? null, $config['actor_b'] ?? null];
 }
 
 /** How many participants of $config are absent from $eligibleNpcMap (for refusal logs). */
