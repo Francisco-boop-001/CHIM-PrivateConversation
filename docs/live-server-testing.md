@@ -74,6 +74,11 @@ Not run by default: `reflection_ack_database_check.php` and `reflection_ack_shut
 disposable PostgreSQL target (`PCV_ACK_TEST_*`). `ui_preview.php` renders a preview, not a test. (`page_check.php`
 failed through 0.1.8 because it still expected the older END wording; fixed in 0.1.9.)
 
+Cases 12–15 (added for 0.1.10) reproduce real-client behaviour the first in-game session exposed: a partner leaving
+the close range mid-scene while the wider `infonpc` report still lists them (12), a heartbeat gap whose next report is
+only a baseline (13), an ACK for an early line while the reply is still generating (14), and a solo reflection with its
+subject standing nearby (15).
+
 For a whole live matrix with an AI-call budget, use `scripts/live-test/standard.py` (all cases) or
 `standard.py 11` (selected case numbers); it stops before `PCV_STANDARD_BUDGET` calls (default 60).
 
