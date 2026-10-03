@@ -1322,7 +1322,7 @@ function pcv_read_active_scene_npcs(?string $key, array $catalogRows, ?string $p
 {
     $now ??= time();
     // 'error' (0.1.13): the evidence could not be read, which is not the same as an absent member.
-    $result = ['known_npcs' => [], 'missing' => [], 'error' => false];
+    $result = ['known_npcs' => [], 'missing' => [], 'error' => false, 'report_fresh' => false];
     if (!function_exists('pcv_scope_name_key')) {
         require_once __DIR__ . '/scope.php';
     }
@@ -1368,6 +1368,7 @@ function pcv_read_active_scene_npcs(?string $key, array $catalogRows, ?string $p
     if (is_array($document) && is_int($document['observed_at'] ?? null)
         && $document['observed_at'] <= $now && $now - $document['observed_at'] <= PCV_PRESENCE_TTL
         && in_array($document['state'] ?? null, ['baseline', 'ready'], true) && is_array($document['actors'] ?? null)) {
+        $result['report_fresh'] = true;
         foreach ($document['actors'] as $actor) {
             if (is_array($actor) && is_string($actor['name'] ?? null)) {
                 $nameKey = pcv_scope_name_key($actor['name']);

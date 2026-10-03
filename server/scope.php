@@ -427,6 +427,11 @@ function pcvReadResolvedScope(): array
             return pcvResolveLiveScopeState(array_replace($state, ['status' => 'unavailable', 'scope' => null, 'reason' => $reason]));
         }
         $eligibleMap = $presence['known_npcs'] ?? [];
+        // 0.1.13: an active scene's reflection check accepts routing's in-scene evidence while reports are fresh.
+        if (is_array($state['scope'] ?? null)) {
+            $sceneIds = array_values(array_filter(pcv_config_actor_ids($state['scope']), 'is_string'));
+            $eligibleMap = pcvScopeAckEligibleMap($eligibleMap, pcv_read_active_scene_npcs($key, $rows, $playerName, $sceneIds));
+        }
         $resolved = pcvResolveLiveScopeState($state, $rows, $playerName, $eligibleMap);
         if (($resolved['status'] ?? null) === 'unavailable'
             && is_array($state['scope'] ?? null)
@@ -439,6 +444,18 @@ function pcvReadResolvedScope(): array
         pcv_log_exception('state.unavailable', 'error', 'unavailable', 'catalog_unavailable', $error, ['operation' => 'begin']);
         return pcvResolveLiveScopeState(array_replace($state, ['status' => 'unavailable', 'scope' => null, 'reason' => 'catalog_unavailable']));
     }
+}
+
+/**
+ * The presence map for checks of an already active scene outside routing (reflection ACKs): the strict map plus
+ * routing's in-scene evidence, but only when the close report is fresh. A heartbeat gap keeps the strict map.
+ */
+function pcvScopeAckEligibleMap(array $strictMap, array $inScene): array
+{
+    if (($inScene['report_fresh'] ?? false) !== true || ($inScene['error'] ?? false) === true) {
+        return $strictMap;
+    }
+    return $strictMap + (is_array($inScene['known_npcs'] ?? null) ? $inScene['known_npcs'] : []);
 }
 
 /** Resolve active state and apply pending changes only when the caller marks an eligible input. */
