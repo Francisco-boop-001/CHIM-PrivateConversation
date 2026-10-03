@@ -2020,7 +2020,7 @@ function pcv_config_actors_are_eligible(array $config, ?array $eligibleNpcMap): 
 }
 
 /** Stage enabled settings for the next eligible input; disabled settings clear both slots immediately. */
-function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $stateDirectory = null): array
+function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $stateDirectory = null, ?string $endReason = null): array
 {
     if (!pcv_valid_key($key)) {
         pcv_log_set_playthrough_ref(null);
@@ -2109,7 +2109,8 @@ function pcv_stage(string $key, array $desired, array $knownNpcs, ?string $state
         }
         if (!$config['enabled']) {
             pcv_log_set_config_id($endConfigId);
-            pcv_log_event('state.scope_ended', 'info', 'ok', null, pcv_state_log_context($config));
+            pcv_log_event('state.scope_ended', 'info', 'ok', in_array($endReason, ['ended_in_game', 'wrapped_up'], true) ? $endReason : null,
+                pcv_state_log_context($config));
             return pcv_visible_state($state, $now);
         }
         $pendingConfigId = $state['pending']['config_id'];

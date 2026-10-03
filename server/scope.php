@@ -1007,6 +1007,55 @@ function pcvBuildScopeContext(array $resolvedScope, string $speaker, string $lis
     return $context . pcvScopeRoleplayGuidance($resolvedScope);
 }
 
+/**
+ * 0.1.14 in-game commands, matched on the whole input after the player prefix:
+ * "end scene" / "end the scene" (trailing punctuation allowed) and "wrap up: <how>".
+ * @return array{command: string, direction?: string}|null
+ */
+function pcvInGameCommand($raw, ?string $playerName): ?array
+{
+    if (!is_string($raw) || preg_match('//u', $raw) !== 1) {
+        return null;
+    }
+    $text = $raw;
+    if (is_string($playerName) && $playerName !== '' && str_starts_with($text, $playerName . ':')) {
+        $text = substr($text, strlen($playerName) + 1);
+    }
+    $text = trim($text);
+    $plain = function_exists('mb_strtolower') ? mb_strtolower($text, 'UTF-8') : strtolower($text);
+    $plain = rtrim($plain, " \t.!?…");
+    if (in_array($plain, ['end scene', 'end the scene'], true)) {
+        return ['command' => 'end'];
+    }
+    if (preg_match('/\Awrap up\s*:\s*(.*)\z/isu', $text, $match) === 1) {
+        $direction = trim($match[1]);
+        return ['command' => 'wrap', 'direction' => $direction !== '' ? $direction : 'They part ways.'];
+    }
+    return null;
+}
+
+/** Consume an ordinary input that was an in-game command: it is not sent to any NPC. */
+function pcvEndRequestQuietly(string $message, string $reason, string $phase): void
+{
+    pcv_log_set_terminal('skipped', $reason, ['phase' => $phase]);
+    if (empty($GLOBALS['PCV_ROUTING_LOG_TERMINAL'])) {
+        $GLOBALS['PCV_ROUTING_LOG_TERMINAL'] = true;
+        pcv_log_event('routing.request_skipped', 'info', 'skipped', $reason, [
+            'phase' => $phase,
+            'request_type' => pcvRoutingLogCurrentType(),
+            'state_status' => 'off',
+            'mode' => pcvRoutingLogMode(pcvEffectiveExecutionMode()),
+        ]);
+    }
+    http_response_code(409);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo $message;
+    if (function_exists('terminate')) {
+        terminate();
+    }
+    exit;
+}
+
 /** SHARMAT's NPC-to-NPC intimate-scene listener pin for this request, if any (set in SHARMAT's prerequest). */
 function pcvSharmatListenerPin(): ?string
 {

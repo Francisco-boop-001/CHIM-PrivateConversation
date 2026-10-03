@@ -96,6 +96,32 @@ if ($mode !== 'STANDARD') {
     return;
 }
 
+// 0.1.14 G1: "end scene" said in game ends an active, queued or stuck scene like END; that input reaches no NPC.
+// It is checked before activation, so it never starts a queued scene first. Without a scene it is ordinary speech.
+$inGameCommand = null;
+if ($isOrdinaryInput) {
+    try {
+        $commandPlayer = pcv_current_player_name();
+    } catch (Throwable) {
+        $commandPlayer = null;
+    }
+    $inGameCommand = pcvInGameCommand($gameRequest[3] ?? null, is_string($commandPlayer) ? $commandPlayer : null);
+    if (($inGameCommand['command'] ?? null) === 'end') {
+        try {
+            $endKey = pcv_current_playthrough_key();
+            $endState = is_string($endKey) ? pcv_read($endKey) : null;
+        } catch (Throwable) {
+            $endKey = null;
+            $endState = null;
+        }
+        if (is_string($endKey) && in_array($endState['status'] ?? null, ['active', 'pending', 'unavailable'], true)) {
+            pcvRoutingLogStart($requestType);
+            pcv_stage($endKey, ['enabled' => false], [], null, 'ended_in_game');
+            pcvEndRequestQuietly('Private Conversation scene ended.', 'ended_in_game', 'preprocessing');
+        }
+    }
+}
+
 $currentPresence = null;
 if ($isOrdinaryInput) {
     try {
@@ -223,6 +249,13 @@ if ($isContinuation) {
     return;
 }
 
+// 0.1.14 G6: "wrap up: <how>" makes this the closing turn of a pair, group or free scene; the scene ends after it.
+$wrapUp = false;
+if (($inGameCommand['command'] ?? null) === 'wrap' && ($resolvedScope['scene_mode'] ?? 'pair') !== 'solo') {
+    $gameRequest[3] = $playerName . ': ' . $inGameCommand['direction'];
+    $wrapUp = true;
+}
+
 try {
     $prepared = pcvPrepareScopedInput($gameRequest, $snapshot, $resolvedScope, $playerName, $mode);
 } catch (Throwable $error) {
@@ -272,7 +305,19 @@ $GLOBALS['PCV_REQUEST_SCOPE'] = array_replace($state, [
     'opener_name' => $openerName,
     'opener_source' => $openerSource,
     'profile_id_opener' => $openerProfile,
+    'wrap_up' => $wrapUp,
 ]);
+if ($wrapUp) {
+    // The closing reply is already routed from PCV_REQUEST_SCOPE; end the stored scene now so nothing follows it.
+    try {
+        $wrapKey = pcv_current_playthrough_key();
+        if (is_string($wrapKey)) {
+            pcv_stage($wrapKey, ['enabled' => false], [], null, 'wrapped_up');
+        }
+    } catch (Throwable $error) {
+        pcvRoutingLogException('preprocessing', $error, $state);
+    }
+}
 if ($route === 'solo_reflection' && is_string($state['config_id'] ?? null) && is_string($state['actor_a_id'] ?? null)) {
     try {
         pcv_solo_inflight_mark($state['config_id'], $state['actor_a_id']);
