@@ -70,6 +70,7 @@ if (!$solo) {
     }
     $plan = pcvSceneTurnPlan($scope, $speaker, $requestScope, pcvSharmatListenerPin(), $spokenKeys);
     $GLOBALS['PCV_TURN_PLAN'] = $plan;
+    pcvApplyTurnPlanToChim($plan, $requestType);
     $GLOBALS['PCV_TURN_GUIDANCE'] = ['spread' => $plan['spread'], 'wrap_up' => $plan['wrap_up']];
     // The end of this hook rewrites PCV_REQUEST_SCOPE from $requestScope, so record the flag there.
     $requestScope['sharmat_listener'] = $plan['sharmat'];

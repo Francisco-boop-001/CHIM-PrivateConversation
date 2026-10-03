@@ -648,6 +648,17 @@ def c_card_and_pace():
     return f"short: {len(short)} lines/{sentences(short)} sentences; long: {len(long)} lines/{sentences(long)} sentences; card-related lines: {mentions}"
 
 
+def c_card_only():
+    """0.1.14 G4: the direction says nothing about the setting; does the card shape the reply?"""
+    end_scene()
+    card = "Late night at the Bannered Mare. Rain on the shutters. A bard is tuning a lute."
+    print("   arm:", arm_pair_with(card=card), flush=True)
+    lines = say(B, "Lidia and Aela talk.")
+    ack_all(lines)
+    hits = [l["subtitle"][:70] for l in lines if re.search(r"mare|rain|shutter|bard|lute|night|tavern|inn", l["subtitle"], re.I)]
+    return f"{len(lines)} lines; lines referring to the card's setting: {len(hits)} -> {hits[:2]}"
+
+
 def arm_pair_with(**extra):
     form = {"action": "arm", "actor_a": str(IDS[A]), "actor_b": str(IDS[B]), "bystander_mode": "exclude",
             "exclude_player": "1", "opener": "auto", "actor_c": "", "actor_d": ""}
@@ -713,6 +724,7 @@ CASES = [
     ("25 scene card and turn length", "card shapes replies; Short is brief, Long is longer (compliance varies)", c_card_and_pace),
     ("26 wrap-up", "one parting reply, no rechat, scene ended (wrapped_up)", c_wrap_up),
     ("27 end scene in game", "input consumed (ended_in_game), scene off, no AI call", c_end_in_game),
+    ("28 scene card alone", "with a setting-free direction, replies pick up the card's setting", c_card_only),
 ]
 # Optional case-number prefixes select a subset, e.g. `standard.py 11`; `--budget=N` caps AI calls.
 _args = [a for a in sys.argv[1:] if not a.startswith("--budget=")]

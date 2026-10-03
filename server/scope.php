@@ -1056,6 +1056,20 @@ function pcvEndRequestQuietly(string $message, string $reason, string $phase): v
     exit;
 }
 
+/**
+ * 0.1.14: CHIM's "Strict Rechat Targeting" (ENFORCE_STRICT_RECHAT_RESPONSE) overwrites a rechat reply's listener
+ * with the previous speaker, so a group could never pass the floor to a third member. On spread rechat turns only,
+ * lift it for this request; the reply's listener then comes from PCV's member-only choices.
+ */
+function pcvApplyTurnPlanToChim(array $plan, string $requestType): void
+{
+    if (($plan['spread'] ?? false) === true && ($plan['sharmat'] ?? false) !== true
+        && in_array($requestType, ['rechat', 'continue', 'continue_group'], true)
+        && !empty($GLOBALS['ENFORCE_STRICT_RECHAT_RESPONSE'])) {
+        $GLOBALS['ENFORCE_STRICT_RECHAT_RESPONSE'] = false;
+    }
+}
+
 /** SHARMAT's NPC-to-NPC intimate-scene listener pin for this request, if any (set in SHARMAT's prerequest). */
 function pcvSharmatListenerPin(): ?string
 {
@@ -1104,7 +1118,7 @@ function pcvScopeRoleplayGuidance(array $resolvedScope, array $turn = []): strin
 {
     $parts = [];
     if (is_string($resolvedScope['card'] ?? null) && $resolvedScope['card'] !== '') {
-        $parts[] = 'Scene: ' . $resolvedScope['card'];
+        $parts[] = 'Scene: ' . $resolvedScope['card'] . ' Let this setting and mood colour what you say and notice.';
     }
     $pace = $resolvedScope['pace'] ?? null;
     if ($pace === 'short') {

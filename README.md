@@ -14,8 +14,8 @@
 
 - **Say "end scene" in game.** Typing or saying exactly "end scene" (or "end the scene") ends the scene and anything queued, like END on the page. That line is not sent to any NPC. With no scene running it is ordinary speech.
 - **Wrap it up.** "wrap up: they part ways at the gate" makes the next reply a closing one: one NPC gives parting words, nobody answers, and the scene ends. (One parting reply for now, not a two-sided goodbye.)
-- **Turns spread around the group.** In scenes of three or more, each speaker can only address members who have not spoken yet this round. CHIM still decides *how many* follow-up turns happen; PCV now decides *who* gets them.
-- **Scene card.** An optional line of up to 300 characters on the page ("Late night at the Bannered Mare. Tense. The treaty is on the table."). It frames every scene turn, follow-ups included. It is staging, not dialogue.
+- **Turns spread around the group.** In scenes of three or more, each speaker can only address members who have not spoken yet this round. CHIM still decides *how many* follow-up turns happen; PCV now decides *who* gets them. To do this, PCV turns off CHIM's **Strict Rechat Targeting** for those follow-up turns only. That setting otherwise forces every reply back to the previous speaker, which is why groups used to ping-pong between two NPCs. Pairs and everything outside PCV scenes keep your setting.
+- **Scene card.** An optional line of up to 300 characters on the page ("Late night at the Bannered Mare. Tense. The treaty is on the table."). It frames every scene turn, follow-ups included. It is staging, not dialogue. Honest note: in testing the card reached every prompt, but a model busy with a long character profile (and a drunk stage) often ignored it.
 - **Turn length.** Short (one or two sentences), Normal, or Long (up to six). Models follow this only partly.
 - **Free-scene size.** Pick how many of the nearest NPCs join a free scene, from 2 to 6.
 - **SHARMAT-compatible.**
