@@ -50,6 +50,24 @@
             && typeof element.replaceChildren === 'function';
     }
 
+    // Optional group members (0.1.11). Absent controls are simply skipped.
+    const EXTRA_MEMBERS = ['#actor-c', '#actor-d'];
+
+    function extraMembersValid(actorA, actorB) {
+        const chosen = [actorA.value, actorB.value];
+        for (const selector of EXTRA_MEMBERS) {
+            const select = documentRef.querySelector(selector);
+            if (!select || select.value === '') {
+                continue;
+            }
+            if (!available(select, select.value) || chosen.includes(select.value)) {
+                return false;
+            }
+            chosen.push(select.value);
+        }
+        return true;
+    }
+
     function updateArmButton() {
         const armButton = documentRef.querySelector('#arm-button');
         const actorA = documentRef.querySelector('#actor-a');
@@ -60,7 +78,7 @@
         }
         const solo = soloMode.checked;
         const hasA = available(actorA, actorA.value);
-        const hasPair = available(actorB, actorB.value) && actorA.value !== actorB.value;
+        const hasPair = available(actorB, actorB.value) && actorA.value !== actorB.value && extraMembersValid(actorA, actorB);
         armButton.disabled = !serverAllowsArm || !hasA || (!solo && !hasPair);
     }
 
@@ -85,6 +103,12 @@
         const hasTwo = Array.from(actorA.options).filter((option) => option.value !== '').length >= 2;
         actorA.disabled = !rosterReady;
         actorB.disabled = !rosterReady || !hasTwo || solo;
+        for (const selector of [...EXTRA_MEMBERS, '#opener']) {
+            const control = documentRef.querySelector(selector);
+            if (control) {
+                control.disabled = !rosterReady || !hasTwo || solo;
+            }
+        }
         soloMode.disabled = !rosterReady;
         if (bystanderMode) {
             bystanderMode.disabled = false;
@@ -214,6 +238,26 @@
             rememberedActorB = '';
         }
 
+        // Optional group controls: refresh options and keep a draft only while it is eligible and distinct.
+        const taken = [currentA.value, currentB.value];
+        for (const selector of [...EXTRA_MEMBERS, '#opener']) {
+            const current = documentRef.querySelector(selector);
+            const next = snapshot.querySelector(selector);
+            if (!isSelectElement(current) || !isSelectElement(next)) {
+                continue;
+            }
+            const draft = identityChanged ? '' : current.value;
+            current.replaceChildren(...Array.from(next.options, (option) => option.cloneNode(true)));
+            if (selector === '#opener') {
+                current.value = available(current, draft) ? draft : 'auto';
+                continue;
+            }
+            current.value = available(current, draft) && !taken.includes(draft) ? draft : '';
+            if (current.value !== '') {
+                taken.push(current.value);
+            }
+        }
+
         currentBadge.className = nextBadge.className;
         currentBadge.textContent = nextBadge.textContent;
         currentStatus.innerHTML = nextStatus.innerHTML;
@@ -299,6 +343,9 @@
     });
     documentRef.querySelector('#actor-a')?.addEventListener('change', updateArmButton);
     documentRef.querySelector('#actor-b')?.addEventListener('change', updateArmButton);
+    for (const selector of EXTRA_MEMBERS) {
+        documentRef.querySelector(selector)?.addEventListener('change', updateArmButton);
+    }
     documentRef.querySelector('#solo-mode')?.addEventListener('change', handleModeChange);
     void refresh();
 })();

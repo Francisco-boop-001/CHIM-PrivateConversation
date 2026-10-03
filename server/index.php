@@ -91,11 +91,41 @@ function pcv_form_desired_state(array $post, string $csrfToken, array $knownNpcs
         throw new PcvUiFormRejection('actor_unavailable', 'The selected scope is invalid.');
     }
 
+    // Group form (0.1.11): optional NPC C and D plus an opener. A post without the opener field is the
+    // pre-0.1.11 pair form and keeps the legacy shape.
+    if (!array_key_exists('opener', $post)) {
+        return [
+            'enabled' => true,
+            'scene_mode' => 'pair',
+            'actor_a' => $actorA,
+            'actor_b' => $actorB,
+            'exclude_player' => $excludePlayer === '1',
+            'bystander_mode' => $bystanderMode,
+        ];
+    }
+    $ids = [$actorA, $actorB];
+    foreach (['actor_c', 'actor_d'] as $optionalKey) {
+        $optional = $post[$optionalKey] ?? '';
+        if ($optional === '') {
+            continue;
+        }
+        if (!is_string($optional) || in_array($optional, $ids, true)) {
+            throw new PcvUiFormRejection('invalid_configuration', 'Choose two to four different NPCs.');
+        }
+        if (!array_key_exists($optional, $knownNpcs)) {
+            throw new PcvUiFormRejection('actor_unavailable', 'The selected scope is invalid.');
+        }
+        $ids[] = $optional;
+    }
+    $opener = $post['opener'];
+    if (!is_string($opener) || ($opener !== 'auto' && !in_array($opener, $ids, true))) {
+        throw new PcvUiFormRejection('invalid_configuration', 'The opener must be one of the selected NPCs.');
+    }
     return [
         'enabled' => true,
         'scene_mode' => 'pair',
-        'actor_a' => $actorA,
-        'actor_b' => $actorB,
+        'actor_ids' => $ids,
+        'opener' => $opener,
         'exclude_player' => $excludePlayer === '1',
         'bystander_mode' => $bystanderMode,
     ];
@@ -229,6 +259,10 @@ function pcv_render_page(
         if (($config['scene_mode'] ?? null) === 'solo') {
             return pcv_html($nameA);
         }
+        if (is_array($config['actor_ids'] ?? null) && count($config['actor_ids']) > 2) {
+            $names = array_map(static fn($id) => pcv_html($displayNpcs[(string)$id] ?? ('NPC ID ' . $id)), $config['actor_ids']);
+            return implode(', ', array_slice($names, 0, -1)) . ' and ' . $names[count($names) - 1];
+        }
         $actorB = is_string($config['actor_b'] ?? null) || is_int($config['actor_b'] ?? null)
             ? (string)$config['actor_b'] : '';
         if ($actorB === '') {
@@ -237,8 +271,18 @@ function pcv_render_page(
         $nameB = $displayNpcs[$actorB] ?? ('NPC ID ' . $actorB);
         return pcv_html($nameA) . ' and ' . pcv_html($nameB);
     };
+    $isGroup = static fn(?array $config): bool => is_array($config) && is_array($config['actor_ids'] ?? null) && count($config['actor_ids']) > 2;
     if ($status === 'active' && ($scene = $sceneText($scope)) !== '') {
-        $scopeSummary .= '<p>' . ($scopeSceneMode === 'solo' ? 'Current reflection: ' : 'Current pair: ') . $scene . '.</p>';
+        $scopeSummary .= '<p>' . ($scopeSceneMode === 'solo' ? 'Current reflection: ' : ($isGroup($scope) ? 'Current group: ' : 'Current pair: '))
+            . $scene . '.</p>';
+    }
+    if ($status === 'active' && is_array($state['dropped'] ?? null)) {
+        foreach ($state['dropped'] as $droppedEntry) {
+            $droppedName = pcv_html($displayNpcs[(string)($droppedEntry['id'] ?? '')] ?? ('NPC ID ' . ($droppedEntry['id'] ?? '?')));
+            $scopeSummary .= ($droppedEntry['reason'] ?? null) === 'left_scene'
+                ? '<p class="small-note">' . $droppedName . ' left the scene.</p>'
+                : '<p class="small-note">Started without ' . $droppedName . ' (not nearby).</p>';
+        }
     }
     $lastTurn = $status === 'active' && is_string($state['config_id'] ?? null) && function_exists('pcv_log_read_last_turn')
         ? pcv_log_read_last_turn($state['config_id']) : null;
@@ -252,7 +296,8 @@ function pcv_render_page(
         if ($pendingEnd) {
             $scopeSummary .= '<p class="pending-summary">End is queued for the next eligible ordinary input.</p>';
         } elseif ($pendingScope !== null && ($scene = $sceneText($pendingScope)) !== '') {
-            $scopeSummary .= '<p class="pending-summary">Next ' . ($pendingSceneMode === 'solo' ? 'reflection: ' : 'pair: ') . $scene . '.</p>';
+            $scopeSummary .= '<p class="pending-summary">Next ' . ($pendingSceneMode === 'solo' ? 'reflection: ' : ($isGroup($pendingScope) ? 'group: ' : 'pair: '))
+                . $scene . '.</p>';
         } else {
             $scopeSummary .= '<p class="pending-summary">A change is queued for the next eligible ordinary input.</p>';
         }
@@ -294,6 +339,20 @@ function pcv_render_page(
     $excludePlayerDisabledAttr = $sceneMode === 'solo' ? ' disabled' : '';
     $optionsA = $optionsFor($actorA);
     $optionsB = str_replace('Choose an NPC', 'Choose a different NPC', $optionsFor($actorB));
+    // Optional group members (0.1.11) and the opener picker.
+    $formIds = is_array($formScope['actor_ids'] ?? null) ? array_values($formScope['actor_ids']) : [];
+    $actorC = isset($formIds[2]) ? (string)$formIds[2] : '';
+    $actorD = isset($formIds[3]) ? (string)$formIds[3] : '';
+    $optionsC = str_replace('Choose an NPC', 'None', $optionsFor($actorC));
+    $optionsD = str_replace('Choose an NPC', 'None', $optionsFor($actorD));
+    $formOpener = is_string($formScope['opener'] ?? null) ? $formScope['opener'] : 'auto';
+    $openerOptions = '<option value="auto"' . ($formOpener === 'auto' ? ' selected' : '') . '>Auto (named in the direction, else NPC A)</option>' . "\n";
+    foreach ($knownNpcs as $id => $name) {
+        $id = (string)$id;
+        $openerOptions .= '<option value="' . pcv_html($id) . '"' . ($formOpener === $id ? ' selected' : '') . '>'
+            . pcv_html($name . ' (ID ' . $id . ')') . "</option>\n";
+    }
+    $extraDisabledAttr = ($pairDisabled || $sceneMode === 'solo') ? ' disabled' : '';
     $noticeHtml = $notice === '' ? '' : '<p role="status">' . pcv_html($notice) . '</p>';
     $csrf = pcv_html($csrfToken);
 
@@ -318,7 +377,7 @@ function pcv_render_page(
 <p class="eyebrow">A quieter kind of scene</p>
 <h1 id="page-title">Private<br><span>Conversation</span></h1>
 <p class="eyebrow hero-credit">Part of the World of Drama-llama</p>
-<p id="page-intro" class="hero-intro">Choose two voices for a conversation, or one NPC to think aloud. CHIM carries that scene direction into the next eligible ordinary Standard-mode input.</p>
+<p id="page-intro" class="hero-intro">Choose two to four voices for a conversation, or one NPC to think aloud. CHIM carries that scene direction into the next eligible ordinary Standard-mode input.</p>
 <p class="hero-meta"><span>STANDARD MODE</span><span>SCENE DIRECTION ONLY</span></p>
 </div>
 </section>
@@ -348,6 +407,12 @@ function pcv_render_page(
 ' . $optionsA . '</select></p>
 <p class="field"><label id="actor-b-label" for="actor-b">' . ($sceneMode === 'solo' ? 'Second NPC (pair mode only)' : 'NPC B') . '</label><select id="actor-b" name="actor_b" required' . $actorBDisabledAttr . '>
 ' . $optionsB . '</select></p>
+<p class="field group-field"><label for="actor-c">NPC C (optional)</label><select id="actor-c" name="actor_c"' . $extraDisabledAttr . '>
+' . $optionsC . '</select></p>
+<p class="field group-field"><label for="actor-d">NPC D (optional)</label><select id="actor-d" name="actor_d"' . $extraDisabledAttr . '>
+' . $optionsD . '</select></p>
+<p class="field group-field"><label for="opener">Who speaks first</label><select id="opener" name="opener"' . $extraDisabledAttr . '>
+' . $openerOptions . '</select></p>
 <p class="field"><label for="bystander-mode">Other NPCs</label><select id="bystander-mode" name="bystander_mode">
 <option value="exclude"' . ($mode === 'exclude' ? ' selected' : '') . '>Exclude from this conversation</option>
 <option value="silent"' . ($mode === 'silent' ? ' selected' : '') . '>Present but silent</option>

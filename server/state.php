@@ -1566,7 +1566,12 @@ function pcv_visible_state(array $state, int $now): array
         ? $storedPendingConfigId : null;
     $pending = $pendingScope !== null;
     if ($scope !== null) {
-        return pcv_result('active', $scope, $pending, $pendingScope, $configId, $pendingConfigId);
+        $result = pcv_result('active', $scope, $pending, $pendingScope, $configId, $pendingConfigId);
+        // Group members left out at the start or who left mid-scene (only present when someone was dropped).
+        if (is_array($active['dropped'] ?? null) && $active['dropped'] !== []) {
+            $result['dropped'] = $active['dropped'];
+        }
+        return $result;
     }
     return $pending
         ? pcv_result('pending', null, true, $pendingScope, null, $pendingConfigId)
