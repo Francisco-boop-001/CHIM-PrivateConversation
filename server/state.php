@@ -524,10 +524,13 @@ function pcv_valid_stored_state(array $state): bool
 
     if ($state['active'] !== null) {
         $active = $state['active'];
+        // 0.1.13: the lifetime slides with use; renewed_at (when present) is the last renewal.
+        $renewedAt = $active['renewed_at'] ?? null;
         if (!is_array($active) || !pcv_valid_config($active['config'] ?? null, false)
             || !is_int($active['activated_at'] ?? null) || !is_int($active['expires_at'] ?? null)
             || $active['activated_at'] < 1 || $active['expires_at'] <= $active['activated_at']
-            || $active['expires_at'] > $active['activated_at'] + PCV_ACTIVE_TTL) {
+            || ($renewedAt !== null && (!is_int($renewedAt) || $renewedAt < $active['activated_at']))
+            || $active['expires_at'] > (is_int($renewedAt) ? $renewedAt : $active['activated_at']) + PCV_ACTIVE_TTL) {
             return false;
         }
         if (array_key_exists('dropped', $active)) {
@@ -2104,6 +2107,17 @@ function pcv_begin_request(string $key, bool $eligible, ?string $stateDirectory 
                         'member_count' => count(pcv_config_actor_ids($kept['config'])),
                     ];
                 }
+            }
+        }
+
+        // 0.1.13: a turn that keeps the scene active renews its lifetime (at most once a minute), so a scene ends
+        // after an hour without use instead of one hour after it started.
+        if (!is_array($blockedPending) && !is_array($blockedActive) && is_array($state['active'])) {
+            $lastRenewal = $state['active']['renewed_at'] ?? $state['active']['activated_at'];
+            if (is_int($lastRenewal) && $now - $lastRenewal >= 60) {
+                $state['active']['renewed_at'] = $now;
+                $state['active']['expires_at'] = $now + PCV_ACTIVE_TTL;
+                $changed = true;
             }
         }
 
