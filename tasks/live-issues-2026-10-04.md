@@ -49,6 +49,22 @@ Gaming distro `DwemerAI4Skyrim3` (D:), PCV 0.1.14, Mind Poisoning 0.1.17, SHARMA
 - Fix: in solo, a "wrap up:" line should end the solo scene, either quietly like "end scene" or with one closing reflection line. It must never become a direction.
 - Also accept the combined form "wrap up: end scene" as an end.
 
+## Fix decisions (2026-10-04, after the session)
+
+- **Root cause of L1, refined on the clone.**
+  - A PCV scene request writes its `user_input` row with its own ts *before* the lock (main.php:218, preprocessing at :201, lock at :256), so it never supersedes itself.
+  - Live, the cancelling row 1009981 was written *after* the direction row 1009980: it belonged to a later request of type `instruction` (CHIM background narration sent through the client).
+  - CHIM exempts `user_input` rows with data='instruction' only for direct player input types. A PCV request is retyped to `instruction`, so background narration supersedes it.
+  - Restoring the type before the LLM call is unsafe: player_tts.php (data_functions.php:5973) would voice the direction as player speech.
+- **The user chose "Block during scenes" (L1 + L2).** While a scene with excluded bystanders is active, PCV preprocessing turns away CHIM `bored` and incoming `instruction` requests before CHIM logs them (logged `routing.request_skipped background_paused`). For silent-bystander scenes, add a timestamp safety net: align the PCV request ts past background instruction rows written while it waited.
+- **L5 progress:**
+  - MP 0.1.17 did not change server/reflection.php (it added opt-in overhearing), so the version bump is not the cause.
+  - MP `findSubjects` (influence.php:97) adds first-name aliases of three or more letters, so "Bruce" resolves when it is unique, and "Hawke" counts as the player.
+  - "No subjects" means the evaluated text named nobody resolvable. Either (a) PCV registered only the final line (fallback; the final line names nobody), or (b) "Bruce" is ambiguous in the live catalog.
+  - **Next live session (look-only):** read PCV's reflection registry record for that utterance (whole reply or fallback) and count catalog NPCs whose first name is Bruce.
+- **L6 cause:** `pcvReflectionEvaluateAck` checks the in-flight marker only when the registry probe is `missing`. Live, the registry still held an older, finished registration (probe `ready`, different utterance), so every early ACK logged `registration_missing`. Fix: check the marker in both cases.
+- **L3:** CHIM writes the witness list during generation, so PCV cannot strip the sentinel there. Hand off to the MP agent: ignore `explicit_disable_rechat` in `eventlog.people`.
+
 ## L1 (FIX NEXT): CHIM cancels PCV's own scene reply when the request waited for the lock
 
 **Evidence (10:55Z):**
