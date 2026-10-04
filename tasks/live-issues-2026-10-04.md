@@ -21,6 +21,27 @@ Gaming distro `DwemerAI4Skyrim3` (D:), PCV 0.1.14, Mind Poisoning 0.1.17, SHARMA
 - Speech-to-text will not produce "wrap up:" with a colon.
 - Accept "wrap up," and "wrap up." (and possibly "wrap up -") as well, keeping whole-input matching for "end scene".
 
+## L5 (investigate): a solo reflection found no subjects
+
+**Evidence:**
+- Solo Lidia, armed 11:42:21Z; direction "Lidia thinks aloud about telling Bruce she was still Hawke's, \"mostly\", and what she meant by it." (rowid 1011044).
+- About 9+ lines to `explicit_disable_rechat`; `reflection.output_registered` at 11:45:36Z.
+- Then `reflection.evaluation_result evaluation_skipped` (model `not_called`, source_reason `reflection-no-subjects`) and `reflection.ack_skipped evaluation_rejected`.
+- The reply names "Bruce" once (rowid 1011102, "I told Bruce…"); Hawke only as "his" / "him". Live Mind Poisoning is **0.1.17** (PCV was tested against 0.1.16).
+- Lidia → Bruce stayed at 17; she has no relationship entry for Hawke.
+
+**Check:**
+- Which lines PCV registered: the whole reply under reply API v2, or a fallback to the final line.
+- Whether MP 0.1.17 resolves a first name "Bruce" to Bruce Wayne.
+- Whether "his"/"him" can ever resolve to the player.
+- If it is MP-side, write a message for the MP agent.
+
+## L6 (minor): early ACKs during a long solo reply logged as registration_missing
+
+- 11 `reflection.ack_skipped registration_missing` (info) between 11:43:13 and 11:45:33Z while Lidia was still talking; registration landed at 11:45:36Z.
+- The 0.1.10 in-flight marker should classify these as `reflection.ack_pending reply_in_progress` (debug).
+- Check `PCV_SOLO_INFLIGHT_TTL` (180 s; this reply took about 3 min) and whether the marker was written for this request.
+
 ## L1 (FIX NEXT): CHIM cancels PCV's own scene reply when the request waited for the lock
 
 **Evidence (10:55Z):**
