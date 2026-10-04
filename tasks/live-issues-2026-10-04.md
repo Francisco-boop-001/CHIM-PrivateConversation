@@ -97,3 +97,16 @@ Read CHIM's main.php order (when the `user_input` row is logged; what else reads
 **Decision needed:** should PCV scope or suppress CHIM-generated instruction/background events while a scene with excluded bystanders is active (at least when the generated speaker is a member)? This is a behaviour change; ask the user before designing it.
 
 **Workaround meanwhile:** give directions when no background banter is running, or turn CHIM's idle/"bored" banter off during scene tests.
+
+## 0.1.15 verification (clone, 2026-10-04, about 4 AI calls; test dwpkg sha256 0d408bd5…)
+
+- Pair scene with excluded bystanders active:
+  - a `bored` request got HTTP 409 and an incoming `instruction` got HTTP 409, each logged as `routing.request_skipped background_paused`;
+  - the scene's reply was intact.
+- "Wrap up, they part ways for the night." (voice form) gave one parting line to `explicit_disable_rechat`, then `state.scope_ended wrapped_up` and `routing.request_prepared wrap_up: true`; page Off.
+- After the scene ended, `bored` returned HTTP 200 (background life resumes).
+- Solo armed plus "wrap up: end scene": consumed (`ended_in_game`), no reflection on the phrase; page Off.
+- 54 PHP fixtures and 12 JS cases pass.
+- **Not reproduced live:** the original L1 race. The clone's `bored` request releases the lock in about 1 s; the fix removes the trigger, since background instruction rows are no longer written during excluded scenes.
+- **Silent-scene timestamp alignment:** offline only.
+- **Still open:** L5 (needs a look-only live read); L3 (hand-off to MP).
