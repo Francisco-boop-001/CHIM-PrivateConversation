@@ -6,6 +6,21 @@ Gaming distro `DwemerAI4Skyrim3` (D:), PCV 0.1.14, Mind Poisoning 0.1.17, SHARMA
 
 - "end scene" on an armed, not yet active pair at 10:53:32Z: `state.scope_ended ended_in_game` and `routing.request_skipped ended_in_game`; no NPC reply.
 
+- An active pair (Lidia and Bruce) ran several rechat turns at 11:13–11:27Z; every line's witnesses were exactly `|Lidia Sobieska|Bruce Wayne|`.
+- "wrap up: they part ways for the night" at 11:30:08Z gave `state.scope_ended wrapped_up` and `routing.request_prepared wrap_up: true` (after a 27 s wait behind a rechat, with **no** interrupt). Then one parting line by Lidia "(talking to explicit_disable_rechat)", and no reply.
+- A first attempt typed without the prefix ("they say goodnight") was correctly treated as an ordinary direction. The instructions given to the user were unclear: put literal in-game text in code blocks.
+
+## L3 (small fix): the sentinel appears in the witness list
+
+- Rowid 1010776 (the wrap-up line) has people `|Lidia Sobieska|Bruce Wayne|explicit_disable_rechat|`: CHIM adds the listener to the witness list.
+- Probably the same for solo lines.
+- Harmless for routing, but Mind Poisoning's overheard-gossip work (judging every witness) could treat it as a person. Either strip it in PCV (if a hook can still touch people or CACHE_PEOPLE at write time), or tell the MP agent to ignore it.
+
+## L4 (small fix): in-game phrases are type-only
+
+- Speech-to-text will not produce "wrap up:" with a colon.
+- Accept "wrap up," and "wrap up." (and possibly "wrap up -") as well, keeping whole-input matching for "end scene".
+
 ## L1 (FIX NEXT): CHIM cancels PCV's own scene reply when the request waited for the lock
 
 **Evidence (10:55Z):**
