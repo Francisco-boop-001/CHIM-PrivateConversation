@@ -51,6 +51,21 @@ if ($isIdentitySync) {
 }
 $continuationTypes = ['rechat', 'continue', 'continue_group'];
 $isContinuation = in_array($requestType, $continuationTypes, true);
+if (in_array($requestType, ['bored', 'instruction'], true)) {
+    // 0.1.15 (L1/L2): CHIM background narration waits while a scene with excluded bystanders is active. This runs
+    // before CHIM logs the request's user_input row, so it can no longer cancel the scene's own reply.
+    try {
+        $pauseKey = pcv_current_playthrough_key();
+        $pauseState = is_string($pauseKey) ? pcv_read($pauseKey) : null;
+    } catch (Throwable) {
+        $pauseState = null;
+    }
+    if (pcvBackgroundPauseApplies($requestType, $pauseState)) {
+        pcvRoutingLogStart($requestType);
+        pcvEndRequestQuietly('Private Conversation paused background narration during an active scene.', 'background_paused', 'preprocessing');
+    }
+    return;
+}
 if (!$isOrdinaryInput && !$isContinuation) {
     return;
 }
@@ -106,7 +121,7 @@ if ($isOrdinaryInput) {
         $commandPlayer = null;
     }
     $inGameCommand = pcvInGameCommand($gameRequest[3] ?? null, is_string($commandPlayer) ? $commandPlayer : null);
-    if (($inGameCommand['command'] ?? null) === 'end') {
+    if (in_array($inGameCommand['command'] ?? null, ['end', 'wrap'], true)) {
         try {
             $endKey = pcv_current_playthrough_key();
             $endState = is_string($endKey) ? pcv_read($endKey) : null;
@@ -114,10 +129,17 @@ if ($isOrdinaryInput) {
             $endKey = null;
             $endState = null;
         }
-        if (is_string($endKey) && in_array($endState['status'] ?? null, ['active', 'pending', 'unavailable'], true)) {
+        if ($inGameCommand['command'] === 'end'
+            && is_string($endKey) && in_array($endState['status'] ?? null, ['active', 'pending', 'unavailable'], true)) {
             pcvRoutingLogStart($requestType);
             pcv_stage($endKey, ['enabled' => false], [], null, 'ended_in_game');
             pcvEndRequestQuietly('Private Conversation scene ended.', 'ended_in_game', 'preprocessing');
+        }
+        // 0.1.15 (L7): solo has no closing turn; "wrap up:" ends a stored solo scene instead of becoming its topic.
+        if ($inGameCommand['command'] === 'wrap' && is_string($endKey) && pcvWrapEndsScene($endState)) {
+            pcvRoutingLogStart($requestType);
+            pcv_stage($endKey, ['enabled' => false], [], null, 'wrapped_up');
+            pcvEndRequestQuietly('Private Conversation reflection ended.', 'ended_in_game', 'preprocessing');
         }
     }
 }

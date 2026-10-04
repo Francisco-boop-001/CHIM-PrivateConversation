@@ -38,6 +38,17 @@ if (!pcvScopeSpeakerAllowed($speaker, $scope)) {
     pcvBlockRequest('Private Conversation selected an NPC outside the scene; request stopped for safety.', 'speaker_outside_scene', 'context_pre', $requestScope);
 }
 $GLOBALS['RECHAT_MODE'] = 'tight';
+// 0.1.15 (L1 safety net): with silent bystanders, CHIM background narration still runs and its instruction-type
+// user_input rows would supersede this scene request (CHIM exempts them only for direct player input). Align the
+// request timestamp past rows written while this request waited for CHIM's lock, before the LLM call checks it.
+$requestTs = $GLOBALS['gameRequest'][1] ?? null;
+if ($requestType === 'instruction' && ($scope['bystander_mode'] ?? 'exclude') === 'silent'
+    && (is_string($requestTs) || is_int($requestTs))) {
+    $alignedTs = pcvLatestInstructionInputTs($GLOBALS['db'] ?? null, (string)$requestTs);
+    if (is_string($alignedTs)) {
+        $GLOBALS['gameRequest'][1] = $alignedTs;
+    }
+}
 try {
     $playerName = pcv_current_player_name();
 } catch (Throwable $error) {

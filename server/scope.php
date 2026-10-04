@@ -1024,14 +1024,61 @@ function pcvInGameCommand($raw, ?string $playerName): ?array
     $text = trim($text);
     $plain = function_exists('mb_strtolower') ? mb_strtolower($text, 'UTF-8') : strtolower($text);
     $plain = rtrim($plain, " \t.!?…");
+    // 0.1.15 (L4): speech-to-text writes "End-scene." or "Wrap up, …" rather than the typed colon form.
+    $plain = (string)preg_replace('/\s*-\s*/u', ' ', $plain);
     if (in_array($plain, ['end scene', 'end the scene'], true)) {
         return ['command' => 'end'];
     }
-    if (preg_match('/\Awrap up\s*:\s*(.*)\z/isu', $text, $match) === 1) {
-        $direction = trim($match[1]);
+    if (preg_match('/\Awrap[\s\-]*up(?:\s*[:,.;\-–—]+\s*(.*))?\z/isu', $text, $match) === 1) {
+        $direction = trim($match[1] ?? '');
+        // 0.1.15 (L7): "wrap up: end scene" means end.
+        if ($direction !== '' && pcvInGameCommand($direction, null) === ['command' => 'end']) {
+            return ['command' => 'end'];
+        }
         return ['command' => 'wrap', 'direction' => $direction !== '' ? $direction : 'They part ways.'];
     }
     return null;
+}
+
+/** 0.1.15 (L7): solo has no closing turn, so "wrap up:" with a stored solo scene (active or queued) ends it. */
+function pcvWrapEndsScene(?array $state): bool
+{
+    $status = $state['status'] ?? null;
+    $scope = $status === 'active' ? ($state['scope'] ?? null) : ($state['pending_scope'] ?? null);
+    return in_array($status, ['active', 'pending'], true) && is_array($scope) && ($scope['scene_mode'] ?? 'pair') === 'solo';
+}
+
+/**
+ * 0.1.15 (L1/L2): while a scene with excluded bystanders is active, CHIM's background narration (idle 'bored'
+ * events and generated 'instruction' requests sent through the client) is turned away. It would otherwise pull
+ * bystanders into the scene, and its user_input rows would cancel the scene's own reply (CHIM's superseding-input
+ * check exempts instruction rows only for direct player input, and PCV routes scene directions as instructions).
+ */
+function pcvBackgroundPauseApplies(string $requestType, ?array $state): bool
+{
+    return in_array($requestType, ['bored', 'instruction'], true)
+        && ($state['status'] ?? null) === 'active'
+        && is_array($state['scope'] ?? null)
+        && ($state['scope']['bystander_mode'] ?? null) === 'exclude';
+}
+
+/**
+ * 0.1.15 (L1 safety net for silent-bystander scenes, where background narration still runs): the newest
+ * instruction-type user_input row written after $requestTs, or null. Digits only; anything else is ignored.
+ */
+function pcvLatestInstructionInputTs($db, string $requestTs): ?string
+{
+    if (!is_object($db) || !method_exists($db, 'fetchAll') || preg_match('/\A[0-9]{1,24}\z/', $requestTs) !== 1) {
+        return null;
+    }
+    try {
+        $rows = $db->fetchAll("SELECT ts FROM (SELECT rowid, type, ts, data FROM eventlog ORDER BY rowid DESC LIMIT 100) AS recent "
+            . "WHERE type='user_input' AND data='instruction' AND ts>{$requestTs} ORDER BY ts DESC LIMIT 1");
+    } catch (Throwable) {
+        return null;
+    }
+    $ts = is_array($rows) && is_array($rows[0] ?? null) ? trim((string)($rows[0]['ts'] ?? '')) : '';
+    return preg_match('/\A[0-9]{1,24}\z/', $ts) === 1 ? $ts : null;
 }
 
 /** Consume an ordinary input that was an in-game command: it is not sent to any NPC. */

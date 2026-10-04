@@ -158,9 +158,9 @@ function pcvReflectionEvaluateAck(array $gameRequest): void
     if ($probe['kind'] === 'missing'
         || ($probe['kind'] === 'ready' && $probe['record']['registration']['utterance_id'] !== $utteranceId)) {
         // The real client ACKs early lines while CHIM is still generating; registration comes at postrequest.
-        $inFlight = $probe['kind'] === 'missing' && function_exists('pcv_solo_inflight_matches')
+        $inFlight = pcvReflectionEarlyAckPending($probe, $utteranceId, function_exists('pcv_solo_inflight_matches')
             && is_string($scope['config_id'] ?? null) && is_string($scope['actor_a_id'] ?? null)
-            && pcv_solo_inflight_matches($scope['config_id'], $scope['actor_a_id']);
+            && pcv_solo_inflight_matches($scope['config_id'], $scope['actor_a_id']));
         pcv_reflection_log($inFlight ? 'reflection.ack_pending' : 'reflection.ack_skipped', 'ack',
             $inFlight ? 'reply_in_progress' : 'registration_missing', $scope);
         pcvReflectionQueueAckReconciliation($gameRequest, $receipt);
@@ -581,6 +581,22 @@ function pcv_reflection_attach_mp_observer(object $requestLog): bool
     } catch (Throwable) {
         return false;
     }
+}
+
+/**
+ * 0.1.15 (L6): an ACK that arrives while this scene's reply is still being generated is "reply in progress",
+ * whether the registry is empty or still holds an older, finished registration for another utterance.
+ */
+function pcvReflectionEarlyAckPending(array $probe, string $utteranceId, bool $inFlightMarkerMatches): bool
+{
+    if (!$inFlightMarkerMatches) {
+        return false;
+    }
+    if (($probe['kind'] ?? null) === 'missing') {
+        return true;
+    }
+    return ($probe['kind'] ?? null) === 'ready'
+        && ($probe['record']['registration']['utterance_id'] ?? null) !== $utteranceId;
 }
 
 /** $failure (0.1.13): 'identity_changed' when no matching scope exists, 'scope_unavailable' when reading it failed. */

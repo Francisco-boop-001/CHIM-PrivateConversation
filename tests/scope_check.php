@@ -855,7 +855,8 @@ try {
 
     scopeCheckBeginSimulatedRequest();
     $GLOBALS['gameRequest'] = ['instruction', 't', 'g', 'an eligible pair event', 'raw'];
-    $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => $storedScope, 'pending' => false, 'config_id' => $fixtureConfigId];
+    // 0.1.15 (L1/L2): background narration still passes untouched with silent bystanders; see the paused case below.
+    $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => array_replace($storedScope, ['bystander_mode' => 'silent']), 'pending' => false, 'config_id' => $fixtureConfigId];
     $GLOBALS['HERIKA_NAME'] = 'Aela';
     $GLOBALS['CHIM_EXECUTION_MODE'] = 'STANDARD';
     $GLOBALS['FUNCTIONS_ARE_ENABLED'] = true;
@@ -872,6 +873,16 @@ try {
         && ($GLOBALS['pcv_fixture_cache_read_calls'] ?? 0) === $cacheReadsBefore
         && ($GLOBALS['pcv_fixture_catalog_calls'] ?? 0) === $catalogReadsBefore,
         'An unrelated Standard instruction inherited stored scene state or triggered actor resolution.');
+
+    // 0.1.15 (L1/L2): with excluded bystanders, CHIM background narration is paused while the scene is active.
+    scopeCheckBeginSimulatedRequest();
+    $GLOBALS['gameRequest'] = ['instruction', 't', 'g', 'a background narration', 'raw'];
+    $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => array_replace($storedScope, ['bystander_mode' => 'exclude']), 'pending' => false, 'config_id' => $fixtureConfigId];
+    unset($GLOBALS['PCV_REQUEST_SCOPE']);
+    $pausedBefore = scopeCheckEventCount('routing.request_skipped', 'background_paused');
+    scopeCheck(scopeCheckHookStops($hookDir . '/preprocessing.php') === true
+        && scopeCheckEventCount('routing.request_skipped', 'background_paused') === $pausedBefore + 1,
+        'Background narration was not paused during an active excluded-bystander scene.');
 
     scopeCheck(!pcvPairRoutedRequest([
         'status' => 'active', 'scope' => $scope, 'origin_mode' => 'STANDARD',
@@ -898,7 +909,8 @@ try {
 
     scopeCheckBeginSimulatedRequest();
     $GLOBALS['gameRequest'] = ['bored', 't', 'g', 'narrator bored event', 'raw'];
-    $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => $storedScope, 'pending' => false, 'config_id' => $fixtureConfigId];
+    // 0.1.15 (L1/L2): silent bystanders keep CHIM background events; excluded bystanders pause them (next case).
+    $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => array_replace($storedScope, ['bystander_mode' => 'silent']), 'pending' => false, 'config_id' => $fixtureConfigId];
     $GLOBALS['HERIKA_NAME'] = 'The Narrator';
     $GLOBALS['CHIM_EXECUTION_MODE'] = 'STANDARD';
     unset($GLOBALS['PCV_REQUEST_SCOPE']);
@@ -907,6 +919,11 @@ try {
         && !isset($GLOBALS['PCV_REQUEST_SCOPE'])
         && ($GLOBALS['HERIKA_NAME'] ?? null) === 'The Narrator',
         'An unrelated Standard narrator event inherited the active pair speaker guard.');
+    scopeCheckBeginSimulatedRequest();
+    $GLOBALS['gameRequest'] = ['bored', 't', 'g', 'narrator bored event', 'raw'];
+    $GLOBALS['pcv_fixture_state'] = ['status' => 'active', 'scope' => array_replace($storedScope, ['bystander_mode' => 'exclude']), 'pending' => false, 'config_id' => $fixtureConfigId];
+    unset($GLOBALS['PCV_REQUEST_SCOPE']);
+    scopeCheck(scopeCheckHookStops($hookDir . '/preprocessing.php') === true, 'A bored event was not paused during an active excluded-bystander scene.');
 
     scopeCheckBeginSimulatedRequest();
     $GLOBALS['gameRequest'] = $normalRequest;
