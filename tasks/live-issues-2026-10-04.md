@@ -42,6 +42,13 @@ Gaming distro `DwemerAI4Skyrim3` (D:), PCV 0.1.14, Mind Poisoning 0.1.17, SHARMA
 - The 0.1.10 in-flight marker should classify these as `reflection.ack_pending reply_in_progress` (debug).
 - Check `PCV_SOLO_INFLIGHT_TTL` (180 s; this reply took about 3 min) and whether the marker was written for this request.
 
+## L7 (small fix): "wrap up:" during solo became a reflection direction
+
+- At 11:51:14Z, with solo Lidia active, the user typed "wrap up: end scene".
+- G6 only applies to pair, group and free scenes, so the solo route took the whole line as its direction: stored "The Narrator: Wrap up: end scene" (rowid 1011201), and Lidia reflected on it.
+- Fix: in solo, a "wrap up:" line should end the solo scene, either quietly like "end scene" or with one closing reflection line. It must never become a direction.
+- Also accept the combined form "wrap up: end scene" as an end.
+
 ## L1 (FIX NEXT): CHIM cancels PCV's own scene reply when the request waited for the lock
 
 **Evidence (10:55Z):**
