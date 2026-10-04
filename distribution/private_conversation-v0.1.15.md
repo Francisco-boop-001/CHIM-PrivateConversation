@@ -1,4 +1,4 @@
-﻿# Private Conversation 0.1.15 — PRE-ALPHA candidate
+# Private Conversation 0.1.15 — PRE-ALPHA candidate
 
 Fixes from the first in-game session on 0.1.14 (evidence: `tasks/live-issues-2026-10-04.md`).
 
