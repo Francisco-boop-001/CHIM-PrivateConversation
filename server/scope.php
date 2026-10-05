@@ -1226,7 +1226,8 @@ function pcvSceneActionVerdict(string $code, string $parameter, array $resolvedS
 function pcvPrepareSceneActions(array $resolvedScope): bool
 {
     $codes = pcvSceneAllowedActionCodes($resolvedScope);
-    if ($codes === []) {
+    // A scene only narrows CHIM's own setting: actions switched off in CHIM stay off.
+    if ($codes === [] || ($GLOBALS['FUNCTIONS_ARE_ENABLED'] ?? false) !== true) {
         $GLOBALS['FUNCTIONS_ARE_ENABLED'] = false;
         return false;
     }

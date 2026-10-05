@@ -26,6 +26,7 @@ try {
     $GLOBALS['ENABLED_FUNCTIONS'] = ['Drink', 'Brawl', 'Attack', 'KillTarget', 'ExtCmdKiss', 'GiveItemTo'];
     $GLOBALS['FUNCTION_PARM_INSPECT'] = ['Lidia', 'Bruce', 'Aelva', 'Hawke'];
     $GLOBALS['action_post_process_fnct_ex'] = ['someOtherPluginFilter'];
+    $GLOBALS['FUNCTIONS_ARE_ENABLED'] = true;
     $enabled = pcvPrepareSceneActions($resolved);
     shCheck($enabled === true && $GLOBALS['FUNCTIONS_ARE_ENABLED'] === true, 'Actions are switched on for a scene with groups.');
     shCheck($GLOBALS['ENABLED_FUNCTIONS'] === ['Drink', 'Brawl', 'ExtCmdKiss'], 'Only allowed and already-enabled codes remain.');
@@ -39,6 +40,11 @@ try {
     shCheck(pcvSceneActionListAllowed(['Talk', 'Drink', 'Brawl', 'ExtCmdKiss'], $resolved), 'Allowed actions pass the check.');
     shCheck(!pcvSceneActionListAllowed(['Talk', 'Attack'], $resolved), 'A stray Attack fails the check.');
     shCheck(pcvSceneActionListAllowed([], $resolved) && pcvSceneActionListAllowed(['Talk'], $resolved), 'Talk-only still passes.');
+
+    // CHIM actions switched off by the user: a scene never switches them on.
+    $GLOBALS['ENABLED_FUNCTIONS'] = ['Drink', 'Brawl'];
+    $GLOBALS['FUNCTIONS_ARE_ENABLED'] = false;
+    shCheck(pcvPrepareSceneActions($resolved) === false && $GLOBALS['FUNCTIONS_ARE_ENABLED'] === false, 'A global actions-off setting is respected.');
 
     // No groups: talk only, unchanged behaviour.
     $GLOBALS['ENABLED_FUNCTIONS'] = ['Drink', 'Attack'];
