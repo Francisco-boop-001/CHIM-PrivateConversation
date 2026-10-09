@@ -312,8 +312,9 @@ Review: tasks/mo2-metadata-fix-2026-10-08/final-review.md accepts the minimal me
 ## Publish Private Conversation 0.1.17 — 2026-10-09
 
 - [x] Prepare/review 0.1.17 source metadata and PCV-only hub changes.
-- [ ] Commit scoped source, verify immutable tag/reproducible packages.
-- [ ] Verify draft assets, publish, then advance mutable update refs.
-- [ ] Verify public downloads/refs/hub and record final judgment.
+- [x] Commit scoped source, verify immutable tag/reproducible packages.
+- [x] Verify draft assets, publish, then advance mutable update refs.
+- [x] Verify public downloads/refs/hub and record final judgment.
 
 Plan: tasks/release-0.1.17/plan.md. User authorized commit, push and publication; no installed changes or separate Mind Poisoning work.
+Review: tasks/release-0.1.17/publication-evidence.md accepts the published 0.1.17 PRE-ALPHA release, exact public asset bytes, update manifest and tagged hub snapshot. Concurrent MP 0.1.19 work was preserved. Package proof is not native MO2/sync/gameplay proof; no installed environments were changed.
