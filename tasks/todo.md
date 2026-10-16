@@ -438,12 +438,12 @@ Full-core beta remains NOT READY. The controlled-ALPHA candidate decision and ac
 - [x] Correct the operator checklist to distinguish disposable acceptance from the separately authorized, backed-up live ALPHA test.
 - [x] Run final scoped JSON, link, LF/newline, diff-whitespace and SHA-256 checks; report exact hashes to the lead.
 - [x] Builder: create and verify the candidate assets and record actual member/hash output.
-- [ ] Lead: review the source allowlist, commit/tag/publish the ALPHA release, verify fresh public assets and record publication evidence.
+- [x] Lead: review the source allowlist, commit/tag/publish the ALPHA release, verify fresh public assets and record publication evidence.
 - [ ] Full HTTP pair/END/wrap/removal, public ACK scheduling, native recovery, and gameplay remain NOT RUN for 0.1.19; beta certification remains pending.
 
-Plan and source assessment: `tasks/release-0.1.19/plan.md` and `tasks/release-0.1.19/source-report.md`. Release operations remain lead-owned.
+Plan and source assessment: `tasks/release-0.1.19/plan.md` and `tasks/release-0.1.19/source-report.md`. Publication is complete; final verification is in tasks/release-0.1.19/publication-evidence.md.
 
 
-### Prepublication review
+### Final release review
 
-Source/docs are accepted. The focused four package checks, 20-file payload delta, and independent 16-assert archive review passed. The clean committed-source build, tag and draft/public asset checks, publication, and canonical main/hub advancement remain lead-owned and pending.
+Source/docs and the PCV-only hub snapshot are accepted. The focused four package checks, 20-file payload delta, independent 16-assert archive review, clean committed-source build, tag, draft/public asset comparisons, publication, and canonical main/hub advancement are complete; see tasks/release-0.1.19/publication-evidence.md. The public ALPHA remains distinct from beta certification: exact-build full HTTP pair/END/wrap/removal, fresh public ACK scheduling, native recovery, and gameplay remain NOT RUN.
