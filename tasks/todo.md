@@ -347,11 +347,11 @@ Review: lead accepted after independent aggregate review. The scene owner's RED/
 - [x] Update current README/install version references and manifest version/ALPHA description; preserve 0.1.17 PRE-ALPHA history and manifest compatibility/channel fields.
 - [x] Add 0.1.18 ALPHA distribution notes with accurate END behavior, evidence limits, single-source install guidance, and no fabricated hashes.
 - [x] Run bounded Windows-only JSON/link/name/diff/whitespace checks; write source report and hand off allowlist.
-- [ ] Build owner: candidate package and focused final-tree checks; lead: commit the explicit source allowlist.
-- [ ] Build owner: clean committed-source rebuild and exact package hashes; lead: immutable tag push, draft asset download checks, then publish verified assets.
-- [ ] Hub owner: PCV-only canonical main/hub snapshot and pointers after publication; lead: verify public refs/downloads.
-- [ ] Add publication evidence separately after public verification; do not put it in the initial source commit or invent checksums before actual builder output.
+- [x] Build owner: candidate package and focused final-tree checks; lead: commit the explicit source allowlist.
+- [x] Build owner: clean committed-source rebuild and exact package hashes; lead: immutable tag push, draft asset download checks, then publish verified assets.
+- [x] Hub owner: PCV-only canonical main/hub snapshot and pointers after publication; lead: verify public refs/downloads.
+- [x] Add publication evidence separately after public verification; do not put it in the initial source commit or invent checksums before actual builder output.
 
 Plan: tasks/release-0.1.18/plan.md. Release operations remain lead-owned; no package/install/commit/tag/push/publication by this metadata owner.
 
-Review: tasks/release-0.1.18/source-report.md records the final metadata/docs scope, pre-edit hashes, invariant checks, verified links, and exact initial staging allowlist. The release gate remains open until the build, commit, tag, publication, hub, and public-download checks are completed by their owners.
+Review: tasks/release-0.1.18/publication-evidence.md records the published ALPHA, immutable source/tag identity, exact verified package/download outcome, preserved 0.1.17 assets, and PCV-only hub snapshot. All authorized gates are complete; package/fixture evidence does not establish live 0.1.18 gameplay, playback, universal privacy, or every installation route.
