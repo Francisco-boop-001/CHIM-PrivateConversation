@@ -481,3 +481,16 @@ Solo action behavior and duplicate owner election/inactive HTTP refusal passed t
 ### Review
 
 The documentation refresh is published. Canonical commit b6f0e82877038746497719d12952f51253fb59e5 is public, and the current 0.1.20 release body matches the reviewed body SHA-256 f43a584592cd504eff14af95c07ea4a7e7f2aeb489007fc571440f9fd6be4b5f. The original body-equals-tag-note evidence refers to initial publication; it is not a claim about the updated body. The PCV-only hub documentation mirror is public at 84dbe4f5c022764372ff23fe65a6b38be229ddf0. The 0.1.20 source tag, five assets, release flags, product code, CHIM core, and Mind Poisoning were not changed by this follow-up. No new runtime or gameplay proof was produced. See [the documentation publication receipt](player-docs-2026-10-16/docs-publication-receipt.md).
+
+## Private Conversation 0.1.21 BETA evidence and operator acceptance update - 2026-10-17
+
+- [x] Keep this documentation-only task separate from CHIM core, SHARMAT, Mind Poisoning, installation, and live-server work; preserve immutable 0.1.20 source/package/release artifacts.
+- [x] Record bounded 0.1.20 runtime/log evidence and direct operator confirmations in `tasks/beta-2026-10-17/acceptance-evidence.md`; do not include raw dialogue, private prompts, credentials, or unsupported exact timing/removal-route details.
+- [x] Update `docs/operator-acceptance.md` to distinguish observed/operator-confirmed practical outcomes from independent log proof, and identify version, scope, and evidence limits.
+- [x] Describe 0.1.21 as a metadata-only BETA candidate; the publisher receipt verifies exact equality for all 20 non-manifest payload members. Do not describe the candidate as natively tested.
+- [x] Append the reusable lesson to `tasks/lessons.md`: distinguish operator confirmation from log proof; do not label an operator-confirmed check NOT RUN solely because its independent trace is narrower.
+- [x] Read back the four owned files, confirm no raw dialogue/private prompt material was added, and record a review that marks payload comparison verified and lead acceptance complete while leaving release mechanics to the separate release record.
+
+### Review
+
+Read back the four owned files. The evidence is a dated summary of previously inspected 0.1.20 runtime records and operator confirmations, with no raw dialogue or private prompts. The publisher receipt verifies 20/20 non-manifest runtime-payload identity for the 0.1.21 candidate; this is not a 0.1.21 gameplay claim. Practical repeat, post-END ordinary Standard, and removal remain accepted as operator-confirmed with their stated detail limits. The lead accepted this bounded evidence; release mechanics are recorded separately under `tasks/release-0.1.21/`, and this review does not claim publication.
