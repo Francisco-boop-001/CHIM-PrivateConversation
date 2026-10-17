@@ -1,0 +1,66 @@
+{
+  "operation": "git add -A with explicit literal pathspec batches",
+  "path_allowlist": "hub-stage-allowlist.txt",
+  "batches": [
+    {
+      "batch": 1,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 2,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 3,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 4,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 5,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 6,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 7,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 8,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 9,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 10,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 11,
+      "path_count": 32,
+      "exit_code": 0
+    },
+    {
+      "batch": 12,
+      "path_count": 7,
+      "exit_code": 0
+    }
+  ]
+}

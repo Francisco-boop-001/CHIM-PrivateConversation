@@ -1,0 +1,109 @@
+{
+  "source_commit": "85e9dd08c8bacbb6f1553e36b0d1f4c2caacf45e",
+  "source_tree": "fd1a2ff48cfa65dbb5c4500a7fb364975e48fdcd",
+  "clean_source_root": "K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0",
+  "archive_path": "K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0.tar",
+  "archive_command": "git -c safe.directory=\"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\" -C \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\" archive --format=tar --output=\"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0.tar\" 85e9dd08c8bacbb6f1553e36b0d1f4c2caacf45e",
+  "archive_exit": 0,
+  "archive_size_bytes": 9195520,
+  "archive_sha256": "f0024a807312d95ad433593327a6581a7028a8b5f1d0ec97770ceb584e01a38d",
+  "extraction_command": "py -3 -c \"import sys, tarfile; tarfile.open(sys.argv[1], 'r:').extractall(sys.argv[2], filter='data')\" \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0.tar\" \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\"",
+  "extraction_exit": 0,
+  "extraction_method": "Python 3.12.4 tarfile.extractall(filter=data)",
+  "successful_build_command": "py -3 scripts/build-package.py --format release --release-dir \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets\"",
+  "build_working_directory": "K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0",
+  "build_exit": 0,
+  "candidate_directory": "K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\package-evidence\\candidate",
+  "clean_assets_directory": "K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets",
+  "prior_harness_attempts": [
+    {
+      "step": "Initial archive wrapper attempt",
+      "effective_process": "git.exe with no arguments",
+      "exit": 1,
+      "reason": "PowerShell helper used reserved automatic variable $args, so ProcessStartInfo received an empty argument list.",
+      "stdout": "archive.stdout.txt",
+      "stderr": "archive.stderr.txt"
+    },
+    {
+      "step": "Initial clean build attempt",
+      "command": "py -3 scripts/build-package.py --format release --release-dir \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets\"",
+      "exit": 1,
+      "reason": "Builder rejected output outside project: Release output must stay inside the project.",
+      "stdout": "build.stdout.txt",
+      "stderr": "build.stderr.txt"
+    }
+  ],
+  "asset_comparisons": [
+    {
+      "asset": "SHA256SUMS.txt",
+      "byte_compare_command": "fc.exe /b \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\package-evidence\\candidate\\SHA256SUMS.txt\" \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets\\SHA256SUMS.txt\"",
+      "byte_compare_exit": 0,
+      "byte_identical": true,
+      "candidate_size_bytes": 381,
+      "clean_size_bytes": 381,
+      "sizes_match": true,
+      "candidate_sha256": "e51d7d230b586ad3f544084b60ad40e4a7fe4fc830d0e35b12061977ad056fee",
+      "clean_sha256": "e51d7d230b586ad3f544084b60ad40e4a7fe4fc830d0e35b12061977ad056fee",
+      "sha256_matches": true,
+      "compare_stdout_file": "compare-SHA256SUMS.txt.stdout.txt",
+      "compare_stderr_file": "compare-SHA256SUMS.txt.stderr.txt"
+    },
+    {
+      "asset": "chim-plugin.tar.gz",
+      "byte_compare_command": "fc.exe /b \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\package-evidence\\candidate\\chim-plugin.tar.gz\" \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets\\chim-plugin.tar.gz\"",
+      "byte_compare_exit": 0,
+      "byte_identical": true,
+      "candidate_size_bytes": 3053486,
+      "clean_size_bytes": 3053486,
+      "sizes_match": true,
+      "candidate_sha256": "50405eca2d8a7b6e7dc9a307740b6ab0518366e21cfcbc743b88e88d94cbcd7b",
+      "clean_sha256": "50405eca2d8a7b6e7dc9a307740b6ab0518366e21cfcbc743b88e88d94cbcd7b",
+      "sha256_matches": true,
+      "compare_stdout_file": "compare-chim-plugin.tar.gz.stdout.txt",
+      "compare_stderr_file": "compare-chim-plugin.tar.gz.stderr.txt"
+    },
+    {
+      "asset": "private_conversation-0.1.20-mo2.zip",
+      "byte_compare_command": "fc.exe /b \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\package-evidence\\candidate\\private_conversation-0.1.20-mo2.zip\" \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets\\private_conversation-0.1.20-mo2.zip\"",
+      "byte_compare_exit": 0,
+      "byte_identical": true,
+      "candidate_size_bytes": 3056680,
+      "clean_size_bytes": 3056680,
+      "sizes_match": true,
+      "candidate_sha256": "7bd8c4e67e970416c116965a0470328a48e7ca4921750fafabf759a2826290db",
+      "clean_sha256": "7bd8c4e67e970416c116965a0470328a48e7ca4921750fafabf759a2826290db",
+      "sha256_matches": true,
+      "compare_stdout_file": "compare-private_conversation-0.1.20-mo2.zip.stdout.txt",
+      "compare_stderr_file": "compare-private_conversation-0.1.20-mo2.zip.stderr.txt"
+    },
+    {
+      "asset": "private_conversation-0.1.20.dwpkg",
+      "byte_compare_command": "fc.exe /b \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\package-evidence\\candidate\\private_conversation-0.1.20.dwpkg\" \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets\\private_conversation-0.1.20.dwpkg\"",
+      "byte_compare_exit": 0,
+      "byte_identical": true,
+      "candidate_size_bytes": 3475090,
+      "clean_size_bytes": 3475090,
+      "sizes_match": true,
+      "candidate_sha256": "d5da301dd332d45a97e962da96c8f0af9269d4d402e2083fe7a221e921090e8c",
+      "clean_sha256": "d5da301dd332d45a97e962da96c8f0af9269d4d402e2083fe7a221e921090e8c",
+      "sha256_matches": true,
+      "compare_stdout_file": "compare-private_conversation-0.1.20.dwpkg.stdout.txt",
+      "compare_stderr_file": "compare-private_conversation-0.1.20.dwpkg.stderr.txt"
+    },
+    {
+      "asset": "private_conversation.tar.gz",
+      "byte_compare_command": "fc.exe /b \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\package-evidence\\candidate\\private_conversation.tar.gz\" \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\source-85e9dd0\\tasks\\release-0.1.20\\publication-evidence\\clean-build\\assets\\private_conversation.tar.gz\"",
+      "byte_compare_exit": 0,
+      "byte_identical": true,
+      "candidate_size_bytes": 3053559,
+      "clean_size_bytes": 3053559,
+      "sizes_match": true,
+      "candidate_sha256": "e949fe37d1e7fb2f8091e28f0c4af106ca1039a15809401082ea460572798bb8",
+      "clean_sha256": "e949fe37d1e7fb2f8091e28f0c4af106ca1039a15809401082ea460572798bb8",
+      "sha256_matches": true,
+      "compare_stdout_file": "compare-private_conversation.tar.gz.stdout.txt",
+      "compare_stderr_file": "compare-private_conversation.tar.gz.stderr.txt"
+    }
+  ],
+  "all_five_byte_and_sha256_identical": true
+}

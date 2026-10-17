@@ -1,0 +1,19 @@
+{
+  "hub_head": "301dce06b7e0559180a38449aaba7ba4551ff4a4",
+  "staged_root_tree": "2fc4d4eac2f0e34bf52eec52581ea14ad27fbb34",
+  "staged_pcv_subtree_tree": "fd1a2ff48cfa65dbb5c4500a7fb364975e48fdcd",
+  "source_pcv_tree": "fd1a2ff48cfa65dbb5c4500a7fb364975e48fdcd",
+  "pcv_tree_equal": true,
+  "pcv_path_mode_blob_count": 356,
+  "pcv_path_mode_blob_equal": true,
+  "protected_non_pcv_index_entry_count": 242,
+  "protected_non_pcv_index_entries_unchanged": true,
+  "three_staged_doc_entries_preserved": true,
+  "explicit_allowlist_path_count": 359,
+  "staged_changed_path_count": 124,
+  "staged_outside_allowlist_count": 0,
+  "default_whitespace_check_exit": 2,
+  "default_whitespace_diagnostic_bytes": 47784,
+  "crlf_aware_whitespace_check_exit": 0,
+  "no_persistent_config_changed": true
+}

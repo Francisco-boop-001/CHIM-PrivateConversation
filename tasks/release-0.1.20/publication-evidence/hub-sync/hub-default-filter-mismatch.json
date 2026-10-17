@@ -1,0 +1,83 @@
+{
+  "repositories_core_autocrlf": {
+    "source": "true",
+    "hub": "true"
+  },
+  "path_attributes": "git check-attr -a returned no path-specific overrides for the affected legacy text receipts",
+  "first_git_add_mismatch_count": 8,
+  "mismatches": [
+    {
+      "path": "tasks/release-0.1.19/hub-stage-allowlist.txt",
+      "source_mode": "100644",
+      "source_blob": "97a77bb8c36394beae7b707f67c53f1c3f25db27",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "17e39d14a0e56867e53805c720d637280d2e1abf",
+      "hash_object_no_filters": "97a77bb8c36394beae7b707f67c53f1c3f25db27",
+      "hash_object_default_filter": "17e39d14a0e56867e53805c720d637280d2e1abf"
+    },
+    {
+      "path": "tasks/release-0.1.19/publication-evidence/clean-build-verification/archive-extraction.stream-capture.txt",
+      "source_mode": "100644",
+      "source_blob": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "a1b0cbfbf5a15171414cb363769623adfc4b7826",
+      "hash_object_no_filters": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+      "hash_object_default_filter": "a1b0cbfbf5a15171414cb363769623adfc4b7826"
+    },
+    {
+      "path": "tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt",
+      "source_mode": "100644",
+      "source_blob": "febecc34ae61b1a596a5bf1b52b4c2484dbbd8dc",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "008975a5b47a6089282ee2f1e65539ab02f4b8e1",
+      "hash_object_no_filters": "febecc34ae61b1a596a5bf1b52b4c2484dbbd8dc",
+      "hash_object_default_filter": "008975a5b47a6089282ee2f1e65539ab02f4b8e1"
+    },
+    {
+      "path": "tasks/release-0.1.19/publication-evidence/clean-build-verification/build.command.txt",
+      "source_mode": "100644",
+      "source_blob": "b868e2284d5551c96f5b9b452454f58f0747df08",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "d01802f4c8c5cf3c699b66578d86c9498063edfd",
+      "hash_object_no_filters": "b868e2284d5551c96f5b9b452454f58f0747df08",
+      "hash_object_default_filter": "d01802f4c8c5cf3c699b66578d86c9498063edfd"
+    },
+    {
+      "path": "tasks/release-0.1.19/publication-evidence/clean-build-verification/build.stream-capture.txt",
+      "source_mode": "100644",
+      "source_blob": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "a1b0cbfbf5a15171414cb363769623adfc4b7826",
+      "hash_object_no_filters": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+      "hash_object_default_filter": "a1b0cbfbf5a15171414cb363769623adfc4b7826"
+    },
+    {
+      "path": "tasks/release-0.1.19/publication-evidence/clean-build-verification/candidate-compare.stream-capture.txt",
+      "source_mode": "100644",
+      "source_blob": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "a1b0cbfbf5a15171414cb363769623adfc4b7826",
+      "hash_object_no_filters": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+      "hash_object_default_filter": "a1b0cbfbf5a15171414cb363769623adfc4b7826"
+    },
+    {
+      "path": "tasks/release-0.1.19/publication-evidence/clean-build-verification/git-tree.command.txt",
+      "source_mode": "100644",
+      "source_blob": "6097d8afaa0c3b10227db9842d6424a5e759165a",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "0309fe23ec92bb320bf50474d60716955cf5def3",
+      "hash_object_no_filters": "6097d8afaa0c3b10227db9842d6424a5e759165a",
+      "hash_object_default_filter": "0309fe23ec92bb320bf50474d60716955cf5def3"
+    },
+    {
+      "path": "tasks/release-0.1.19/publication-evidence/public-verification/public-verification-command.txt",
+      "source_mode": "100644",
+      "source_blob": "85962fd4d6f0e3fcbeb9fd273817cc6962ea7b44",
+      "first_git_add_mode": "100644",
+      "first_git_add_blob": "28ed9f666509ba3e563653cf654c9eb192d16a08",
+      "hash_object_no_filters": "85962fd4d6f0e3fcbeb9fd273817cc6962ea7b44",
+      "hash_object_default_filter": "28ed9f666509ba3e563653cf654c9eb192d16a08"
+    }
+  ],
+  "interpretation": "The eight legacy receipt blobs retain CRLF bytes in the canonical commit; the default clean filter normalized them on add and changed their blob IDs. The Git-archive worktree overlay itself was byte-identical to its extraction. Exact source blobs are restored in the index below without changing worktree files or Git configuration."
+}

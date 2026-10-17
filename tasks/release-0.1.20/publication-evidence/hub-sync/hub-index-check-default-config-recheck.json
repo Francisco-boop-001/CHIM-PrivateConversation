@@ -1,0 +1,8 @@
+{
+  "command": "git diff --cached --check",
+  "exit_code": 2,
+  "stdout_sha256": "fff179625d1081600dc2be8a9f1756da8433ebfc58c2d8f5e606bb6637cf6687",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_bytes": 47784,
+  "stderr_bytes": 0
+}

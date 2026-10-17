@@ -1,0 +1,121 @@
+{
+  "hub_head": "301dce06b7e0559180a38449aaba7ba4551ff4a4",
+  "expected_hub_head": "301dce06b7e0559180a38449aaba7ba4551ff4a4",
+  "hub_head_matches_baseline": true,
+  "hub_head_tree": "9012b1ecae0d4d07af9627a225bb611303ba4532",
+  "source_commit": "85e9dd08c8bacbb6f1553e36b0d1f4c2caacf45e",
+  "source_tree": "fd1a2ff48cfa65dbb5c4500a7fb364975e48fdcd",
+  "expected_source_tree": "fd1a2ff48cfa65dbb5c4500a7fb364975e48fdcd",
+  "source_tree_matches_expected": true,
+  "pcv_source_entries": 356,
+  "pcv_index_entries": 356,
+  "pcv_prefix_exact_path_mode_type_blob": true,
+  "index_entries": 598,
+  "index_stages_nonzero": [],
+  "baseline_outside_entries": 242,
+  "current_outside_entries": 242,
+  "outside_path_set_exact": true,
+  "baseline_protected_entries": 239,
+  "protected_exact_match_count": 239,
+  "protected_mismatches": [],
+  "authorized_shared_documents": [
+    "README.md",
+    "docs/deployment-migration.md",
+    "docs/development.md"
+  ],
+  "changed_authorized_shared_documents": [
+    "README.md",
+    "docs/deployment-migration.md",
+    "docs/development.md"
+  ],
+  "changed_path_count": 124,
+  "out_of_scope_changed_paths": [],
+  "allowlist_entries": 359,
+  "changed_paths_missing_from_allowlist": [],
+  "unstaged_or_untracked_status_records": [],
+  "whitespace": {
+    "default_git_diff_check_exit": 2,
+    "default_warning_line_count": 271,
+    "default_warning_paths": [
+      "plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt",
+      "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/archive-extraction.stream-capture.txt",
+      "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt",
+      "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.command.txt",
+      "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.stream-capture.txt",
+      "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/candidate-compare.stream-capture.txt",
+      "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/git-tree.command.txt",
+      "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/public-verification/public-verification-command.txt"
+    ],
+    "crlf_source_proof": [
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt",
+        "blob": "97a77bb8c36394beae7b707f67c53f1c3f25db27",
+        "bytes": 18065,
+        "crlf_sequences": 259,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      },
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/archive-extraction.stream-capture.txt",
+        "blob": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+        "bytes": 98,
+        "crlf_sequences": 1,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      },
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt",
+        "blob": "febecc34ae61b1a596a5bf1b52b4c2484dbbd8dc",
+        "bytes": 808,
+        "crlf_sequences": 5,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      },
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.command.txt",
+        "blob": "b868e2284d5551c96f5b9b452454f58f0747df08",
+        "bytes": 193,
+        "crlf_sequences": 2,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      },
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.stream-capture.txt",
+        "blob": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+        "bytes": 98,
+        "crlf_sequences": 1,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      },
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/candidate-compare.stream-capture.txt",
+        "blob": "1cb2b7aa3ca860111f31164339b4849ef5b52810",
+        "bytes": 98,
+        "crlf_sequences": 1,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      },
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/git-tree.command.txt",
+        "blob": "6097d8afaa0c3b10227db9842d6424a5e759165a",
+        "bytes": 212,
+        "crlf_sequences": 1,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      },
+      {
+        "path": "plugins/private_conversation/tasks/release-0.1.19/publication-evidence/public-verification/public-verification-command.txt",
+        "blob": "85962fd4d6f0e3fcbeb9fd273817cc6962ea7b44",
+        "bytes": 3528,
+        "crlf_sequences": 1,
+        "lone_cr_bytes": 0,
+        "matches_source_tree_blob": true
+      }
+    ],
+    "scoped_cr_at_eol_check_exit": 0,
+    "scoped_cr_at_eol_output": "",
+    "all_default_warning_paths_are_exact_source_blobs": true,
+    "core_autocrlf": "true"
+  },
+  "pass": true
+}

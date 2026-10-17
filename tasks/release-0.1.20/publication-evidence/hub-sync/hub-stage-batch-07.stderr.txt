@@ -1,0 +1,1 @@
+warning: in the working copy of 'plugins/private_conversation/tasks/release-0.1.19/publication-evidence/public-verification/public-verification-command.txt', LF will be replaced by CRLF the next time Git touches it

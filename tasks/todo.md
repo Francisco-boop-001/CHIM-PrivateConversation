@@ -462,9 +462,22 @@ Source/docs and the PCV-only hub snapshot are accepted. The focused four package
 - [x] Run py -3 tests/package_check.py (4 tests, exit 0) and build the task-owned working-tree candidate under tasks/release-0.1.20/package-evidence/candidate. The candidate is not a clean committed-source release build.
 - [x] Independently inventory asset members, source-byte equality, MO2 inner-DWPkg equality, and all four SHA256SUMS entries; see package-evidence/candidate-inventory.stdout.txt.
 - [x] Prepare the exact source staging allowlist and hash manifest, run git diff --check, and record a review section. Do not stage before root accepts the source gate.
-- [ ] After root source acceptance, stage only the reviewed allowlist, create the accepted PCV source commit and annotated tag, rebuild from clean exported source, and compare every candidate asset byte-for-byte.
-- [ ] After fresh public downloads verify against the approved build, publish the normal-flag ALPHA release and advance only the PCV subtree in the hub with path/mode/blob proofs.
+- [x] Stage the explicit reviewed source allowlist, pass the cached whitespace gate, create the accepted source commit and annotated private_conversation-v0.1.20 tag, rebuild from a clean export, and compare all five assets byte-for-byte.
+- [x] Publish the normal-flag ALPHA release, verify all five anonymous public downloads, advance canonical main and the PCV-only hub non-force, and independently verify the exact subtree and protected paths.
 
 ### Review
 
-Solo action behavior and duplicate owner election/inactive HTTP refusal passed their bounded fixtures. Package contract tests passed and the current working-tree candidate is inventoried with exact hashes, but this is not the clean committed-source build required for publication. The guarded ACK shutdown behavior remains NOTRUN because no disposable PostgreSQL target was configured; no connection was made. The retained postrequest logger directory_unavailable warning is unattributed. Full CHIM bootstrap/schema refresh, live install, providers/database, public ACK scheduling, native recovery, client sync, and Skyrim gameplay remain unverified. The release remains ALPHA. The overall source gate, staging, commit/tag, publication, and hub update remain pending. CHIM core, Mind Poisoning, live installation, and game data remain outside this change.
+Solo action behavior and duplicate owner election/inactive HTTP refusal passed their bounded fixtures. Package checks passed; the exact source commit was clean-built, tagged, published as a normal-flag ALPHA release, and all five anonymous public downloads matched the clean build. Canonical main and the PCV-only hub mirror advanced non-force; independent review proved 356 exact PCV path/mode/blob entries, three authorized shared-doc edits, and 239 protected paths unchanged. The ACK shutdown behavior remains NOTRUN because no disposable PostgreSQL target was configured; no connection was made. One postterminal logger directory_unavailable warning remains unattributed. Full CHIM bootstrap/schema refresh, live install/provider/database operation, public ACK scheduling, native recovery, client sync, and Skyrim gameplay remain unverified. The release is ALPHA, not beta or stable certification. CHIM core, Mind Poisoning, live installation, and game data remain outside this change. See tasks/release-0.1.20/publication-evidence/final-publication-receipt.md.
+
+
+## Reader-first README refresh (2026-10-16)
+
+- [x] Preserve the current ALPHA identity, existing art, release/download URLs, and safety boundaries; inspect the README and documentation map.
+- [x] Use the player guide's verified workflows to rewrite the README around quickstart, capability/mode map, examples/results, and current limits; move release archaeology behind clear links without deleting history.
+- [x] Check every workflow claim against the guide/source and keep optional Mind Poisoning integration explicitly separate.
+- [x] Run focused Markdown/link/line-ending and diff checks; record scope and limitations in `tasks/player-docs-2026-10-16/readme-review.md` for lead review.
+- [x] Prepare `tasks/player-docs-2026-10-16/release-body.md` as a complete proposed replacement for the 0.1.20 release body; leave the GitHub release unchanged pending lead review.
+
+### Review
+
+Documentation-only follow-up after the immutable 0.1.20 release. The README review and proposed release-body replacement are ready for lead review; the release body has not been applied to GitHub. No version, package assets, product code, Mind Poisoning, or CHIM core changes were made.

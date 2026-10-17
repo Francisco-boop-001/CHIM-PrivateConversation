@@ -1,0 +1,542 @@
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:1: trailing whitespace.
++README.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:2: trailing whitespace.
++docs/deployment-migration.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:3: trailing whitespace.
++docs/development.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:4: trailing whitespace.
++plugins/private_conversation/.gitattributes
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:5: trailing whitespace.
++plugins/private_conversation/.gitignore
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:6: trailing whitespace.
++plugins/private_conversation/README.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:7: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.10.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:8: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.11.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:9: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.12.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:10: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.13.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:11: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.14.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:12: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.15.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:13: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.16.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:14: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.17.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:15: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.18.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:16: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.19.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:17: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.7.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:18: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.8.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:19: trailing whitespace.
++plugins/private_conversation/distribution/private_conversation-v0.1.9.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:20: trailing whitespace.
++plugins/private_conversation/docs/background-presence.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:21: trailing whitespace.
++plugins/private_conversation/docs/followups/chim-core-delivery-diagnostics-2026-10-15.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:22: trailing whitespace.
++plugins/private_conversation/docs/followups/mind-poisoning-subject-diagnostics-2026-10-15.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:23: trailing whitespace.
++plugins/private_conversation/docs/live-server-testing.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:24: trailing whitespace.
++plugins/private_conversation/docs/logging-revision-2.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:25: trailing whitespace.
++plugins/private_conversation/docs/logging.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:26: trailing whitespace.
++plugins/private_conversation/docs/operator-acceptance.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:27: trailing whitespace.
++plugins/private_conversation/docs/superpowers/plans/2026-10-03-pcv-0.1.10-reliability.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:28: trailing whitespace.
++plugins/private_conversation/docs/superpowers/plans/2026-10-03-pcv-0.1.11-group-mode.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:29: trailing whitespace.
++plugins/private_conversation/docs/superpowers/plans/2026-10-03-pcv-0.1.12-free-mode.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:30: trailing whitespace.
++plugins/private_conversation/docs/superpowers/specs/2026-10-03-pcv-0.1.10-reliability-design.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:31: trailing whitespace.
++plugins/private_conversation/docs/superpowers/specs/2026-10-03-pcv-0.1.11-group-mode-design.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:32: trailing whitespace.
++plugins/private_conversation/docs/superpowers/specs/2026-10-03-pcv-0.1.12-free-mode-design.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:33: trailing whitespace.
++plugins/private_conversation/docs/superpowers/specs/2026-10-03-pcv-0.1.13-reliability-design.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:34: trailing whitespace.
++plugins/private_conversation/docs/superpowers/specs/2026-10-03-pcv-0.1.14-roleplay-design.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:35: trailing whitespace.
++plugins/private_conversation/docs/superpowers/specs/2026-10-05-pcv-0.1.16-scene-actions-design.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:36: trailing whitespace.
++plugins/private_conversation/scripts/build-package.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:37: trailing whitespace.
++plugins/private_conversation/scripts/live-test/crowd_live.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:38: trailing whitespace.
++plugins/private_conversation/scripts/live-test/env.sh
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:39: trailing whitespace.
++plugins/private_conversation/scripts/live-test/install_pkg.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:40: trailing whitespace.
++plugins/private_conversation/scripts/live-test/pcvsim.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:41: trailing whitespace.
++plugins/private_conversation/scripts/live-test/run-php-tests.sh
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:42: trailing whitespace.
++plugins/private_conversation/scripts/live-test/sim.ps1
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:43: trailing whitespace.
++plugins/private_conversation/scripts/live-test/smoke.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:44: trailing whitespace.
++plugins/private_conversation/scripts/live-test/solo_retest.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:45: trailing whitespace.
++plugins/private_conversation/scripts/live-test/standard.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:46: trailing whitespace.
++plugins/private_conversation/server/.htaccess
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:47: trailing whitespace.
++plugins/private_conversation/server/assets/private-conversation-scene.png
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:48: trailing whitespace.
++plugins/private_conversation/server/assets/style.css
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:49: trailing whitespace.
++plugins/private_conversation/server/assets/ui-refresh.js
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:50: trailing whitespace.
++plugins/private_conversation/server/context.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:51: trailing whitespace.
++plugins/private_conversation/server/context_pre.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:52: trailing whitespace.
++plugins/private_conversation/server/diagnostics.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:53: trailing whitespace.
++plugins/private_conversation/server/index.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:54: trailing whitespace.
++plugins/private_conversation/server/json_response_custom.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:55: trailing whitespace.
++plugins/private_conversation/server/log.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:56: trailing whitespace.
++plugins/private_conversation/server/log_reader.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:57: trailing whitespace.
++plugins/private_conversation/server/manifest.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:58: trailing whitespace.
++plugins/private_conversation/server/postrequest.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:59: trailing whitespace.
++plugins/private_conversation/server/prepostrequest.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:60: trailing whitespace.
++plugins/private_conversation/server/preprocessing.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:61: trailing whitespace.
++plugins/private_conversation/server/prerequest.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:62: trailing whitespace.
++plugins/private_conversation/server/reflection.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:63: trailing whitespace.
++plugins/private_conversation/server/reflection_receipt.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:64: trailing whitespace.
++plugins/private_conversation/server/scope.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:65: trailing whitespace.
++plugins/private_conversation/server/state.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:66: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-fix-2026-10-01/core-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:67: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-fix-2026-10-01/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:68: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-fix-2026-10-01/final-scope-check.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:69: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-fix-2026-10-01/integration-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:70: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-fix-2026-10-01/storage-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:71: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-run-2026-10-01/core-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:72: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-run-2026-10-01/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:73: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-run-2026-10-01/integration-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:74: trailing whitespace.
++plugins/private_conversation/tasks/ack-bug-run-2026-10-01/storage-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:75: trailing whitespace.
++plugins/private_conversation/tasks/ack-handoff-fix-2026-10-01/contract-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:76: trailing whitespace.
++plugins/private_conversation/tasks/ack-handoff-fix-2026-10-01/core-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:77: trailing whitespace.
++plugins/private_conversation/tasks/ack-handoff-fix-2026-10-01/database-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:78: trailing whitespace.
++plugins/private_conversation/tasks/ack-handoff-fix-2026-10-01/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:79: trailing whitespace.
++plugins/private_conversation/tasks/alpha-end-2026-10-15/baseline.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:80: trailing whitespace.
++plugins/private_conversation/tasks/alpha-end-2026-10-15/docs-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:81: trailing whitespace.
++plugins/private_conversation/tasks/alpha-end-2026-10-15/end-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:82: trailing whitespace.
++plugins/private_conversation/tasks/alpha-end-2026-10-15/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:83: trailing whitespace.
++plugins/private_conversation/tasks/alpha-end-2026-10-15/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:84: trailing whitespace.
++plugins/private_conversation/tasks/audit-2026-10-03.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:85: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/ack-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:86: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:87: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/log-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:88: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/operator-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:89: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:90: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/proposed.patch
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:91: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/skill-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:92: trailing whitespace.
++plugins/private_conversation/tasks/critique-followup-2026-10-01/storage-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:93: trailing whitespace.
++plugins/private_conversation/tasks/diagnostic-clarity-2026-10-15/baseline.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:94: trailing whitespace.
++plugins/private_conversation/tasks/diagnostic-clarity-2026-10-15/docs-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:95: trailing whitespace.
++plugins/private_conversation/tasks/diagnostic-clarity-2026-10-15/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:96: trailing whitespace.
++plugins/private_conversation/tasks/diagnostic-clarity-2026-10-15/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:97: trailing whitespace.
++plugins/private_conversation/tasks/diagnostic-clarity-2026-10-15/preservation-check.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:98: trailing whitespace.
++plugins/private_conversation/tasks/diagnostic-clarity-2026-10-15/review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:99: trailing whitespace.
++plugins/private_conversation/tasks/diagnostic-clarity-2026-10-15/ui-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:100: trailing whitespace.
++plugins/private_conversation/tasks/feature-requests.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:101: trailing whitespace.
++plugins/private_conversation/tasks/free-mode-verification-2026-10-03.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:102: trailing whitespace.
++plugins/private_conversation/tasks/group-mode-verification-2026-10-03.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:103: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/bug-run-operations.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:104: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/bug-run-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:105: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:106: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/influence-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:107: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging-bug-run/baseline-sha256.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:108: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging-bug-run/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:109: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging-bug-run/logger-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:110: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging-bug-run/protected-external-work-sha256.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:111: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging-bug-run/ui-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:112: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:113: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging/logger-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:114: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/logging/ui-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:115: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/registry-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:116: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/state-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:117: trailing whitespace.
++plugins/private_conversation/tasks/implementation-2026-09-30/ui-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:118: trailing whitespace.
++plugins/private_conversation/tasks/instrumentation-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:119: trailing whitespace.
++plugins/private_conversation/tasks/lessons.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:120: trailing whitespace.
++plugins/private_conversation/tasks/live-issues-2026-10-03.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:121: trailing whitespace.
++plugins/private_conversation/tasks/live-issues-2026-10-04.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:122: trailing whitespace.
++plugins/private_conversation/tasks/logging-bug-run-2026-09-30.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:123: trailing whitespace.
++plugins/private_conversation/tasks/logging-improvements-plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:124: trailing whitespace.
++plugins/private_conversation/tasks/maintenance-2026-10-01/ack-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:125: trailing whitespace.
++plugins/private_conversation/tasks/maintenance-2026-10-01/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:126: trailing whitespace.
++plugins/private_conversation/tasks/maintenance-2026-10-01/routing-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:127: trailing whitespace.
++plugins/private_conversation/tasks/maintenance-2026-10-01/state-security-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:128: trailing whitespace.
++plugins/private_conversation/tasks/mind-poisoning-logging-prompt.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:129: trailing whitespace.
++plugins/private_conversation/tasks/mo2-metadata-fix-2026-10-08/baseline.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:130: trailing whitespace.
++plugins/private_conversation/tasks/mo2-metadata-fix-2026-10-08/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:131: trailing whitespace.
++plugins/private_conversation/tasks/mo2-metadata-fix-2026-10-08/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:132: trailing whitespace.
++plugins/private_conversation/tasks/mo2-metadata-fix-2026-10-08/task-1-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:133: trailing whitespace.
++plugins/private_conversation/tasks/mo2-metadata-fix-2026-10-08/task-2-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:134: trailing whitespace.
++plugins/private_conversation/tasks/mo2-metadata-fix-2026-10-08/task-3-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:135: trailing whitespace.
++plugins/private_conversation/tasks/mo2-warning-check-2026-10-08/final-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:136: trailing whitespace.
++plugins/private_conversation/tasks/mo2-warning-check-2026-10-08/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:137: trailing whitespace.
++plugins/private_conversation/tasks/mp-api-check-2026-09-30.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:138: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.17/hub-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:139: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.17/package-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:140: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.17/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:141: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.17/publication-evidence.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:142: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.17/runtime-before.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:143: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.17/source-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:144: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.18/hub-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:145: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.18/package-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:146: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.18/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:147: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.18/publication-evidence.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:148: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.18/source-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:149: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/compatibility-evidence/package-inspection-0.1.19.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:150: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/compatibility-evidence/package-inspection-command.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:151: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/compatibility-evidence/package-inspection-exit-code.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:152: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/compatibility-evidence/package-inspection-output.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:153: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/compatibility-evidence/source-snapshot.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:154: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/compatibility-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:155: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-build.combined-output.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:156: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-build.command.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:157: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-build.exit-code.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:158: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-build.stream-capture.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:159: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-check.combined-output.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:160: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-check.command.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:161: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-check.exit-code.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:162: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/package-check.stream-capture.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:163: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/payload-delta.combined-output.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:164: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-evidence/payload-delta.stream-capture.txt
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:165: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/package-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:166: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:167: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.19/source-report.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:168: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.5-source-inventory.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:169: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/hub-metadata-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:170: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/hub-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:171: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/metadata-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:172: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/package-evidence.json
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:173: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/package-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:174: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:175: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/preservation-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:176: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/publication-evidence.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:177: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.7/source-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:178: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.8/hub-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:179: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.8/package-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:180: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.8/plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:181: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.8/preservation-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:182: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.8/public-state-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:183: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.8/publication-evidence.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:184: trailing whitespace.
++plugins/private_conversation/tasks/release-0.1.8/source-review.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:185: trailing whitespace.
++plugins/private_conversation/tasks/release-metadata-review-v0.1.5.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:186: trailing whitespace.
++plugins/private_conversation/tasks/release-package-review-v0.1.5.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:187: trailing whitespace.
++plugins/private_conversation/tasks/release-v0.1.4-notes.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:188: trailing whitespace.
++plugins/private_conversation/tasks/release-v0.1.4-packaging.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:189: trailing whitespace.
++plugins/private_conversation/tasks/release-v0.1.4-plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:190: trailing whitespace.
++plugins/private_conversation/tasks/release-v0.1.4-readme.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:191: trailing whitespace.
++plugins/private_conversation/tasks/release-v0.1.5-evidence.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:192: trailing whitespace.
++plugins/private_conversation/tasks/release-v0.1.5-plan.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:193: trailing whitespace.
++plugins/private_conversation/tasks/release-v0.1.6-evidence.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:194: trailing whitespace.
++plugins/private_conversation/tasks/reliability-verification-2026-10-03.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:195: trailing whitespace.
++plugins/private_conversation/tasks/roleplay-verification-2026-10-03.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:196: trailing whitespace.
++plugins/private_conversation/tasks/todo.md
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:197: trailing whitespace.
++plugins/private_conversation/tests/active_ttl_renewal_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:198: trailing whitespace.
++plugins/private_conversation/tests/background_presence_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:199: trailing whitespace.
++plugins/private_conversation/tests/background_presence_hook_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:200: trailing whitespace.
++plugins/private_conversation/tests/diagnostics_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:201: trailing whitespace.
++plugins/private_conversation/tests/eligibility_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:202: trailing whitespace.
++plugins/private_conversation/tests/free_activation_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:203: trailing whitespace.
++plugins/private_conversation/tests/free_config_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:204: trailing whitespace.
++plugins/private_conversation/tests/free_opener_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:205: trailing whitespace.
++plugins/private_conversation/tests/free_ui_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:206: trailing whitespace.
++plugins/private_conversation/tests/group_activation_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:207: trailing whitespace.
++plugins/private_conversation/tests/group_config_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:208: trailing whitespace.
++plugins/private_conversation/tests/group_opener_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:209: trailing whitespace.
++plugins/private_conversation/tests/group_routing_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:210: trailing whitespace.
++plugins/private_conversation/tests/group_scope_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:211: trailing whitespace.
++plugins/private_conversation/tests/group_ui_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:212: trailing whitespace.
++plugins/private_conversation/tests/http_state_protection_check.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:213: trailing whitespace.
++plugins/private_conversation/tests/identity_source_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:214: trailing whitespace.
++plugins/private_conversation/tests/in_game_commands_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:215: trailing whitespace.
++plugins/private_conversation/tests/in_game_end_hook_failure_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:216: trailing whitespace.
++plugins/private_conversation/tests/live_fixes_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:217: trailing whitespace.
++plugins/private_conversation/tests/log_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:218: trailing whitespace.
++plugins/private_conversation/tests/log_reason_literals_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:219: trailing whitespace.
++plugins/private_conversation/tests/log_shutdown_context_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:220: trailing whitespace.
++plugins/private_conversation/tests/package_check.py
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:221: trailing whitespace.
++plugins/private_conversation/tests/page_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:222: trailing whitespace.
++plugins/private_conversation/tests/page_notes_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:223: trailing whitespace.
++plugins/private_conversation/tests/postrequest_terminal_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:224: trailing whitespace.
++plugins/private_conversation/tests/presence_active_scene_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:225: trailing whitespace.
++plugins/private_conversation/tests/presence_crowd_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:226: trailing whitespace.
++plugins/private_conversation/tests/presence_log_volume_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:227: trailing whitespace.
++plugins/private_conversation/tests/presence_same_second_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:228: trailing whitespace.
++plugins/private_conversation/tests/presence_wide_capture_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:229: trailing whitespace.
++plugins/private_conversation/tests/reflection_ack_bug_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:230: trailing whitespace.
++plugins/private_conversation/tests/reflection_ack_database_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:231: trailing whitespace.
++plugins/private_conversation/tests/reflection_ack_pending_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:232: trailing whitespace.
++plugins/private_conversation/tests/reflection_ack_shutdown_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:233: trailing whitespace.
++plugins/private_conversation/tests/reflection_actor_id_state_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:234: trailing whitespace.
++plugins/private_conversation/tests/reflection_direct_ack_capacity_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:235: trailing whitespace.
++plugins/private_conversation/tests/reflection_full_reply_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:236: trailing whitespace.
++plugins/private_conversation/tests/reflection_hook_timing_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:237: trailing whitespace.
++plugins/private_conversation/tests/reflection_presence_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:238: trailing whitespace.
++plugins/private_conversation/tests/reflection_receipt_bug_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:239: trailing whitespace.
++plugins/private_conversation/tests/reflection_registry_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:240: trailing whitespace.
++plugins/private_conversation/tests/reflection_reply_length_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:241: trailing whitespace.
++plugins/private_conversation/tests/reflection_scope_error_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:242: trailing whitespace.
++plugins/private_conversation/tests/roleplay_settings_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:243: trailing whitespace.
++plugins/private_conversation/tests/roleplay_ui_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:244: trailing whitespace.
++plugins/private_conversation/tests/scene_actions_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:245: trailing whitespace.
++plugins/private_conversation/tests/scene_actions_hook_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:246: trailing whitespace.
++plugins/private_conversation/tests/scene_actions_ui_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:247: trailing whitespace.
++plugins/private_conversation/tests/scene_resilience_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:248: trailing whitespace.
++plugins/private_conversation/tests/scope_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:249: trailing whitespace.
++plugins/private_conversation/tests/solo_guidance_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:250: trailing whitespace.
++plugins/private_conversation/tests/state_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:251: trailing whitespace.
++plugins/private_conversation/tests/state_recovery_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:252: trailing whitespace.
++plugins/private_conversation/tests/strict_rechat_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:253: trailing whitespace.
++plugins/private_conversation/tests/turn_hooks_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:254: trailing whitespace.
++plugins/private_conversation/tests/turn_plan_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:255: trailing whitespace.
++plugins/private_conversation/tests/ui_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:256: trailing whitespace.
++plugins/private_conversation/tests/ui_diagnostics_http_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:257: trailing whitespace.
++plugins/private_conversation/tests/ui_logs_host_access_check.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:258: trailing whitespace.
++plugins/private_conversation/tests/ui_preview.php
+plugins/private_conversation/tasks/release-0.1.19/hub-stage-allowlist.txt:259: trailing whitespace.
++plugins/private_conversation/tests/ui_refresh_check.mjs
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/archive-extraction.stream-capture.txt:1: trailing whitespace.
++exec_command returned one combined output field; stdout and stderr were not captured separately.
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt:1: trailing whitespace.
++Built and verified dist\release-v0.1.19-clean\SHA256SUMS.txt (381 bytes, sha256 096cce8e8dcbf72aa0085be890baee7d33814f8e33c0a3fd4fb60f4a1df2e56a)
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt:2: trailing whitespace.
++Built and verified dist\release-v0.1.19-clean\chim-plugin.tar.gz (3051196 bytes, sha256 2453de55c50c04c6a167432bb00d02eaa2e42ccf353ba64e71e3f3ebe99d141f)
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt:3: trailing whitespace.
++Built and verified dist\release-v0.1.19-clean\private_conversation-0.1.19-mo2.zip (3054306 bytes, sha256 6dcb27863fae36ab3c6deab5f8ba6255aea02a68a56af8c439df95a78774ebb9)
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt:4: trailing whitespace.
++Built and verified dist\release-v0.1.19-clean\private_conversation-0.1.19.dwpkg (3464673 bytes, sha256 d78a969480375d448afe347142ddd320c66a201ed01ab1e43d858aa490d2ccf6)
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.combined-output.txt:5: trailing whitespace.
++Built and verified dist\release-v0.1.19-clean\private_conversation.tar.gz (3051279 bytes, sha256 921518e1a750fd2595ac030412fd05ec65909b7b10e5548766c27588f111b34c)
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.command.txt:1: trailing whitespace.
++py -3 scripts/build-package.py --format release --release-dir dist/release-v0.1.19-clean
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.command.txt:2: trailing whitespace.
++workdir=K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\dist\release-0.1.19-clean\source
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/build.stream-capture.txt:1: trailing whitespace.
++exec_command returned one combined output field; stdout and stderr were not captured separately.
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/candidate-compare.stream-capture.txt:1: trailing whitespace.
++exec_command returned one combined output field; stdout and stderr were not captured separately.
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/clean-build-verification/git-tree.command.txt:1: trailing whitespace.
++git -c safe.directory='K:/ActorwrightExchange/projects/CHIM-PrivateConversation-dev' -C 'K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev' rev-parse 'c7ec6cde8231ebb103ef7d443b09789eb4b29691^{tree}'
+plugins/private_conversation/tasks/release-0.1.19/publication-evidence/public-verification/public-verification-command.txt:31: trailing whitespace.
++Orchestration assertions: local exact-name and byte-equality results all true; current API release assets equal the clean files by name/size/SHA-256; public-release.json and latest-release.json match current API identity/body/status; current API body equals the committed note; and current 0.1.18 release identity/status/asset name-ID-size-digest tuples equal both before and after snapshots.
