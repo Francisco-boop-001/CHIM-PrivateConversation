@@ -1,0 +1,6 @@
+tasks/player-docs-2026-10-16/docs-publication-receipt.md
+tasks/player-docs-2026-10-16/docs-refresh-public-release.json
+tasks/player-docs-2026-10-16/final-receipt-stage-allowlist.txt
+tasks/player-docs-2026-10-16/hub-docs-independent-review.md
+tasks/release-0.1.20/publication-evidence/final-publication-receipt.md
+tasks/todo.md
