@@ -521,3 +521,14 @@ Baseline captured before publication work: repository `K:\ActorwrightExchange\pr
 ### Publication review
 
 The documentation update is public at canonical commit 98d9e0bae656b83e6d04cbb348ebb4182896b0ff; the existing 0.1.21 release body was updated from the separately approved draft, and the PCV-only hub mirror landed at 27b835165f8432b807f256dadc971f8156698ace. Exact source, release, hub, and scope details are in [the 2026-10-18 publication receipt](docs-publication-2026-10-18/publication-receipt.md). The three old missing links in historical task-list material predate this publication and were left unchanged; they are not new reader-facing links. No tests, installation, provider requests, game actions, or product/runtime changes were part of this documentation publication.
+
+## Confirmed critique fixes and 0.1.22 BETA publication — 2026-10-20
+
+- [x] Complete D1 action-prompt scoping, D2 scene-card feedback, D3 clock rollback handling, and R7 truthful timeout reasons under exclusive Luna Max/Ponytail FULL ownership.
+- [x] Retain focused RED/GREEN outputs from the test distro and review all affected callers and failure paths; keep other CHIM components unchanged.
+- [ ] Update useful player-facing guidance and release notes in the established tone, build and verify the new immutable release, commit, push and publish only after the evidence gates pass.
+- [ ] Record release verification and a final review in [the task plan](critique-fixes-2026-10-20/plan.md).
+
+### Review
+
+Implementation, bounded verification, cross-review and player documentation are accepted. The package candidate passed the required four checks and independent content inventory; clean committed-source rebuild and publication remain pending. Earlier beta gameplay evidence remains version-qualified; this maintenance task does not claim a new in-game session.
