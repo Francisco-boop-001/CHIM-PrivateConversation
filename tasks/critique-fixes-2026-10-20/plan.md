@@ -19,9 +19,9 @@ The dedicated PCV development checkout is clean of tracked changes and on its ex
 - [x] Complete the R7 UI consumer after the producer contract is settled.
 - [x] Review every diff, connected caller, failure path and targeted GREEN output; fix findings with the same owners.
 - [x] Prepare informative, sarcastic and self-deprecating user documentation and 0.1.22 BETA metadata after code acceptance; keep prior gameplay evidence distinct from this release's fixture evidence.
-- [ ] Verify packages and deterministic clean committed-source build, exact payload/allowlist/checksums, and protected components.
-- [ ] Publish new immutable release assets, verify fresh public downloads, then advance canonical/hub references non-force as applicable.
-- [ ] Record final publication receipts, review and test-window release.
+- [x] Verify packages and deterministic clean committed-source build, exact payload/allowlist/checksums, and protected components.
+- [x] Publish new immutable release assets, verify fresh public downloads, then advance canonical/hub references non-force as applicable.
+- [x] Record final publication receipts, review and test-window release.
 
 ## Verification limits
 
@@ -29,8 +29,10 @@ Use only `DwemerAI4Skyrim3-test` for PHP/runtime execution, synthetic fixture da
 
 ## Review
 
-The lead reviewed all four product changes and their connected paths. Focused regressions failed against the baseline and passed after correction, including a clean baseline-versus-fixed run of the corrected UI fixture. Cross-reviews found no supported code blocker; report wording/link corrections are complete. The player documentation and metadata are accepted. The candidate passed four package tests and 14 independent inventory checks; all 21 source hashes stayed stable during packaging. Clean committed-source rebuild and publication remain pending. See [verification.md](verification.md).
+The lead reviewed all four product changes and their connected paths. Focused regressions failed against the baseline and passed after correction, including a clean baseline-versus-fixed run of the corrected UI fixture. Cross-reviews found no supported code blocker; report wording/link corrections are complete. The player documentation and metadata are accepted. The candidate passed four package tests and 14 independent inventory checks; all 21 source hashes stayed stable during packaging. Clean committed-source rebuild and canonical publication passed, including all five fresh anonymous downloads. The PCV-only hub mirror also passed its local diff, protected-tree, committed source-map and public tree gates. See [verification.md](verification.md) and [the publication receipt](../release-0.1.22/publication-receipt.md).
 
 For the hub, use the PCV-specific clean clone refreshed from current public main on a new publication branch. Preserve the Mind Poisoning-owned clone and every non-PCV path. The hub mirror follows successful canonical release verification and must not overwrite newer MP work.
 
 The test window was released to Department after all PHP checks, with explicit user-authorized coordination. See [the corrected runtime release receipt](runtime/runtime-release-corrected.json). The initial receipt is retained: PowerShell automatically parsed a timestamp and its string comparison falsely reported a mismatch; an exact UTC-tick/length comparison confirmed the recorded gaming metadata was unchanged. No live distro entry occurred.
+
+Final publication review: canonical release source is 066ffdabcc132e5c43a6c620e8ffeff70f19854a; public hub mirror is 66e92d77048bdb75669f4d506d5e51cf71ddcfe7. Both non-forced publications and all five anonymous downloads are verified. Independent publication review passed. Remaining limitations are the stated unrun installation/provider/native-gameplay checks, not unfinished release gates. Final evidence is committed separately without changing the runtime payload or immutable tag.

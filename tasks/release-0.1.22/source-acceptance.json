@@ -1,0 +1,23 @@
+{
+  "recorded_at_utc": "2026-10-20T10:42:17.3342344Z",
+  "source_commit": "066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "source_tree": "049a10126234cec80497dd6dadb3834c08b561ec",
+  "lead_review": "Approved D1 D2 D3 R7 product diffs, connected callers, failure paths and original verification output",
+  "independent_reviews": [
+    "tasks/critique-fixes-2026-10-20/integration-review.md",
+    "tasks/critique-fixes-2026-10-20/state-review.md"
+  ],
+  "documentation_gate": {
+    "secrets_or_raw_gameplay_found": false,
+    "local_markdown_links": 73,
+    "current_tag_links_mapped_to_source_or_assets": 15,
+    "future_release_page": "Pending public verification"
+  },
+  "staging": {
+    "allowlist_enforced": true,
+    "original_transcript_whitespace_exception": "runtime/preflight.output.txt retained trailing blank",
+    "path_count": 94
+  },
+  "test_window": "Released to Department; no further distro access",
+  "publication": "Pending clean committed-source package equality"
+}

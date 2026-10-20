@@ -1,0 +1,22 @@
+{
+  "recorded_at_utc": "2026-10-20T10:34:52.692Z",
+  "hub_repository": "Francisco-boop-001/CHIM-Plugins",
+  "origin_url": "https://github.com/Francisco-boop-001/CHIM-Plugins.git",
+  "checkout": "K:/ActorwrightExchange/projects/CHIM-Plugins-pcv-0.1.19-hub",
+  "worktree_count": 1,
+  "worktree_and_index_clean": true,
+  "branch": "publish/private-conversation-0.1.22",
+  "branch_head": "c1cd9d0cb3739c0908e6561e4c8ddd2436d3a70c",
+  "verified_public_origin_main": "c1cd9d0cb3739c0908e6561e4c8ddd2436d3a70c",
+  "fetched_origin_main": "c1cd9d0cb3739c0908e6561e4c8ddd2436d3a70c",
+  "public_ref_matched_fetched_ref": true,
+  "base_commit_tree": "8844dd24954a1b670c8e59b50f5760aee9b6e221",
+  "pcv_subtree": "plugins/private_conversation/",
+  "pcv_subtree_tree": "0a7395b75df69e06f81421feb75e121f9b58dc2f",
+  "pcv_tracked_path_count": 366,
+  "pcv_path_manifest": "pcv-paths.txt",
+  "pcv_path_manifest_sha256": "75e06b2e4cd719680c64ef00a224588102c84561d2f1adc94ffad69744c3f8d0",
+  "preserved_preexisting_local_main": "27b835165f8432b807f256dadc971f8156698ace",
+  "preserved_preexisting_local_main_tree": "40987d8b2f4e685627d17bf007e14ab5c23a8b4d",
+  "evidence": "Fetch was non-forced; local main was not moved. New publication branch starts at the verified public main. No product files mirrored, staged, committed, or pushed."
+}

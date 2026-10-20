@@ -526,9 +526,9 @@ The documentation update is public at canonical commit 98d9e0bae656b83e6d04cbb34
 
 - [x] Complete D1 action-prompt scoping, D2 scene-card feedback, D3 clock rollback handling, and R7 truthful timeout reasons under exclusive Luna Max/Ponytail FULL ownership.
 - [x] Retain focused RED/GREEN outputs from the test distro and review all affected callers and failure paths; keep other CHIM components unchanged.
-- [ ] Update useful player-facing guidance and release notes in the established tone, build and verify the new immutable release, commit, push and publish only after the evidence gates pass.
-- [ ] Record release verification and a final review in [the task plan](critique-fixes-2026-10-20/plan.md).
+- [x] Update useful player-facing guidance and release notes in the established tone, build and verify the new immutable release, commit, push and publish only after the evidence gates pass.
+- [x] Record release verification and a final review in [the task plan](critique-fixes-2026-10-20/plan.md).
 
 ### Review
 
-Implementation, bounded verification, cross-review and player documentation are accepted. The package candidate passed the required four checks and independent content inventory; clean committed-source rebuild and publication remain pending. Earlier beta gameplay evidence remains version-qualified; this maintenance task does not claim a new in-game session.
+Implementation, bounded verification, cross-review and player documentation are accepted. The four package checks and independent content inventory passed. Clean committed-source rebuild, draft downloads and all five anonymous public downloads are byte-identical. Canonical 0.1.22 BETA and the PCV-only hub mirror are public; prior release assets and all other plugin work remain preserved. See [the publication receipt](release-0.1.22/publication-receipt.md). Earlier beta gameplay evidence remains version-qualified; this maintenance task does not claim a new in-game session.

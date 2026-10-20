@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-10-20T11:11:21.0390603Z",
+  "status": "PASS",
+  "hub_repository": "Francisco-boop-001/CHIM-Plugins",
+  "hub_commit": "66e92d77048bdb75669f4d506d5e51cf71ddcfe7",
+  "public_tree": "438494604c69934b5db9e14f7845d4f57379bd6e",
+  "expected_tree": "438494604c69934b5db9e14f7845d4f57379bd6e",
+  "public_tree_exact": true,
+  "public_main_ref": "66e92d77048bdb75669f4d506d5e51cf71ddcfe7\trefs/heads/main",
+  "non_forced_push": true,
+  "public_manifest_version": "0.1.22",
+  "canonical_source_commit": "066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "mapped_blob_mode_matches": 109,
+  "server_payload_files": 21,
+  "protected_tracked_paths": 258,
+  "protected_scope": "All paths outside approved PCV mapping and non-PCV root README text preserved",
+  "hub_worktree_and_index_clean": true,
+  "source_url": "https://github.com/Francisco-boop-001/CHIM-Plugins/commit/66e92d77048bdb75669f4d506d5e51cf71ddcfe7"
+}

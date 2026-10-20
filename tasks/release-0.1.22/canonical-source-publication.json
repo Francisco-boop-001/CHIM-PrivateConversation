@@ -1,0 +1,15 @@
+{
+  "recorded_at_utc": "2026-10-20T10:48:44.4064004Z",
+  "status": "PASS",
+  "source_commit": "066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "source_tree": "049a10126234cec80497dd6dadb3834c08b561ec",
+  "non_forced_main_push": true,
+  "public_refs": [
+    "066ffdabcc132e5c43a6c620e8ffeff70f19854a\trefs/heads/main",
+    "e056638a9a083c91634da7619e469645cf2d09bc\trefs/tags/private_conversation-v0.1.21",
+    "f1e1b4b410bca981afb1f7e95de7ea84f9dd2981\trefs/tags/private_conversation-v0.1.21^{}",
+    "e25b8977e97dd70affa9378524c578e9484c1955\trefs/tags/private_conversation-v0.1.22",
+    "066ffdabcc132e5c43a6c620e8ffeff70f19854a\trefs/tags/private_conversation-v0.1.22^{}"
+  ],
+  "prior_release_tag_preserved": true
+}

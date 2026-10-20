@@ -1,0 +1,61 @@
+{
+  "lines": [
+    {
+      "line": 34,
+      "before": "### Private Conversation 0.1.21 — BETA",
+      "after": "### Private Conversation 0.1.22 — BETA"
+    },
+    {
+      "line": 40,
+      "before": "The public 0.1.21 BETA release has the same 20 non-manifest package payload files as exercised 0.1.20. The evidence record covers 0.1.20 runtime observations and the 0.1.21 package comparison; 0.1.21 itself was not separately played in-game. See [current beta evidence and limits](plugins/private_conversation/docs/operator-acceptance.md) and the [0.1.21 release note](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/blob/private_conversation-v0.1.21/distribution/private_conversation-v0.1.21.md).",
+      "after": "The public 0.1.22 BETA release contains 21 server payload files and changes runtime code. Its [focused verification record](plugins/private_conversation/tasks/critique-fixes-2026-10-20/verification.md) records synthetic test-distro fixture RED/GREEN results and syntax checks; these do not establish a fresh installation, provider run, or Skyrim gameplay session. See [current beta evidence and limits](plugins/private_conversation/docs/operator-acceptance.md) and the [0.1.22 release note](plugins/private_conversation/distribution/private_conversation-v0.1.22.md)."
+    },
+    {
+      "line": 42,
+      "before": "[Release and checksums](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/tag/private_conversation-v0.1.21) · [Release notes](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/blob/private_conversation-v0.1.21/distribution/private_conversation-v0.1.21.md) · [Source](https://github.com/Francisco-boop-001/CHIM-PrivateConversation) · [Player guide](plugins/private_conversation/docs/player-guide.md) · [Current README and installation](plugins/private_conversation/README.md#install-and-update) · [Logging guide](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/blob/private_conversation-v0.1.21/docs/logging-revision-2.md)",
+      "after": "[Release and checksums](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/tag/private_conversation-v0.1.22) · [Release notes](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/blob/private_conversation-v0.1.22/distribution/private_conversation-v0.1.22.md) · [Source](https://github.com/Francisco-boop-001/CHIM-PrivateConversation) · [Player guide](plugins/private_conversation/docs/player-guide.md) · [Current README and installation](plugins/private_conversation/README.md#install-and-update) · [Logging guide](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/blob/private_conversation-v0.1.22/docs/logging-revision-2.md)"
+    },
+    {
+      "line": 67,
+      "before": "| Private Conversation 0.1.21 BETA | [Download](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.21/private_conversation-0.1.21-mo2.zip) | [Download](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.21/private_conversation-0.1.21.dwpkg) | [Download](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.21/private_conversation.tar.gz) |",
+      "after": "| Private Conversation 0.1.22 BETA | [Download](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.22/private_conversation-0.1.22-mo2.zip) | [Download](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.22/private_conversation-0.1.22.dwpkg) | [Download](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.22/private_conversation.tar.gz) |"
+    },
+    {
+      "line": 72,
+      "before": "Private Conversation’s discovery asset is the flat [`chim-plugin.tar.gz`](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.21/chim-plugin.tar.gz). The table entry above is the wrapped legacy `private_conversation.tar.gz` route; CHIM’s repository installer strips that configured wrapper, so users should not unpack it by hand. The published BETA release has `prerelease=false` so CHIM can discover it; that flag is a filter, not a maturity certification.",
+      "after": "Private Conversation’s discovery asset is the flat [`chim-plugin.tar.gz`](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/releases/download/private_conversation-v0.1.22/chim-plugin.tar.gz). The table entry above is the wrapped legacy `private_conversation.tar.gz` route; CHIM’s repository installer strips that configured wrapper, so users should not unpack it by hand. The published BETA release has `prerelease=false` so CHIM can discover it; that flag is a filter, not a maturity certification."
+    },
+    {
+      "line": 90,
+      "before": "For Mind Poisoning, open CHIM Plugin Manager → Plugin Page → Logs → Download filtered plugin log. For Private Conversation, follow its [tagged logging guide](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/blob/private_conversation-v0.1.21/docs/logging-revision-2.md); for Sworn & Scorned, follow its [tagged guide](https://github.com/Francisco-boop-001/CHIM-SwornAndScorned/blob/sworn_and_scorned-v0.1.5/README.md). Each plugin has its own logging instructions.",
+      "after": "For Mind Poisoning, open CHIM Plugin Manager → Plugin Page → Logs → Download filtered plugin log. For Private Conversation, follow its [tagged logging guide](https://github.com/Francisco-boop-001/CHIM-PrivateConversation/blob/private_conversation-v0.1.22/docs/logging-revision-2.md); for Sworn & Scorned, follow its [tagged guide](https://github.com/Francisco-boop-001/CHIM-SwornAndScorned/blob/sworn_and_scorned-v0.1.5/README.md). Each plugin has its own logging instructions."
+    }
+  ],
+  "local_links": [
+    {
+      "line": 40,
+      "target": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/verification.md",
+      "exists": true
+    },
+    {
+      "line": 40,
+      "target": "plugins/private_conversation/docs/operator-acceptance.md",
+      "exists": true
+    },
+    {
+      "line": 40,
+      "target": "plugins/private_conversation/distribution/private_conversation-v0.1.22.md",
+      "exists": true
+    },
+    {
+      "line": 42,
+      "target": "plugins/private_conversation/docs/player-guide.md",
+      "exists": true
+    },
+    {
+      "line": 42,
+      "target": "plugins/private_conversation/README.md#install-and-update",
+      "exists": true
+    }
+  ]
+}

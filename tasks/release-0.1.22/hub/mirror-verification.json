@@ -1,0 +1,1043 @@
+{
+  "result": "PASS",
+  "hub_repository": "CHIM-Plugins",
+  "hub_branch": "publish/private-conversation-0.1.22",
+  "hub_head_before_commit": "c1cd9d0cb3739c0908e6561e4c8ddd2436d3a70c",
+  "public_origin_main": "c1cd9d0cb3739c0908e6561e4c8ddd2436d3a70c",
+  "canonical_source_commit": "066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "canonical_source_tree": "049a10126234cec80497dd6dadb3834c08b561ec",
+  "mapped_file_count": 109,
+  "server_payload_count": 21,
+  "server_payload_matches_source": true,
+  "package_inventory_source_hash_count": 21,
+  "changed_worktree_path_count": 94,
+  "staged_changes": false,
+  "protected_tracked_path_count": 258,
+  "protected_tracked_tree_exact": true,
+  "tracked_changes_outside_allowlist": [],
+  "readme_changed_lines": [
+    34,
+    40,
+    42,
+    67,
+    72,
+    90
+  ],
+  "readme_non_pcv_lines_unchanged": true,
+  "readme_local_links": [
+    {
+      "line": 40,
+      "target": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/verification.md",
+      "exists": true
+    },
+    {
+      "line": 40,
+      "target": "plugins/private_conversation/docs/operator-acceptance.md",
+      "exists": true
+    },
+    {
+      "line": 40,
+      "target": "plugins/private_conversation/distribution/private_conversation-v0.1.22.md",
+      "exists": true
+    },
+    {
+      "line": 42,
+      "target": "plugins/private_conversation/docs/player-guide.md",
+      "exists": true
+    },
+    {
+      "line": 42,
+      "target": "plugins/private_conversation/README.md#install-and-update",
+      "exists": true
+    }
+  ],
+  "mapped_files": [
+    {
+      "source_path": "distribution/private_conversation-v0.1.22.md",
+      "target_path": "plugins/private_conversation/distribution/private_conversation-v0.1.22.md",
+      "mode": "100644",
+      "blob": "eedc2c914caf856f5e172a1de405c1b9b550715e",
+      "matches": true
+    },
+    {
+      "source_path": "docs/player-guide.md",
+      "target_path": "plugins/private_conversation/docs/player-guide.md",
+      "mode": "100644",
+      "blob": "d66eab219d733823c29bbb4abdde77789e9168f9",
+      "matches": true
+    },
+    {
+      "source_path": "README.md",
+      "target_path": "plugins/private_conversation/README.md",
+      "mode": "100644",
+      "blob": "f348f1ab73c029bc90121bd9320b2ba864e358b9",
+      "matches": true
+    },
+    {
+      "source_path": "server/.htaccess",
+      "target_path": "plugins/private_conversation/server/.htaccess",
+      "mode": "100644",
+      "blob": "1cbcf1c9cd701e205bc9d7c3490617ecdcb65e80",
+      "matches": true
+    },
+    {
+      "source_path": "server/assets/private-conversation-scene.png",
+      "target_path": "plugins/private_conversation/server/assets/private-conversation-scene.png",
+      "mode": "100644",
+      "blob": "3cd50cad720f71cf5d71f710cf3f756f6df467f7",
+      "matches": true
+    },
+    {
+      "source_path": "server/assets/style.css",
+      "target_path": "plugins/private_conversation/server/assets/style.css",
+      "mode": "100644",
+      "blob": "3b0d9507fc9097cbcb3f69c4810dee633ba495a9",
+      "matches": true
+    },
+    {
+      "source_path": "server/assets/ui-refresh.js",
+      "target_path": "plugins/private_conversation/server/assets/ui-refresh.js",
+      "mode": "100644",
+      "blob": "89570cd8bf55541c9ccf134fccc9c8e9dcbc3fb0",
+      "matches": true
+    },
+    {
+      "source_path": "server/context_pre.php",
+      "target_path": "plugins/private_conversation/server/context_pre.php",
+      "mode": "100644",
+      "blob": "eb59fd005c957e5a4902192ef8332a47e69d3cc4",
+      "matches": true
+    },
+    {
+      "source_path": "server/context.php",
+      "target_path": "plugins/private_conversation/server/context.php",
+      "mode": "100644",
+      "blob": "01d712951f7a182ae8638b1c786c79b142a786d5",
+      "matches": true
+    },
+    {
+      "source_path": "server/diagnostics.php",
+      "target_path": "plugins/private_conversation/server/diagnostics.php",
+      "mode": "100644",
+      "blob": "7704333190a3bf82765ca50c4ac5e665967301e4",
+      "matches": true
+    },
+    {
+      "source_path": "server/index.php",
+      "target_path": "plugins/private_conversation/server/index.php",
+      "mode": "100644",
+      "blob": "37d1124359ad12341ea866fe88ff09f46d78f180",
+      "matches": true
+    },
+    {
+      "source_path": "server/installation_guard.php",
+      "target_path": "plugins/private_conversation/server/installation_guard.php",
+      "mode": "100644",
+      "blob": "dc1bb586fa51c7075b5c059521d61260f371b3dd",
+      "matches": true
+    },
+    {
+      "source_path": "server/json_response_custom.php",
+      "target_path": "plugins/private_conversation/server/json_response_custom.php",
+      "mode": "100644",
+      "blob": "c38b7e098238aa578711b00655eb980d7e841e4a",
+      "matches": true
+    },
+    {
+      "source_path": "server/log_reader.php",
+      "target_path": "plugins/private_conversation/server/log_reader.php",
+      "mode": "100644",
+      "blob": "9a750ee0065a6d94d42086714361729bfd9c8770",
+      "matches": true
+    },
+    {
+      "source_path": "server/log.php",
+      "target_path": "plugins/private_conversation/server/log.php",
+      "mode": "100644",
+      "blob": "2d61773a5b2ebdef63b5f2703d65848767e7758a",
+      "matches": true
+    },
+    {
+      "source_path": "server/manifest.json",
+      "target_path": "plugins/private_conversation/server/manifest.json",
+      "mode": "100644",
+      "blob": "08d2d7b6ae01b8a0755be218a7c1d25c6e7baa8c",
+      "matches": true
+    },
+    {
+      "source_path": "server/postrequest.php",
+      "target_path": "plugins/private_conversation/server/postrequest.php",
+      "mode": "100644",
+      "blob": "018683b34d9a9cd56312537600ebf50a33a5c015",
+      "matches": true
+    },
+    {
+      "source_path": "server/prepostrequest.php",
+      "target_path": "plugins/private_conversation/server/prepostrequest.php",
+      "mode": "100644",
+      "blob": "40be8450b42375b9261f26faa48abe3052f59ad2",
+      "matches": true
+    },
+    {
+      "source_path": "server/preprocessing.php",
+      "target_path": "plugins/private_conversation/server/preprocessing.php",
+      "mode": "100644",
+      "blob": "cfa93f17b191753d8dded0cb5cb73d4c4e0752d7",
+      "matches": true
+    },
+    {
+      "source_path": "server/prerequest.php",
+      "target_path": "plugins/private_conversation/server/prerequest.php",
+      "mode": "100644",
+      "blob": "6ed079daac9a4a7f95f19b3415fd02c8fee989cf",
+      "matches": true
+    },
+    {
+      "source_path": "server/reflection_receipt.php",
+      "target_path": "plugins/private_conversation/server/reflection_receipt.php",
+      "mode": "100644",
+      "blob": "bba9115747b970ef7c9285f68382a5977325e692",
+      "matches": true
+    },
+    {
+      "source_path": "server/reflection.php",
+      "target_path": "plugins/private_conversation/server/reflection.php",
+      "mode": "100644",
+      "blob": "10ecf7db7c5eb67d71550e4d2e1f02cb25668c7c",
+      "matches": true
+    },
+    {
+      "source_path": "server/scope.php",
+      "target_path": "plugins/private_conversation/server/scope.php",
+      "mode": "100644",
+      "blob": "09d35d24556745d48a8ce4aca3ad2573e4864138",
+      "matches": true
+    },
+    {
+      "source_path": "server/state.php",
+      "target_path": "plugins/private_conversation/server/state.php",
+      "mode": "100644",
+      "blob": "b1cd0b59e3c4c0856d8f6fb1ca624fb7583db4f0",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/d1/implementation-report.md",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/d1/implementation-report.md",
+      "mode": "100644",
+      "blob": "bc7a368f7c12a13043c70d77592f748cb70b4dc0",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/docs-review.md",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/docs-review.md",
+      "mode": "100644",
+      "blob": "198bf2f0878cc46790c7527a33c2e5dbe14dc5dd",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/hub-preflight.md",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/hub-preflight.md",
+      "mode": "100644",
+      "blob": "7b5bdd68c9fb7ae6665e9eb31344fec7c9dcd425",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/integration-review.md",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/integration-review.md",
+      "mode": "100644",
+      "blob": "6595f27a1f199fd3ccbe8665c9d243c26fdda555",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/plan.md",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/plan.md",
+      "mode": "100644",
+      "blob": "5389090a33cb44c3c4a948f2cf3520aa095ee2a9",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/actions-hook-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/actions-hook-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/actions-hook-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/actions-hook-green.output.txt",
+      "mode": "100644",
+      "blob": "094c16a743b2ff3dbf8c095ba82db2a41e1297bf",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/card-validator-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/card-validator-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/card-validator-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/card-validator-green.output.txt",
+      "mode": "100644",
+      "blob": "ff7cd917b53446da620c2901f6da347f45c48b05",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-green.output.txt",
+      "mode": "100644",
+      "blob": "f858a40cf2513ea018633059323c4888605c24ac",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-red.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-red.exit.txt",
+      "mode": "100644",
+      "blob": "d00491fd7e5bb6fa28c517a0bb32b8b506539d4d",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-red.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-red.output.txt",
+      "mode": "100644",
+      "blob": "0c8e6675e3cfd166ed28a9661754a58a2121a316",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-talk-baseline.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-baseline.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-talk-baseline.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-baseline.output.txt",
+      "mode": "100644",
+      "blob": "7ec834f1e7ffb976688dff92aa994c8dd6f041a3",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-talk-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d1-talk-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-green.output.txt",
+      "mode": "100644",
+      "blob": "262c85d85af9edc2541030d69d173c139489f821",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-corrected-fixture-red.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-corrected-fixture-red.exit.txt",
+      "mode": "100644",
+      "blob": "ace9d0362138cfabef3b6feb959808748e4263b4",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-corrected-fixture-red.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-corrected-fixture-red.output.txt",
+      "mode": "100644",
+      "blob": "5c693a8c80706edcd8a79c5225aceaa654c7584f",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-green-initial.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green-initial.exit.txt",
+      "mode": "100644",
+      "blob": "ace9d0362138cfabef3b6feb959808748e4263b4",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-green-initial.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green-initial.output.txt",
+      "mode": "100644",
+      "blob": "e1ae5961afbb82c98bef2919e467c6be0760ea88",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green.output.txt",
+      "mode": "100644",
+      "blob": "bc32f676124da7b1eab363461ab01aef05aa5b86",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-red.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-red.exit.txt",
+      "mode": "100644",
+      "blob": "ace9d0362138cfabef3b6feb959808748e4263b4",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d2-red.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-red.output.txt",
+      "mode": "100644",
+      "blob": "e1ae5961afbb82c98bef2919e467c6be0760ea88",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d3-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d3-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-green.output.txt",
+      "mode": "100644",
+      "blob": "0e54375ab87dd0d14544d1ec60f3b07b78eebcd7",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d3-red.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-red.exit.txt",
+      "mode": "100644",
+      "blob": "d00491fd7e5bb6fa28c517a0bb32b8b506539d4d",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/d3-red.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-red.output.txt",
+      "mode": "100644",
+      "blob": "7e0d9a80ca6c44b716314bb886d594f0e8f3931b",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/host-before.json",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/host-before.json",
+      "mode": "100644",
+      "blob": "b58b351647dd030fd568c25fb1e04b073ef87bf8",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-clock-test.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-clock-test.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-clock-test.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-clock-test.output.txt",
+      "mode": "100644",
+      "blob": "3dfe401d0770952f4f78457d8380367c06cd4908",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-context-pre.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-context-pre.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-context-pre.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-context-pre.output.txt",
+      "mode": "100644",
+      "blob": "9c5659590f3484cbc7dda3d12142bb6179814526",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-d1-test.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-d1-test.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-d1-test.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-d1-test.output.txt",
+      "mode": "100644",
+      "blob": "14cd0d57d1ccb1137e8ca292dc59c4ce9a77ce21",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-index.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-index.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-index.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-index.output.txt",
+      "mode": "100644",
+      "blob": "b9278829ef2626d8d7e118321aed3b564423d4ba",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-log.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-log.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-log.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-log.output.txt",
+      "mode": "100644",
+      "blob": "eb763f84dd3f752bbabcd55fbc34f61f2963db78",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-page-test.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-page-test.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-page-test.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-page-test.output.txt",
+      "mode": "100644",
+      "blob": "03425cf574afe6107ac1ed60869b78c18565516a",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-resilience-test.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-resilience-test.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-resilience-test.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-resilience-test.output.txt",
+      "mode": "100644",
+      "blob": "50bc3ad28eb3c00a9c4d38054f95d90dba8f17dc",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-scope-test.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-scope-test.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-scope-test.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-scope-test.output.txt",
+      "mode": "100644",
+      "blob": "0bc3c92e68ccc3dd8c73c3a0046fd17f687a6611",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-state.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-state.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/lint-state.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-state.output.txt",
+      "mode": "100644",
+      "blob": "8a4caa01c71bf633df9b94288884fe53e5b38728",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/php.ini",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/php.ini",
+      "mode": "100644",
+      "blob": "43cfde941ae077c7f24d8bb96d87ceff38f0e842",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/preflight.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/preflight.output.txt",
+      "mode": "100644",
+      "blob": "5c03e6919b035525b0747df06defbb24eb5489dc",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/preflight.sh",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/preflight.sh",
+      "mode": "100644",
+      "blob": "10635a4a5c248d814ecf01625b133ca0320f3d88",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-green.output.txt",
+      "mode": "100644",
+      "blob": "21a68ede04e4d21894db824b16d558dfa2181de4",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-red.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-red.exit.txt",
+      "mode": "100644",
+      "blob": "d00491fd7e5bb6fa28c517a0bb32b8b506539d4d",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-red.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-red.output.txt",
+      "mode": "100644",
+      "blob": "a98b3ea8493c8f71e8fa7851454452a2221adf83",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-ui-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-ui-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-green.output.txt",
+      "mode": "100644",
+      "blob": "bc32f676124da7b1eab363461ab01aef05aa5b86",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-ui-red.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-red.exit.txt",
+      "mode": "100644",
+      "blob": "ace9d0362138cfabef3b6feb959808748e4263b4",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/r7-ui-red.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-red.output.txt",
+      "mode": "100644",
+      "blob": "3358fab49855d518f12ddce7ab08a04232916319",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/run-check.sh",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/run-check.sh",
+      "mode": "100644",
+      "blob": "ce8db4bb09029631d7622a3afebb780b428a814e",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/runtime-release-corrected.json",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/runtime-release-corrected.json",
+      "mode": "100644",
+      "blob": "cac353077b4ab11b12969b1b6fd4ae8c0a4603cc",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/runtime-release.json",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/runtime-release.json",
+      "mode": "100644",
+      "blob": "09bb3c8943d90d98d185f2be850ac81d1671c6bc",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/scope-final-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-final-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/scope-final-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-final-green.output.txt",
+      "mode": "100644",
+      "blob": "3d549d5098a280a0f5595ba9484d9a2cfc4a2403",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/scope-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/scope-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-green.output.txt",
+      "mode": "100644",
+      "blob": "aafa0b918cd13174b1775a3b58d4e62b4c5c3b6a",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/state-compat-green.exit.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/state-compat-green.exit.txt",
+      "mode": "100644",
+      "blob": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/runtime/state-compat-green.output.txt",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/state-compat-green.output.txt",
+      "mode": "100644",
+      "blob": "eed067b33d4072bf510071cd98a77250bfe50245",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/state-review.md",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/state-review.md",
+      "mode": "100644",
+      "blob": "cb1d4b99ede31d2f5a1fc37ff253d118f801a80e",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/critique-fixes-2026-10-20/verification.md",
+      "target_path": "plugins/private_conversation/tasks/critique-fixes-2026-10-20/verification.md",
+      "mode": "100644",
+      "blob": "423abbb67ac927f7c16806ab0e2c04ebddd71e88",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/inventory-provenance.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/inventory-provenance.json",
+      "mode": "100644",
+      "blob": "0137af941582abf6a9326bfd8ecd724f2fb5e71f",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/inventory.py",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/inventory.py",
+      "mode": "100644",
+      "blob": "cea78c18280b694e8956955f6028b64269eb08dd",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/package-build.run.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-build.run.json",
+      "mode": "100644",
+      "blob": "1b2f23d5a8667edfafa85c82cc100e15593843fa",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/package-check.run.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-check.run.json",
+      "mode": "100644",
+      "blob": "5f3999465bd54900926992d2d1de094e03426d8d",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/package-inventory.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-inventory.json",
+      "mode": "100644",
+      "blob": "1b14ed94798822905def8830a885630fac837686",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/package-inventory.run.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-inventory.run.json",
+      "mode": "100644",
+      "blob": "9f9bd9d9e0a3d9659f2b147d76f4990cd27e295e",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/source-hashes-after.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/source-hashes-after.json",
+      "mode": "100644",
+      "blob": "723fdf31f7c180ed53f14833637c2d51f5278a63",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/package-evidence/source-hashes-before.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/package-evidence/source-hashes-before.json",
+      "mode": "100644",
+      "blob": "723fdf31f7c180ed53f14833637c2d51f5278a63",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/publication-baseline.json",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/publication-baseline.json",
+      "mode": "100644",
+      "blob": "a0badbe740015c054a3c03b67689fb3ac451cbee",
+      "matches": true
+    },
+    {
+      "source_path": "tasks/release-0.1.22/release-body.md",
+      "target_path": "plugins/private_conversation/tasks/release-0.1.22/release-body.md",
+      "mode": "100644",
+      "blob": "bb31834663e35c263e2045b5761f29bff9cde9ec",
+      "matches": true
+    },
+    {
+      "source_path": "tests/d1_actions_prompt_check.php",
+      "target_path": "plugins/private_conversation/tests/d1_actions_prompt_check.php",
+      "mode": "100644",
+      "blob": "6ed56c63fd43079c208794e95a33c099ecd74727",
+      "matches": true
+    },
+    {
+      "source_path": "tests/page_check.php",
+      "target_path": "plugins/private_conversation/tests/page_check.php",
+      "mode": "100644",
+      "blob": "59ea4ccd1e039dc3fa92b2dfd6a746435f738995",
+      "matches": true
+    },
+    {
+      "source_path": "tests/scene_resilience_check.php",
+      "target_path": "plugins/private_conversation/tests/scene_resilience_check.php",
+      "mode": "100644",
+      "blob": "a38bfdc74a5dab1e14440f170fa53365cd93cb0d",
+      "matches": true
+    },
+    {
+      "source_path": "tests/scope_check.php",
+      "target_path": "plugins/private_conversation/tests/scope_check.php",
+      "mode": "100644",
+      "blob": "8e5907fb12f46675c9c8431d8122cacfd9b2a969",
+      "matches": true
+    },
+    {
+      "source_path": "tests/state_clock_regression_check.php",
+      "target_path": "plugins/private_conversation/tests/state_clock_regression_check.php",
+      "mode": "100644",
+      "blob": "6a03c7574c06aaa12526965198d07bc19e92cd8d",
+      "matches": true
+    }
+  ],
+  "server_payload": [
+    {
+      "path": "server/.htaccess",
+      "blob": "1cbcf1c9cd701e205bc9d7c3490617ecdcb65e80",
+      "target_blob": "1cbcf1c9cd701e205bc9d7c3490617ecdcb65e80",
+      "matches": true
+    },
+    {
+      "path": "server/assets/private-conversation-scene.png",
+      "blob": "3cd50cad720f71cf5d71f710cf3f756f6df467f7",
+      "target_blob": "3cd50cad720f71cf5d71f710cf3f756f6df467f7",
+      "matches": true
+    },
+    {
+      "path": "server/assets/style.css",
+      "blob": "3b0d9507fc9097cbcb3f69c4810dee633ba495a9",
+      "target_blob": "3b0d9507fc9097cbcb3f69c4810dee633ba495a9",
+      "matches": true
+    },
+    {
+      "path": "server/assets/ui-refresh.js",
+      "blob": "89570cd8bf55541c9ccf134fccc9c8e9dcbc3fb0",
+      "target_blob": "89570cd8bf55541c9ccf134fccc9c8e9dcbc3fb0",
+      "matches": true
+    },
+    {
+      "path": "server/context_pre.php",
+      "blob": "eb59fd005c957e5a4902192ef8332a47e69d3cc4",
+      "target_blob": "eb59fd005c957e5a4902192ef8332a47e69d3cc4",
+      "matches": true
+    },
+    {
+      "path": "server/context.php",
+      "blob": "01d712951f7a182ae8638b1c786c79b142a786d5",
+      "target_blob": "01d712951f7a182ae8638b1c786c79b142a786d5",
+      "matches": true
+    },
+    {
+      "path": "server/diagnostics.php",
+      "blob": "7704333190a3bf82765ca50c4ac5e665967301e4",
+      "target_blob": "7704333190a3bf82765ca50c4ac5e665967301e4",
+      "matches": true
+    },
+    {
+      "path": "server/index.php",
+      "blob": "37d1124359ad12341ea866fe88ff09f46d78f180",
+      "target_blob": "37d1124359ad12341ea866fe88ff09f46d78f180",
+      "matches": true
+    },
+    {
+      "path": "server/installation_guard.php",
+      "blob": "dc1bb586fa51c7075b5c059521d61260f371b3dd",
+      "target_blob": "dc1bb586fa51c7075b5c059521d61260f371b3dd",
+      "matches": true
+    },
+    {
+      "path": "server/json_response_custom.php",
+      "blob": "c38b7e098238aa578711b00655eb980d7e841e4a",
+      "target_blob": "c38b7e098238aa578711b00655eb980d7e841e4a",
+      "matches": true
+    },
+    {
+      "path": "server/log_reader.php",
+      "blob": "9a750ee0065a6d94d42086714361729bfd9c8770",
+      "target_blob": "9a750ee0065a6d94d42086714361729bfd9c8770",
+      "matches": true
+    },
+    {
+      "path": "server/log.php",
+      "blob": "2d61773a5b2ebdef63b5f2703d65848767e7758a",
+      "target_blob": "2d61773a5b2ebdef63b5f2703d65848767e7758a",
+      "matches": true
+    },
+    {
+      "path": "server/manifest.json",
+      "blob": "08d2d7b6ae01b8a0755be218a7c1d25c6e7baa8c",
+      "target_blob": "08d2d7b6ae01b8a0755be218a7c1d25c6e7baa8c",
+      "matches": true
+    },
+    {
+      "path": "server/postrequest.php",
+      "blob": "018683b34d9a9cd56312537600ebf50a33a5c015",
+      "target_blob": "018683b34d9a9cd56312537600ebf50a33a5c015",
+      "matches": true
+    },
+    {
+      "path": "server/prepostrequest.php",
+      "blob": "40be8450b42375b9261f26faa48abe3052f59ad2",
+      "target_blob": "40be8450b42375b9261f26faa48abe3052f59ad2",
+      "matches": true
+    },
+    {
+      "path": "server/preprocessing.php",
+      "blob": "cfa93f17b191753d8dded0cb5cb73d4c4e0752d7",
+      "target_blob": "cfa93f17b191753d8dded0cb5cb73d4c4e0752d7",
+      "matches": true
+    },
+    {
+      "path": "server/prerequest.php",
+      "blob": "6ed079daac9a4a7f95f19b3415fd02c8fee989cf",
+      "target_blob": "6ed079daac9a4a7f95f19b3415fd02c8fee989cf",
+      "matches": true
+    },
+    {
+      "path": "server/reflection_receipt.php",
+      "blob": "bba9115747b970ef7c9285f68382a5977325e692",
+      "target_blob": "bba9115747b970ef7c9285f68382a5977325e692",
+      "matches": true
+    },
+    {
+      "path": "server/reflection.php",
+      "blob": "10ecf7db7c5eb67d71550e4d2e1f02cb25668c7c",
+      "target_blob": "10ecf7db7c5eb67d71550e4d2e1f02cb25668c7c",
+      "matches": true
+    },
+    {
+      "path": "server/scope.php",
+      "blob": "09d35d24556745d48a8ce4aca3ad2573e4864138",
+      "target_blob": "09d35d24556745d48a8ce4aca3ad2573e4864138",
+      "matches": true
+    },
+    {
+      "path": "server/state.php",
+      "blob": "b1cd0b59e3c4c0856d8f6fb1ca624fb7583db4f0",
+      "target_blob": "b1cd0b59e3c4c0856d8f6fb1ca624fb7583db4f0",
+      "matches": true
+    }
+  ],
+  "worktree_paths": [
+    "README.md",
+    "plugins/private_conversation/README.md",
+    "plugins/private_conversation/distribution/private_conversation-v0.1.22.md",
+    "plugins/private_conversation/docs/player-guide.md",
+    "plugins/private_conversation/server/context_pre.php",
+    "plugins/private_conversation/server/index.php",
+    "plugins/private_conversation/server/log.php",
+    "plugins/private_conversation/server/manifest.json",
+    "plugins/private_conversation/server/state.php",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/d1/implementation-report.md",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/docs-review.md",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/hub-preflight.md",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/integration-review.md",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/plan.md",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/actions-hook-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/actions-hook-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/card-validator-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/card-validator-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-red.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-red.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-baseline.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-baseline.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d1-talk-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-corrected-fixture-red.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-corrected-fixture-red.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green-initial.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green-initial.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-red.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d2-red.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-red.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/d3-red.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/host-before.json",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-clock-test.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-clock-test.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-context-pre.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-context-pre.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-d1-test.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-d1-test.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-index.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-index.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-log.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-log.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-page-test.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-page-test.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-resilience-test.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-resilience-test.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-scope-test.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-scope-test.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-state.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/lint-state.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/php.ini",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/preflight.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/preflight.sh",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-red.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-red.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-red.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/r7-ui-red.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/run-check.sh",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/runtime-release-corrected.json",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/runtime-release.json",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-final-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-final-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/scope-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/state-compat-green.exit.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/runtime/state-compat-green.output.txt",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/state-review.md",
+    "plugins/private_conversation/tasks/critique-fixes-2026-10-20/verification.md",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/inventory-provenance.json",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/inventory.py",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-build.run.json",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-check.run.json",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-inventory.json",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/package-inventory.run.json",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/source-hashes-after.json",
+    "plugins/private_conversation/tasks/release-0.1.22/package-evidence/source-hashes-before.json",
+    "plugins/private_conversation/tasks/release-0.1.22/publication-baseline.json",
+    "plugins/private_conversation/tasks/release-0.1.22/release-body.md",
+    "plugins/private_conversation/tests/d1_actions_prompt_check.php",
+    "plugins/private_conversation/tests/page_check.php",
+    "plugins/private_conversation/tests/scene_resilience_check.php",
+    "plugins/private_conversation/tests/scope_check.php",
+    "plugins/private_conversation/tests/state_clock_regression_check.php"
+  ]
+}

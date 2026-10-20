@@ -1,0 +1,7 @@
+{
+  "command": "git -c safe.directory=K:/ActorwrightExchange/projects/CHIM-PrivateConversation-dev -C K:/ActorwrightExchange/projects/CHIM-PrivateConversation-dev archive --format=zip --output=dist/release-v0.1.22-clean-source-066ffdab/source-archive.zip 066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "exit_code": 0,
+  "combined_output": "",
+  "resolved_commit": "066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "tree": "049a10126234cec80497dd6dadb3834c08b561ec"
+}

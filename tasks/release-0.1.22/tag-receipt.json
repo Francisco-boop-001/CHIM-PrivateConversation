@@ -1,0 +1,11 @@
+{
+  "recorded_at_utc": "2026-10-20T10:46:10.7554210Z",
+  "tag": "private_conversation-v0.1.22",
+  "source_commit": "066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "tag_object": "e25b8977e97dd70affa9378524c578e9484c1955",
+  "remote_readback": [
+    "e25b8977e97dd70affa9378524c578e9484c1955\trefs/tags/private_conversation-v0.1.22",
+    "066ffdabcc132e5c43a6c620e8ffeff70f19854a\trefs/tags/private_conversation-v0.1.22^{}"
+  ],
+  "gate": "clean committed-source five-asset byte equality PASS"
+}

@@ -1,0 +1,17 @@
+{
+  "commit": "066ffdabcc132e5c43a6c620e8ffeff70f19854a",
+  "tree": "049a10126234cec80497dd6dadb3834c08b561ec",
+  "expected_tree": "049a10126234cec80497dd6dadb3834c08b561ec",
+  "source_archive": "dist/release-v0.1.22-clean-source-066ffdab/source-archive.zip",
+  "source_archive_sha256": "f5c5608c4bf307c08abfa1315b0cebf48280adb70c46c8a63596c81ac8f86709",
+  "source_archive_bytes": 7124057,
+  "source_directory": "dist/release-v0.1.22-clean-source-066ffdab/source",
+  "builder_git_blob": "443b464c5e71df7b43cfe59ab9a69f6260557186",
+  "builder_export_hash_object": "443b464c5e71df7b43cfe59ab9a69f6260557186",
+  "builder_blob_match": true,
+  "manifest_git_blob": "08d2d7b6ae01b8a0755be218a7c1d25c6e7baa8c",
+  "manifest_export_hash_object": "08d2d7b6ae01b8a0755be218a7c1d25c6e7baa8c",
+  "manifest_blob_match": true,
+  "manifest_name": "private_conversation",
+  "manifest_version": "0.1.22"
+}
