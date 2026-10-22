@@ -1,0 +1,7 @@
+{
+  "command": "py -3 tasks/release-0.1.23/hub/prepare_hub_mirror.py",
+  "exit_code": 1,
+  "output": "Traceback (most recent call last):\n  File \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.23\\hub\\prepare_hub_mirror.py\", line 376, in <module>\n    main()\n  File \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.23\\hub\\prepare_hub_mirror.py\", line 204, in main\n    readme_after, readme_changes = prepared_readme(readme_before)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.23\\hub\\prepare_hub_mirror.py\", line 85, in prepared_readme\n    if not readme_content(lines[number - 1])[0].decode(\"utf-8\").startswith(prefix):\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.23\\hub\\prepare_hub_mirror.py\", line 65, in readme_content\n    if line.endswith(b\"\\r\\n\"):\n       ^^^^^^^^^^^^^^^^^^^^^^\nTypeError: endswith first arg must be str or a tuple of str, not bytes",
+  "hub_files_written": false,
+  "notes": "Preflight stopped before any hub worktree file was written."
+}

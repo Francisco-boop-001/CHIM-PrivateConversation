@@ -1,0 +1,12 @@
+{
+  "git_commit_error": "unable to write loose object file: No space left on device",
+  "subsequent_drive_check_free_bytes": 1239416832,
+  "removed_task_owned_duplicate_directory": "K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\dist\\release-v0.1.23-first-harness",
+  "removed_files": 5,
+  "removed_bytes": 12642059,
+  "all_removed_bytes_identical_to_retained_approved_assets": true,
+  "approved_candidate_and_all_verification_records_preserved": true,
+  "no_other_cleanup": true,
+  "retry_commit": "0be780db88521a576c1cba55a4b7f8dbc914ba00",
+  "retry_result": "PASS; unchanged prepared tree committed and non-force pushed"
+}

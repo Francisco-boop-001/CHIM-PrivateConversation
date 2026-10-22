@@ -1,0 +1,30 @@
+{
+  "all_worktree_changes_within_allowlist": true,
+  "canonical_source_commit": "77265202d7f4a47b88e1eb88131b21f4b0752020",
+  "canonical_source_tree": "0a0e0b7d6f55f9992a6aea7d9febfe8b83bf4653",
+  "hub_base": "6e52bcef4636206e410208abbae419eff5a74790",
+  "hub_branch": "publish/private-conversation-0.1.23",
+  "index_clean_no_staged_changes": true,
+  "mapped_blob_mode_matches": true,
+  "mapped_file_count": 154,
+  "protected_tracked_path_count": 258,
+  "protected_tracked_tree_exact": true,
+  "readme_changed_lines": [
+    34,
+    40,
+    42,
+    67,
+    72,
+    90
+  ],
+  "readme_non_pcv_lines_unchanged": true,
+  "readme_special_scope": "Only PCV release/version/download/discovery/support lines were changed.",
+  "result": "PASS",
+  "root_readme_matches_expected_after": true,
+  "server_payload_count": 21,
+  "server_payload_matches_source_tag": true,
+  "source_changed_path_count_mirrored": 140,
+  "source_changed_path_count_raw": 141,
+  "source_tasks_todo_excluded_and_target_preserved": true,
+  "unexpected_paths": []
+}

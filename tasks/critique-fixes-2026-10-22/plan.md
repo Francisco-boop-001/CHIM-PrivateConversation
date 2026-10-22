@@ -16,8 +16,8 @@ Baseline: 3cd9f840ec5ce3d66da1a5e72252c1d28929c6a5. The user authorizes the prev
 - [x] Task 2 / certify_routing: server/scope.php, server/preprocessing.php and directly necessary context hooks; scope/state-recovery/wrap tests. Expired-only readable unknown-playthrough state must not block; live/corrupt/unsafe state must still fail closed without unknown-identity writes. Wrap suffix always becomes scene direction while retaining included-player audience; ordinary player speech unchanged. PCV wrap no-reply sentinel wins over SHARMAT listener pin. No SHARMAT changes.
 - [x] Task 3 / docs_publication_verify: server/index.php, server/assets/ui-refresh.js and page/log-access/UI tests. Correct stale page fixture; accurate Free cap and Group voice copy. Restrict gateway log access to positively identified supported WSL; preserve direct loopback and trusted REMOTE_USER, reject forwarded/non-WSL gateway access. Report topology proof limits; no new auth system.
 - [x] Lead: coordinate MP lease, run baseline RED and focused GREEN in TEST; review every diff and actual caller/failure modes; return defects to owner. Cross-review after all patches; no broad reruns without a concrete remaining concern.
-- [ ] Documentation/release follow-up, assigned only after code acceptance: current guidance, evidence, metadata, packages, clean committed-source comparison and public download checks; preserve all non-PCV hub paths.
-- [ ] Lead: explicit staging, source commit, clean rebuild evidence, new immutable tag/release, canonical/hub push and final receipts after gates pass.
+- [x] Documentation/release follow-up, assigned only after code acceptance: current guidance, evidence, metadata, packages, clean committed-source comparison and public download checks; preserve all non-PCV hub paths.
+- [x] Lead: explicit staging, source commit, clean rebuild evidence, new immutable tag/release, canonical/hub push and final receipts after gates pass.
 
 ## Conflict and interface scan
 
@@ -36,10 +36,12 @@ Rejecting a queue must not consume the active scene or redirect the failed input
 
 ## Progress
 
-Plan and contract approved by user request. Baseline tracked clean; pre-existing untracked evidence preserved. All scoped runtime gates and source reviews are accepted; TEST has been released. Metadata and publication gates remain.
+Plan and contract approved by user request. Baseline tracked clean; pre-existing untracked evidence preserved. All scoped runtime gates and source reviews are accepted; TEST has been released. Metadata, clean build, draft/public download, independent review, canonical push and PCV-only hub gates are complete.
 
 ## Review
 
 Lead acceptance: the targeted failures were reproduced before fixes. All six product-file diffs and their callers, failure paths and fixtures were reviewed; defects in the first pending-map and wrap-prefix patches were returned to the responsible agents and corrected. Independent cross-reviews found no actionable remaining blocker. Nineteen selected PHP fixture files, fourteen host-only Node DOM cases and five PHP syntax checks passed. TEST is released; no installation, provider or gameplay proof is claimed. Packaging and public readback remain separate gates.
 
 Ruling: Kernel identity cannot distinguish Docker under WSL2 or prove original client identity behind NAT. Remove automatic gateway admission instead of adding heuristic WSL detection; retain direct loopback and server-authenticated REMOTE_USER. The supported Windows-host route may require existing web-server authentication. No new authentication system is introduced. This intentionally narrows an unsafe address exception and supersedes Task 3's proposed WSL predicate.
+
+Publication: 0.1.23 BETA is public at immutable source tag private_conversation-v0.1.23 (77265202d7f4a47b88e1eb88131b21f4b0752020). Canonical source and the PCV-only hub mirror were pushed non-force after their gates passed. See [the publication receipt](../release-0.1.23/publication-receipt.md). The final evidence-only commit does not change the release tag or packages.

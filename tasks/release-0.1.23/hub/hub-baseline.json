@@ -1,0 +1,18 @@
+{
+  "base_commit_tree": "524f67cccf46b87cade5637f5d97357fc89f62f2",
+  "branch": "publish/private-conversation-0.1.23",
+  "branch_head": "6e52bcef4636206e410208abbae419eff5a74790",
+  "checkout": "K:\\ActorwrightExchange\\projects\\CHIM-Plugins-pcv-0.1.19-hub",
+  "hub_repository": "Francisco-boop-001/CHIM-Plugins",
+  "pcv_path_manifest": "pcv-paths-before.txt",
+  "pcv_subtree": "plugins/private_conversation/",
+  "pcv_subtree_tree": "7c993cfaed75b6072095c78d2def93663c964ad0",
+  "pcv_tracked_path_count": 449,
+  "preserved_previous_0_1_22_branch": "66e92d77048bdb75669f4d506d5e51cf71ddcfe7",
+  "preserved_previous_0_1_22_tree": "438494604c69934b5db9e14f7845d4f57379bd6e",
+  "recorded_at_utc": "2026-10-22T18:30:14.556482+00:00",
+  "source_commit": "77265202d7f4a47b88e1eb88131b21f4b0752020",
+  "source_tree": "0a0e0b7d6f55f9992a6aea7d9febfe8b83bf4653",
+  "verified_fetched_origin_main": "6e52bcef4636206e410208abbae419eff5a74790",
+  "worktree_and_index_clean_before_mirror": true
+}

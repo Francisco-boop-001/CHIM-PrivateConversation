@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\tasks\release-0.1.23\hub\prepare_hub_mirror.py", line 412, in <module>
+    main()
+  File "K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\tasks\release-0.1.23\hub\prepare_hub_mirror.py", line 371, in main
+    "result": "PASS" if map_ok and protected_ok and readme_ok and server_ok and exact_worktree and staged_clean and todo_unchanged else "FAIL",
+                                                                                ^^^^^^^^^^^^^^
+NameError: name 'exact_worktree' is not defined

@@ -537,6 +537,10 @@ Implementation, bounded verification, cross-review and player documentation are 
 
 - [x] Complete exclusive state, routing, and UI/security tasks with original targeted RED/GREEN evidence.
 - [x] Review all diffs, connected callers and failure modes; coordinate TEST use with MP and keep all other components unchanged.
-- [ ] Update useful player guidance and release evidence, then commit, push and publish a new immutable release after all gates pass.
+- [x] Update useful player guidance and release evidence, then commit, push and publish a new immutable release after all gates pass.
 
 See [the task plan](critique-fixes-2026-10-22/plan.md).
+
+### 0.1.23 publication review
+
+All scoped fixes, review and bounded checks are accepted. The clean committed-source rebuild, draft and anonymous public downloads, independent publication audit and PCV-only hub readback passed. The test window is released; other components and prior releases are preserved. [Publication receipt](release-0.1.23/publication-receipt.md). No fresh installation, provider or Skyrim gameplay is claimed.

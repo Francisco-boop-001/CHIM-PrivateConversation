@@ -1,0 +1,11 @@
+{
+  "source_commit": "77265202d7f4a47b88e1eb88131b21f4b0752020",
+  "remote_refs": [
+    "e25b8977e97dd70affa9378524c578e9484c1955\trefs/tags/private_conversation-v0.1.22",
+    "066ffdabcc132e5c43a6c620e8ffeff70f19854a\trefs/tags/private_conversation-v0.1.22^{}",
+    "4f735d8276ec2fab9cdbe52cacc0b6b511e25fc4\trefs/tags/private_conversation-v0.1.23",
+    "77265202d7f4a47b88e1eb88131b21f4b0752020\trefs/tags/private_conversation-v0.1.23^{}"
+  ],
+  "new_tag_object": "4f735d8276ec2fab9cdbe52cacc0b6b511e25fc4",
+  "new_peeled": "77265202d7f4a47b88e1eb88131b21f4b0752020"
+}

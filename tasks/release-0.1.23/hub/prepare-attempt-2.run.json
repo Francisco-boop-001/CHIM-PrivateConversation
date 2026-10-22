@@ -1,0 +1,7 @@
+{
+  "command": "py -3 tasks/release-0.1.23/hub/prepare_hub_mirror.py",
+  "exit_code": 1,
+  "output": "Traceback (most recent call last):\n  File \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.23\\hub\\prepare_hub_mirror.py\", line 376, in <module>\n    main()\n  File \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.23\\hub\\prepare_hub_mirror.py\", line 204, in main\n    readme_after, readme_changes = prepared_readme(readme_before)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\tasks\\release-0.1.23\\hub\\prepare_hub_mirror.py\", line 113, in prepared_readme\n    return \"\".join(updated).encode(\"utf-8\"), changes\n           ^^^^^^^^^^^^^^^^\nTypeError: sequence item 0: expected str instance, bytes found",
+  "hub_files_written": false,
+  "notes": "Preflight stopped before any hub worktree file was written."
+}

@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\tasks\release-0.1.23\hub\prepare_hub_mirror.py", line 376, in <module>
+    main()
+  File "K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\tasks\release-0.1.23\hub\prepare_hub_mirror.py", line 360, in main
+    raise RuntimeError("One or more mirror verification gates failed; inspect mirror-verification.json")
+RuntimeError: One or more mirror verification gates failed; inspect mirror-verification.json

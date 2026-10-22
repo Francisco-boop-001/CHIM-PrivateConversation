@@ -1,0 +1,19 @@
+{
+  "checked_utc": "2026-10-22T18:35:39.203270+00:00",
+  "hub_base": "6e52bcef4636206e410208abbae419eff5a74790",
+  "proposed_tree": "a3baf069efed2a1e25b37567481715e75aeba482",
+  "actual_staged_paths": 141,
+  "mapped_files_match_blob_and_mode": 154,
+  "protected_entries_match_blob_and_mode": 258,
+  "README_changed_lines": [
+    34,
+    40,
+    42,
+    67,
+    72,
+    90
+  ],
+  "non_PCV_README_bytes_preserved": true,
+  "proof": "Git index/tree identities and normalized worktree diff; not raw checkout byte identity",
+  "status": "PASS"
+}

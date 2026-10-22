@@ -1,0 +1,6 @@
+{
+  "command": "py -3 tasks/release-0.1.23/hub/prepare_hub_mirror.py --verify-prepared",
+  "startedUtc": "2026-10-22T18:32:48.0503082Z",
+  "exitCode": 0,
+  "outputFile": "tasks/release-0.1.23/hub/mirror-verify-prepared-final2.output.txt"
+}

@@ -1,0 +1,42 @@
+{
+  "source_commit": "77265202d7f4a47b88e1eb88131b21f4b0752020",
+  "source_tree": "0a0e0b7d6f55f9992a6aea7d9febfe8b83bf4653",
+  "archive_sha256": "e510d9bcaff7ac6da6fc8648801fd5ffa500dce7f18d18423810db007b92accc",
+  "export_directory": "K:\\ActorwrightExchange\\projects\\CHIM-PrivateConversation-dev\\dist\\release-v0.1.23-clean-source-77265202\\source",
+  "command": "py -3 scripts/build-package.py --format release --release-dir dist/release-v0.1.23-clean",
+  "exit_code": 0,
+  "exported_payload_files_match": 21,
+  "assets": [
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 381,
+      "sha256": "9ac9680d552fc99cf7cea7d46f3b48511780d0da1932f288842ec2d8cb352031",
+      "matches_candidate": true
+    },
+    {
+      "name": "chim-plugin.tar.gz",
+      "bytes": 3053766,
+      "sha256": "4aa0d8d5dd32ce57c59f56324c31a8b0b89e48db6075d0988156e5fc03587d9a",
+      "matches_candidate": true
+    },
+    {
+      "name": "private_conversation-0.1.23-mo2.zip",
+      "bytes": 3057014,
+      "sha256": "cb009a464a4d75977e9eb15e32df62ac8acdf99d087648c0c75f2fbc517ffd76",
+      "matches_candidate": true
+    },
+    {
+      "name": "private_conversation-0.1.23.dwpkg",
+      "bytes": 3477054,
+      "sha256": "e743d43ef3c34f7d9dc11e3b2bc3c5162957973e9978d3c784270a2c1314c001",
+      "matches_candidate": true
+    },
+    {
+      "name": "private_conversation.tar.gz",
+      "bytes": 3053844,
+      "sha256": "e8ba7b6a10d6d8591a291d3da286e5f017b331b816f7454039de465a715d9cdb",
+      "matches_candidate": true
+    }
+  ],
+  "status": "PASS"
+}

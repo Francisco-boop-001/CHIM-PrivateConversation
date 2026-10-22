@@ -1,0 +1,17 @@
+{
+  "hub_commit": "0be780db88521a576c1cba55a4b7f8dbc914ba00",
+  "hub_tree": "a3baf069efed2a1e25b37567481715e75aeba482",
+  "hub_parent": "6e52bcef4636206e410208abbae419eff5a74790",
+  "source_commit": "77265202d7f4a47b88e1eb88131b21f4b0752020",
+  "non_forced_push": true,
+  "public_ref": "0be780db88521a576c1cba55a4b7f8dbc914ba00\trefs/heads/main",
+  "status": "PASS",
+  "checked_utc": "2026-10-22T18:38:46.876858+00:00",
+  "anonymous_complete_tree_readback": true,
+  "public_tree_entries_equal_local": 830,
+  "manifest_version": "0.1.23",
+  "hub_worktree_and_index_clean": true,
+  "protected_entries_verified": 258,
+  "mapped_source_files_verified": 154,
+  "server_payload_files_verified": 21
+}

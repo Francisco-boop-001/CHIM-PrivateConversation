@@ -1,0 +1,48 @@
+{
+  "checked_utc": "2026-10-22T18:22:46.181684+00:00",
+  "release_id": 421054139,
+  "tag": "private_conversation-v0.1.23",
+  "draft": false,
+  "prerelease": false,
+  "latest": true,
+  "body_matches": true,
+  "anonymous_downloads": [
+    {
+      "name": "SHA256SUMS.txt",
+      "sha256": "9ac9680d552fc99cf7cea7d46f3b48511780d0da1932f288842ec2d8cb352031",
+      "bytes": 381,
+      "matches_candidate": true,
+      "asset_id": 666689125
+    },
+    {
+      "name": "chim-plugin.tar.gz",
+      "sha256": "4aa0d8d5dd32ce57c59f56324c31a8b0b89e48db6075d0988156e5fc03587d9a",
+      "bytes": 3053766,
+      "matches_candidate": true,
+      "asset_id": 666689122
+    },
+    {
+      "name": "private_conversation-0.1.23-mo2.zip",
+      "sha256": "cb009a464a4d75977e9eb15e32df62ac8acdf99d087648c0c75f2fbc517ffd76",
+      "bytes": 3057014,
+      "matches_candidate": true,
+      "asset_id": 666689123
+    },
+    {
+      "name": "private_conversation-0.1.23.dwpkg",
+      "sha256": "e743d43ef3c34f7d9dc11e3b2bc3c5162957973e9978d3c784270a2c1314c001",
+      "bytes": 3477054,
+      "matches_candidate": true,
+      "asset_id": 666689116
+    },
+    {
+      "name": "private_conversation.tar.gz",
+      "sha256": "e8ba7b6a10d6d8591a291d3da286e5f017b331b816f7454039de465a715d9cdb",
+      "bytes": 3053844,
+      "matches_candidate": true,
+      "asset_id": 666689117
+    }
+  ],
+  "prior_0_1_22_release_preserved": true,
+  "status": "PASS"
+}

@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\tasks\release-0.1.23\hub\prepare_hub_mirror.py", line 406, in <module>
+    main()
+  File "K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\tasks\release-0.1.23\hub\prepare_hub_mirror.py", line 213, in main
+    readme_after, readme_changes = prepared_readme(readme_before)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "K:\ActorwrightExchange\projects\CHIM-PrivateConversation-dev\tasks\release-0.1.23\hub\prepare_hub_mirror.py", line 87, in prepared_readme
+    raise RuntimeError(f"README line {number} no longer matches the approved PCV anchor")
+RuntimeError: README line 34 no longer matches the approved PCV anchor
