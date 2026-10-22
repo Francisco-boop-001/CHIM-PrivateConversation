@@ -532,3 +532,11 @@ The documentation update is public at canonical commit 98d9e0bae656b83e6d04cbb34
 ### Review
 
 Implementation, bounded verification, cross-review and player documentation are accepted. The four package checks and independent content inventory passed. Clean committed-source rebuild, draft downloads and all five anonymous public downloads are byte-identical. Canonical 0.1.22 BETA and the PCV-only hub mirror are public; prior release assets and all other plugin work remain preserved. See [the publication receipt](release-0.1.22/publication-receipt.md). Earlier beta gameplay evidence remains version-qualified; this maintenance task does not claim a new in-game session.
+
+## Confirmed PCV review fixes — 2026-10-22
+
+- [x] Complete exclusive state, routing, and UI/security tasks with original targeted RED/GREEN evidence.
+- [x] Review all diffs, connected callers and failure modes; coordinate TEST use with MP and keep all other components unchanged.
+- [ ] Update useful player guidance and release evidence, then commit, push and publish a new immutable release after all gates pass.
+
+See [the task plan](critique-fixes-2026-10-22/plan.md).
