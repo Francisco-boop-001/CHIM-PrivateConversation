@@ -547,8 +547,12 @@ All scoped fixes, review and bounded checks are accepted. The clean committed-so
 
 ## Paired PCV SQL wait bounds — 2026-10-26
 
-- [ ] Record scoped baseline RED, implement bounded owned identity/catalog reader and native callers under exclusive Luna Max/Ponytail FULL ownership.
-- [ ] Verify actual isolated TEST2 behavior, paired Department overlay/known23 backup migration and independent review.
-- [ ] Coordinate verified0.1.24/Department20 source, packages and publication; preserve other components and prior releases.
+- [x] Record scoped baseline RED, implement bounded owned identity/catalog reader and native callers under exclusive Luna Max/Ponytail FULL ownership.
+- [x] Verify actual isolated TEST2 behavior, paired Department overlay/known23 backup migration and independent review.
+- [x] Coordinate verified0.1.24/Department20 source, packages and publication; preserve other components and prior releases.
 
 Plan: [SQL read timeouts](read-timeouts-2026-10-26/plan.md).
+
+### Review
+
+The lead reviewed every product diff, native caller and failure path, returned defects to the responsible agents, and inspected the original RED/GREEN/cleanup receipts. The 18/18 owner and 6/6 exact overlay SQL checks, 15/15 migration cases, actual three-package consumer gate, and clean/draft/anonymous asset comparisons passed. The paired canonical releases and PCV-only hub bridge are public; component ownership and immutable payload/tag boundaries remain intact. This closing documentation commit records those completed gates; no fresh installation, provider or Skyrim result is claimed. See [publication record](read-timeouts-2026-10-26/publication/record.md).
