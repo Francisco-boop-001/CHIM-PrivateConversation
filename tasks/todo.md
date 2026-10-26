@@ -544,3 +544,11 @@ See [the task plan](critique-fixes-2026-10-22/plan.md).
 ### 0.1.23 publication review
 
 All scoped fixes, review and bounded checks are accepted. The clean committed-source rebuild, draft and anonymous public downloads, independent publication audit and PCV-only hub readback passed. The test window is released; other components and prior releases are preserved. [Publication receipt](release-0.1.23/publication-receipt.md). No fresh installation, provider or Skyrim gameplay is claimed.
+
+## Paired PCV SQL wait bounds — 2026-10-26
+
+- [ ] Record scoped baseline RED, implement bounded owned identity/catalog reader and native callers under exclusive Luna Max/Ponytail FULL ownership.
+- [ ] Verify actual isolated TEST2 behavior, paired Department overlay/known23 backup migration and independent review.
+- [ ] Coordinate verified0.1.24/Department20 source, packages and publication; preserve other components and prior releases.
+
+Plan: [SQL read timeouts](read-timeouts-2026-10-26/plan.md).
