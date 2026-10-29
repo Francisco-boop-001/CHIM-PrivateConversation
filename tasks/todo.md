@@ -556,3 +556,36 @@ Plan: [SQL read timeouts](read-timeouts-2026-10-26/plan.md).
 ### Review
 
 The lead reviewed every product diff, native caller and failure path, returned defects to the responsible agents, and inspected the original RED/GREEN/cleanup receipts. The 18/18 owner and 6/6 exact overlay SQL checks, 15/15 migration cases, actual three-package consumer gate, and clean/draft/anonymous asset comparisons passed. The paired canonical releases and PCV-only hub bridge are public; component ownership and immutable payload/tag boundaries remain intact. This closing documentation commit records those completed gates; no fresh installation, provider or Skyrim result is claimed. See [publication record](read-timeouts-2026-10-26/publication/record.md).
+
+## Offline PCV bughunt — 2026-10-28
+
+- [x] Complete bounded state, routing and reflection reviews with reused Luna Max/Ponytail FULL agents and explicit source/fixture ownership.
+- [x] Verify consequential hypotheses with the smallest safe host checks, then review raw output and call paths.
+- [x] Report confirmed PCV defects separately from external/resolved issues and unperformed runtime checks; change no product code or release.
+
+Plan: [offline bughunt](bughunt-2026-10-28/plan.md).
+
+### Bughunt review
+
+Lead review accepted two reproduced routing/offer defects and one reproduced stale-form targeting risk, with exact fixture boundaries; the reflection ACK-capacity hypothesis remains unconfirmed because the integrated Windows fixture could not pass real Unix-mode checks. Intended group narrowing and resolved Department defects were excluded. No product code, existing tests, pins, release or external runtime changed. [Findings and raw evidence](bughunt-2026-10-28/report.md).
+
+## Confirmed offline bughunt fixes — 2026-10-28
+
+- [x] Repair queued-Solo wrap routing and included-player action offerings with focused RED/GREEN evidence.
+- [x] Bind browser mutations to the rendered playthrough and verify refresh/draft behavior.
+- [x] Update directly relevant guidance, complete independent and lead reviews, and record proof limits without publication or pin advancement.
+
+Plan: [confirmed fixes](bugfix-2026-10-28/plan.md).
+
+### Confirmed-fix review
+
+The reused Luna Max/Ponytail FULL owners implemented the three confirmed fixes under exclusive file ownership. Independent and lead diff/caller/failure-path review accepted the changes after strengthening failed-clear assertions. Four focused host PHP programs and 16/16 JS cases passed; POSIX-dependent broader fixtures and the early-ACK hypothesis remain explicitly unverified. Player guidance and original RED/GREEN evidence are retained. No distro/server, other component, version, release or pin was changed. [Lead review and evidence](bugfix-2026-10-28/lead-review.md).
+
+
+## PCV 0.1.25 BETA publication — 2026-10-28
+
+- [ ] Verify release metadata, useful player guidance, scoped source checks and deterministic package evidence.
+- [ ] Commit/tag the reviewed source, reproduce clean assets, verify draft/public bytes and then advance update refs.
+- [ ] Publish the PCV-only CHIM-Plugins mirror without changing other components; retain final publication evidence.
+
+Plan: [0.1.25 publication](release-0.1.25/plan.md).
