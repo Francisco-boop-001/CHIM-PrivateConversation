@@ -584,8 +584,13 @@ The reused Luna Max/Ponytail FULL owners implemented the three confirmed fixes u
 
 ## PCV 0.1.25 BETA publication — 2026-10-28
 
-- [ ] Verify release metadata, useful player guidance, scoped source checks and deterministic package evidence.
-- [ ] Commit/tag the reviewed source, reproduce clean assets, verify draft/public bytes and then advance update refs.
-- [ ] Publish the PCV-only CHIM-Plugins mirror without changing other components; retain final publication evidence.
+- [x] Verify release metadata, useful player guidance, scoped source checks and deterministic package evidence.
+- [x] Commit/tag the reviewed source, reproduce clean assets, verify draft/public bytes and then advance update refs.
+- [x] Publish the PCV-only CHIM-Plugins mirror without changing other components; retain final publication evidence.
 
 Plan: [0.1.25 publication](release-0.1.25/plan.md).
+
+
+### 0.1.25 publication review
+
+The canonical and PCV-only hub releases are public; all five anonymous assets from both match the clean immutable source build. Main/update refs advanced only after source/package/public gates and lead plus independent review. A transient global latest selection was restored without changing the previous release content/assets. Runtime code and other components are unchanged by this closing documentation; Department owns the separately requested compatibility rebase and retains its PCV24 pin. No live distro, installation, provider or gameplay check was performed. [Publication record](release-0.1.25/publication/record.md).
